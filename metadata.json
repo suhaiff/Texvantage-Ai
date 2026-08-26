@@ -1,0 +1,6 @@
+{
+  "name": "TexVantage AI - Textile Business Intelligence Platform",
+  "description": "Executive AI business intelligence platform for textile company owners and central administrators with multi-tenant data isolation, interactive analytics, conversational AI, and report exports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
