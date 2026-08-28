@@ -12,7 +12,7 @@ def setup_test_env(monkeypatch):
     monkeypatch.setattr(settings, "APP_ENV", "test")
     monkeypatch.setattr(settings, "AI_PROVIDER", "mock")
 
-def get_auth_header(email: str = "owner.a@demo.local", role: str = "OWNER", company_id: str = "comp_textile_a"):
+def get_auth_header(email: str = "owner.a@test.local", role: str = "OWNER", company_id: str = "comp_test_a"):
     data = {
         "sub": "user_owner_a" if role == "OWNER" else "user_admin",
         "email": email,
@@ -23,8 +23,8 @@ def get_auth_header(email: str = "owner.a@demo.local", role: str = "OWNER", comp
     token = create_access_token(data)
     return {"Authorization": f"Bearer {token}"}
 
-def test_sse_streaming_endpoint_for_owner():
-    headers = get_auth_header(role="OWNER", company_id="comp_textile_a")
+def test_sse_streaming_endpoint_for_owner(test_environment):
+    headers = get_auth_header(role="OWNER", company_id="comp_test_a")
     response = client.post(
         "/api/chat/stream",
         json={"prompt": "What were my total sales this month?"},
@@ -57,8 +57,8 @@ def test_sse_streaming_endpoint_unauthorized_without_token():
     )
     assert response.status_code == 401
 
-def test_sse_streaming_admin_comparison():
-    headers = get_auth_header(email="admin@demo.local", role="ADMIN")
+def test_sse_streaming_admin_comparison(test_environment):
+    headers = get_auth_header(email="admin@test.local", role="ADMIN")
     response = client.post(
         "/api/chat/stream",
         json={"prompt": "Compare Textile A and Textile B"},

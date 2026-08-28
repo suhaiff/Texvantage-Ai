@@ -14,28 +14,16 @@ from app.repositories.dev_repo import repo
 client = TestClient(app)
 
 @pytest.fixture
-def admin_token():
-    res = client.post("/api/auth/login", json={
-        "email": "admin@demo.local",
-        "password": "admin123"
-    })
-    return res.json()["access_token"]
+def admin_token(get_auth_token):
+    return get_auth_token("admin@test.local")
 
 @pytest.fixture
-def owner_a_token():
-    res = client.post("/api/auth/login", json={
-        "email": "owner.a@demo.local",
-        "password": "owner123"
-    })
-    return res.json()["access_token"]
+def owner_a_token(get_auth_token):
+    return get_auth_token("owner.a@test.local")
 
 @pytest.fixture
-def owner_b_token():
-    res = client.post("/api/auth/login", json={
-        "email": "owner.b@demo.local",
-        "password": "owner123"
-    })
-    return res.json()["access_token"]
+def owner_b_token(get_auth_token):
+    return get_auth_token("owner.b@test.local")
 
 
 def test_report_metadata_owner(owner_a_token):
@@ -55,7 +43,7 @@ def test_report_metadata_admin(admin_token):
     assert res.status_code == 200
     data = res.json()
     assert "Global Administrator" in data["tenant_scope"]
-    assert len(data["companies_included"]) >= 10
+    assert len(data["companies_included"]) >= 2
     assert "Company Comparison" in data["sheets"]
 
 
@@ -65,7 +53,7 @@ def test_owner_generate_own_company_excel_report(owner_a_token):
         "/api/reports/excel",
         json={
             "report_type": "executive",
-            "company_id": "comp_textile_a",
+            "company_id": "comp_test_a",
             "period_months": 6,
             "title": "Q4 Executive Performance Review"
         },
@@ -84,7 +72,7 @@ def test_owner_generate_own_company_excel_report(owner_a_token):
     # Verify Executive Summary sheet content
     ws_exec = wb["Executive Summary"]
     assert ws_exec.cell(row=2, column=2).value == "TEXVANTAGE AI — EXECUTIVE BUSINESS REPORT"
-    assert "TEX-A" in str(ws_exec.cell(row=5, column=3).value)
+    assert "TCA" in str(ws_exec.cell(row=5, column=3).value)
 
     # Verify Data Sources provenance sheet exists and has records
     ws_sources = wb["Data Sources"]
@@ -97,7 +85,7 @@ def test_owner_cannot_export_another_company(owner_a_token):
         "/api/reports/excel",
         json={
             "report_type": "executive",
-            "company_id": "comp_textile_b",
+            "company_id": "comp_test_b",
             "period_months": 6
         },
         headers={"Authorization": f"Bearer {owner_a_token}"}
@@ -112,7 +100,7 @@ def test_owner_cannot_export_multi_company_list(owner_a_token):
         "/api/reports/excel",
         json={
             "report_type": "comparison",
-            "company_ids": ["comp_textile_a", "comp_textile_b"],
+            "company_ids": ["comp_test_a", "comp_test_b"],
             "period_months": 6
         },
         headers={"Authorization": f"Bearer {owner_a_token}"}
@@ -122,13 +110,13 @@ def test_owner_cannot_export_multi_company_list(owner_a_token):
 
 
 def test_admin_generate_full_portfolio_excel_report(admin_token):
-    """Verify Admin can generate a complete 10-mill portfolio Excel report."""
+    """Verify Admin can generate a complete portfolio Excel report."""
     res = client.post(
         "/api/reports/excel",
         json={
             "report_type": "portfolio",
             "period_months": 6,
-            "title": "Consolidated 10-Enterprise Board Brief"
+            "title": "Consolidated Enterprise Board Brief"
         },
         headers={"Authorization": f"Bearer {admin_token}"}
     )
@@ -140,16 +128,16 @@ def test_admin_generate_full_portfolio_excel_report(admin_token):
     for s in expected_sheets:
         assert s in wb.sheetnames
 
-    # Check Company Comparison sheet has rows for all 10 companies
+    # Check Company Comparison sheet has rows for all 2 test companies
     ws_comp = wb["Company Comparison"]
-    # Row 5 is header, rows 6-15 are the companies
+    # Row 5 is header, rows 6-7 are the companies
     assert ws_comp.cell(row=6, column=2).value is not None
-    assert ws_comp.cell(row=15, column=2).value is not None
+    assert ws_comp.cell(row=7, column=2).value is not None
 
 
 def test_admin_generate_selected_comparison_report(admin_token):
     """Verify Admin can generate comparison report for specific selected companies."""
-    selected = ["comp_textile_a", "comp_textile_b", "comp_textile_c"]
+    selected = ["comp_test_a", "comp_test_b"]
     res = client.post(
         "/api/reports/excel",
         json={
@@ -165,12 +153,13 @@ def test_admin_generate_selected_comparison_report(admin_token):
     assert ws_comp.cell(row=6, column=2).value is not None
 
 
-def test_missing_metrics_handled_as_not_available(owner_a_token):
+def test_missing_metrics_handled_as_not_available(owner_a_token, test_environment):
     """Verify that null/missing metrics are clearly marked 'Not available' without substituting zero."""
     res = client.post(
         "/api/reports/excel",
         json={
             "report_type": "executive",
+            "company_id": "comp_test_a",
             "period_months": 6
         },
         headers={"Authorization": f"Bearer {owner_a_token}"}

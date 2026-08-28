@@ -86,7 +86,7 @@ def test_4_5_missing_cogs_results_in_unavailable_gross_profit_and_margin():
         "revenue_lakh": 500.0,
         "raw_row": {}
     }]
-    financials, products, start_d, end_d = normalizer.normalize("comp_textile_a", rows, "ds_1")
+    financials, products, start_d, end_d = normalizer.normalize("comp_test_a", rows, "ds_1")
     assert financials[0].gross_profit_lakh is None
     assert financials[0].profit_margin_pct is None
 
@@ -94,7 +94,7 @@ def test_6_missing_units_results_in_unavailable_units_in_tools(monkeypatch):
     monkeypatch.setattr(settings, "SEED_DEMO_DATA", False)
     user = AuthenticatedUser(
         id="user_owner_custom",
-        email="owner.custom@demo.local",
+        email="owner.custom@test.local",
         name="Owner Custom",
         role="OWNER",
         company_id="comp_test_units_missing"
@@ -136,7 +136,7 @@ def test_6_missing_units_results_in_unavailable_units_in_tools(monkeypatch):
 def test_7_production_gemini_unavailable_does_not_invoke_mock(monkeypatch):
     monkeypatch.setattr(settings, "APP_ENV", "production")
     monkeypatch.setattr(settings, "GEMINI_API_KEY", "")
-    user = AuthenticatedUser(id="u1", email="admin@demo.local", name="Admin", role="ADMIN", company_id=None)
+    user = AuthenticatedUser(id="u1", email="admin@test.local", name="Admin", role="ADMIN", company_id=None)
     test_repo = DevRepository("sqlite:///:memory:")
     orchestrator = AIOrchestrator(test_repo, user)
     assert isinstance(orchestrator.provider, GeminiProvider)
@@ -150,7 +150,7 @@ def test_7_production_gemini_unavailable_does_not_invoke_mock(monkeypatch):
 
 def test_8_production_gemini_runtime_failure_does_not_invoke_mock(monkeypatch):
     monkeypatch.setattr(settings, "APP_ENV", "production")
-    user = AuthenticatedUser(id="u1", email="admin@demo.local", name="Admin", role="ADMIN", company_id=None)
+    user = AuthenticatedUser(id="u1", email="admin@test.local", name="Admin", role="ADMIN", company_id=None)
     test_repo = DevRepository("sqlite:///:memory:")
     
     class FailingGeminiProvider(GeminiProvider):
@@ -169,7 +169,7 @@ def test_8_production_gemini_runtime_failure_does_not_invoke_mock(monkeypatch):
 def test_9_test_environment_uses_mock_provider(monkeypatch):
     monkeypatch.setattr(settings, "APP_ENV", "test")
     monkeypatch.setattr(settings, "AI_PROVIDER", None)
-    user = AuthenticatedUser(id="u1", email="admin@demo.local", name="Admin", role="ADMIN", company_id=None)
+    user = AuthenticatedUser(id="u1", email="admin@test.local", name="Admin", role="ADMIN", company_id=None)
     test_repo = DevRepository("sqlite:///:memory:")
     orchestrator = AIOrchestrator(test_repo, user)
     assert isinstance(orchestrator.provider, MockAIProvider)
@@ -177,7 +177,7 @@ def test_9_test_environment_uses_mock_provider(monkeypatch):
 def test_10_explicit_mock_mode_forbidden_in_production(monkeypatch):
     monkeypatch.setattr(settings, "APP_ENV", "production")
     monkeypatch.setattr(settings, "AI_PROVIDER", "mock")
-    user = AuthenticatedUser(id="u1", email="admin@demo.local", name="Admin", role="ADMIN", company_id=None)
+    user = AuthenticatedUser(id="u1", email="admin@test.local", name="Admin", role="ADMIN", company_id=None)
     test_repo = DevRepository("sqlite:///:memory:")
     with pytest.raises(ValueError, match="Mock AI provider is strictly prohibited in production"):
         AIOrchestrator(test_repo, user)

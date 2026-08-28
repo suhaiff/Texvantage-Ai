@@ -6,16 +6,7 @@ from sqlalchemy import text
 
 client = TestClient(app)
 
-@pytest.fixture(autouse=True)
-def clean_db():
-    # Clean the database before each test
-    with repo.SessionLocal() as session:
-        session.execute(text("DELETE FROM audit_logs"))
-        session.execute(text("DELETE FROM monthly_financials"))
-        session.execute(text("DELETE FROM users"))
-        session.execute(text("DELETE FROM companies"))
-        session.commit()
-    yield
+
 
 def test_unauthenticated_access_rejected():
     """AUTH-001: Unauthenticated user cannot access protected endpoint."""

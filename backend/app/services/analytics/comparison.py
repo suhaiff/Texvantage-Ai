@@ -68,9 +68,16 @@ def compare_multiple_companies(
     ranked_by_revenue = rank_companies_by_metric(comparison_records, "total_revenue_lakh", descending=True)
 
     # Compute portfolio aggregates
-    total_portfolio_rev = round(sum(r["total_revenue_lakh"] for r in ranked_by_revenue), 2)
-    total_portfolio_profit = round(sum(r["total_gross_profit_lakh"] for r in ranked_by_revenue), 2)
-    portfolio_avg_margin = round((total_portfolio_profit / total_portfolio_rev * 100.0), 2) if total_portfolio_rev > 0 else 0.0
+    valid_revenues = [r["total_revenue_lakh"] for r in ranked_by_revenue if r.get("total_revenue_lakh") is not None]
+    total_portfolio_rev = round(sum(valid_revenues), 2) if valid_revenues else None
+
+    valid_profits = [r["total_gross_profit_lakh"] for r in ranked_by_revenue if r.get("total_gross_profit_lakh") is not None]
+    total_portfolio_profit = round(sum(valid_profits), 2) if valid_profits else None
+
+    if total_portfolio_rev and total_portfolio_profit:
+        portfolio_avg_margin = round((total_portfolio_profit / total_portfolio_rev * 100.0), 2)
+    else:
+        portfolio_avg_margin = None
 
     highest_margin_comp = max(ranked_by_revenue, key=lambda x: x["avg_profit_margin_pct"]) if ranked_by_revenue else None
     highest_growth_comp = max(ranked_by_revenue, key=lambda x: x["revenue_growth_pct"]) if ranked_by_revenue else None

@@ -23,12 +23,7 @@ from app.services.ai.mock_provider import MockAIProvider
 
 client = TestClient(app)
 
-def get_auth_token(email: str, password: str = "admin123") -> str:
-    """Helper to authenticate and get JWT bearer token."""
-    pwd = "owner123" if "owner" in email else password
-    res = client.post("/api/auth/login", json={"email": email, "password": pwd})
-    assert res.status_code == 200, f"Login failed for {email}: {res.text}"
-    return res.json()["access_token"]
+
 
 # 1. Parser Unit Tests
 def test_csv_parser_valid():
@@ -134,7 +129,7 @@ def test_normalizer_accumulates_and_creates_entities():
             "raw_row": {}
         }
     ]
-    financials, products, start_d, end_d = normalizer.normalize("comp_textile_a", validated_rows, "ds_test_1")
+    financials, products, start_d, end_d = normalizer.normalize("comp_test_a", validated_rows, "ds_test_1")
     assert len(financials) == 2
     assert financials[0].revenue_lakh == 320.0
     assert financials[1].revenue_lakh == 340.0
@@ -142,8 +137,8 @@ def test_normalizer_accumulates_and_creates_entities():
     assert end_d == date(2026, 8, 1)
 
 # 4. End-to-End API Ingestion Tests
-def test_owner_upload_csv_preview_and_import():
-    owner_token = get_auth_token("owner.a@demo.local")
+def test_owner_upload_csv_preview_and_import(test_environment, get_auth_token):
+    owner_token = get_auth_token("owner.a@test.local")
     headers = {"Authorization": f"Bearer {owner_token}"}
 
     # A. Upload CSV
@@ -191,8 +186,8 @@ def test_owner_upload_csv_preview_and_import():
     assert aug_rec["revenue_lakh"] == 335.50
 
 # 5. Repeated Uploads Accumulate Historical Business Periods
-def test_repeated_uploads_accumulate_periods():
-    owner_token = get_auth_token("owner.b@demo.local")
+def test_repeated_uploads_accumulate_periods(test_environment, get_auth_token):
+    owner_token = get_auth_token("owner.b@test.local")
     headers = {"Authorization": f"Bearer {owner_token}"}
 
     # Upload Dataset 1: Sept 2026
@@ -215,9 +210,9 @@ def test_repeated_uploads_accumulate_periods():
     assert "Oct 2026" in months
 
 # 6. TenantGuard Security Isolation on Datasets
-def test_owner_security_cross_tenant_isolation():
-    owner_a_token = get_auth_token("owner.a@demo.local")
-    owner_b_token = get_auth_token("owner.b@demo.local")
+def test_owner_security_cross_tenant_isolation(test_environment, get_auth_token):
+    owner_a_token = get_auth_token("owner.a@test.local")
+    owner_b_token = get_auth_token("owner.b@test.local")
     headers_a = {"Authorization": f"Bearer {owner_a_token}"}
     headers_b = {"Authorization": f"Bearer {owner_b_token}"}
 
@@ -251,36 +246,35 @@ def test_owner_security_cross_tenant_isolation():
     assert del_a.status_code == 200
 
 # 7. Admin Cross-Company Dataset Operations
-def test_admin_cross_company_dataset_management():
-    admin_token = get_auth_token("admin@demo.local")
+def test_admin_cross_company_dataset_management(test_environment, get_auth_token):
+    admin_token = get_auth_token("admin@test.local")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # Admin uploads for Company C
-    csv_c = b"Period,Sales\n2026-07-01,400.0\n"
-    files = {"file": ("admin_upload_c.csv", csv_c, "text/csv")}
-    data = {"company_id": "comp_textile_c", "dataset_name": "Admin Upload for Mill C"}
-    
+    # Admin uploads for Company A
+    csv_a = b"Period,Sales\n2026-07-01,400.0\n"
+    files = {"file": ("admin_upload_a.csv", csv_a, "text/csv")}
+    data = {"company_id": "comp_test_a", "dataset_name": "Admin Upload for Mill A"}
     admin_up = client.post("/api/datasets/upload", headers=admin_headers, files=files, data=data)
     assert admin_up.status_code == 200
-    ds_c_id = admin_up.json()["dataset_id"]
+    ds_a_id = admin_up.json()["dataset_id"]
 
-    # Admin previews Dataset C
-    prev = client.get(f"/api/datasets/{ds_c_id}/preview", headers=admin_headers)
+    # Admin previews Dataset A
+    prev = client.get(f"/api/datasets/{ds_a_id}/preview", headers=admin_headers)
     assert prev.status_code == 200
 
-    # Admin lists datasets filtered by company C
-    list_c = client.get("/api/datasets?company_id=comp_textile_c", headers=admin_headers)
-    assert list_c.status_code == 200
-    assert any(d["id"] == ds_c_id for d in list_c.json())
+    # Admin lists datasets filtered by company A
+    list_a = client.get("/api/datasets?company_id=comp_test_a", headers=admin_headers)
+    assert list_a.status_code == 200
+    assert any(d["id"] == ds_a_id for d in list_a.json())
 
 # 8. AI Integration with Ingested Datasets
-def test_ai_answers_dataset_awareness():
+def test_ai_answers_dataset_awareness(test_environment):
     user = AuthenticatedUser(
         id="user_owner_a",
-        email="owner.a@demo.local",
-        name="Rajesh V. Singhania",
+        email="owner.a@test.local",
+        name="Test Owner A",
         role="OWNER",
-        company_id="comp_textile_a"
+        company_id="comp_test_a"
     )
     orchestrator = AIOrchestrator(
         repository=repo,

@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { apiRouter } from './src/server/apiRouter';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 dotenv.config();
 
@@ -12,19 +12,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Body Parsers for API routes
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
 // ----------------------------------------------------
-// 1. AUTHORITATIVE BACKEND REST & SSE ROUTER (/api/*)
+// 1. REVERSE PROXY TO FASTAPI (/api/*)
 // ----------------------------------------------------
-app.use('/api', apiRouter);
-
-// Fallback for unmatched /api routes (guarantee JSON 404 instead of Vite index.html)
-app.all('/api/*', (_req: Request, res: Response) => {
-  res.status(404).json({ detail: `API route not found: ${_req.method} ${_req.url}` });
-});
+app.use(createProxyMiddleware({
+  pathFilter: '/api',
+  target: 'http://127.0.0.1:8081',
+  changeOrigin: true,
+}));
 
 // ----------------------------------------------------
 // 2. VITE CLIENT APPLICATION HOSTING

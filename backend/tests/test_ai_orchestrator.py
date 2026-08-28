@@ -9,22 +9,22 @@ from app.services.ai.gemini import GeminiProvider
 def admin_user():
     return AuthenticatedUser(
         id="user_admin_01",
-        email="admin@demo.local",
+        email="admin@test.local",
         name="Global Admin",
         role="ADMIN",
         company_id=None,
-        authorized_company_ids=[f"comp_textile_{c}" for c in "abcdefghij"]
+        authorized_company_ids=["comp_test_a"]
     )
 
 @pytest.fixture
 def owner_a_user():
     return AuthenticatedUser(
         id="user_owner_a",
-        email="owner.a@demo.local",
+        email="owner.a@test.local",
         name="Owner A",
         role="OWNER",
-        company_id="comp_textile_a",
-        authorized_company_ids=["comp_textile_a"]
+        company_id="comp_test_a",
+        authorized_company_ids=["comp_test_a"]
     )
 
 def test_gemini_provider_init_from_env_safe():

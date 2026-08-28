@@ -5,32 +5,32 @@ from app.schemas.auth import AuthenticatedUser
 from app.core.exceptions import ForbiddenError, NotFoundError
 
 @pytest.fixture
-def admin_user():
+def admin_user(test_environment):
     return AuthenticatedUser(
         id="user_admin_01",
-        email="admin@demo.local",
+        email="admin@test.local",
         name="Global Admin",
         role="ADMIN",
         company_id=None,
-        authorized_company_ids=[f"comp_textile_{c}" for c in "abcdefghij"]
+        authorized_company_ids=["comp_test_a", "comp_test_b"]
     )
 
 @pytest.fixture
-def owner_a_user():
+def owner_a_user(test_environment):
     return AuthenticatedUser(
         id="user_owner_a",
-        email="owner.a@demo.local",
+        email="owner.a@test.local",
         name="Owner A",
         role="OWNER",
-        company_id="comp_textile_a",
-        authorized_company_ids=["comp_textile_a"]
+        company_id="comp_test_a",
+        authorized_company_ids=["comp_test_a"]
     )
 
 def test_owner_a_can_query_own_summary(owner_a_user):
     service = BusinessQueryService(repo, owner_a_user)
-    summary = service.get_company_summary("comp_textile_a")
-    assert summary["company_id"] == "comp_textile_a"
-    assert "Apex Spinners" in summary["company_name"]
+    summary = service.get_company_summary("comp_test_a")
+    assert summary["company_id"] == "comp_test_a"
+    assert "Test Company A" in summary["company_name"]
     assert summary["period_months"] == 12
     assert summary["latest_monthly_revenue_lakh"] > 0
     assert summary["annual_aggregate"]["total_revenue_lakh"] > 0
@@ -38,12 +38,12 @@ def test_owner_a_can_query_own_summary(owner_a_user):
 def test_owner_a_cannot_query_company_b(owner_a_user):
     service = BusinessQueryService(repo, owner_a_user)
     with pytest.raises(ForbiddenError):
-        service.get_company_summary("comp_textile_b")
+        service.get_company_summary("comp_test_b")
 
 def test_owner_a_cannot_query_company_b_financials(owner_a_user):
     service = BusinessQueryService(repo, owner_a_user)
     with pytest.raises(ForbiddenError):
-        service.get_monthly_financials(company_id="comp_textile_b")
+        service.get_monthly_financials(company_id="comp_test_b")
 
 def test_owner_a_cannot_access_global_summary(owner_a_user):
     service = BusinessQueryService(repo, owner_a_user)
@@ -53,26 +53,26 @@ def test_owner_a_cannot_access_global_summary(owner_a_user):
 def test_owner_a_cannot_compare_companies(owner_a_user):
     service = BusinessQueryService(repo, owner_a_user)
     with pytest.raises(ForbiddenError):
-        service.get_company_comparison(["comp_textile_a", "comp_textile_b"])
+        service.get_company_comparison(["comp_test_a", "comp_test_b"])
 
 def test_admin_can_query_any_company(admin_user):
     service = BusinessQueryService(repo, admin_user)
-    sum_a = service.get_company_summary("comp_textile_a")
-    sum_b = service.get_company_summary("comp_textile_b")
-    assert sum_a["company_id"] == "comp_textile_a"
-    assert sum_b["company_id"] == "comp_textile_b"
+    sum_a = service.get_company_summary("comp_test_a")
+    sum_b = service.get_company_summary("comp_test_b")
+    assert sum_a["company_id"] == "comp_test_a"
+    assert sum_b["company_id"] == "comp_test_b"
 
 def test_admin_can_compare_companies(admin_user):
     service = BusinessQueryService(repo, admin_user)
-    comp_result = service.get_company_comparison(["comp_textile_a", "comp_textile_b", "comp_textile_c"], period_months=6)
-    assert comp_result["companies_count"] == 3
-    assert len(comp_result["companies"]) == 3
+    comp_result = service.get_company_comparison(["comp_test_a", "comp_test_b"], period_months=6)
+    assert comp_result["companies_count"] == 2
+    assert len(comp_result["companies"]) == 2
     assert comp_result["portfolio_summary"]["total_portfolio_revenue_lakh"] > 0
 
 def test_admin_global_summary(admin_user):
     service = BusinessQueryService(repo, admin_user)
     glob = service.get_global_summary(period_months=12)
-    assert glob["companies_count"] == 10
+    assert glob["companies_count"] == 2
     assert glob["portfolio_summary"]["total_portfolio_revenue_lakh"] > 0
     assert glob["portfolio_summary"]["top_revenue_performer"] is not None
 
