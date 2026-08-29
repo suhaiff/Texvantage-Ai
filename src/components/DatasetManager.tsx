@@ -99,6 +99,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
   const [targetCompanyId, setTargetCompanyId] = useState(currentUser.companyId || 'comp_textile_a');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadType, setUploadType] = useState<'dataset' | 'knowledge'>('dataset');
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -150,10 +151,17 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
   };
 
   const handleFileSelected = (file: File) => {
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    if (!['xlsx', 'xls', 'csv', 'json'].includes(ext || '')) {
-      setError('Unsupported file type. Please upload .xlsx, .xls, .csv, or .json.');
-      return;
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (uploadType === 'dataset') {
+      if (!['xlsx', 'xls', 'csv', 'json'].includes(ext)) {
+        setError('Unsupported file type. Please upload .xlsx, .xls, .csv, or .json.');
+        return;
+      }
+    } else {
+      if (!['pdf', 'txt'].includes(ext)) {
+        setError('Unsupported file type for Knowledge. Please upload .pdf or .txt.');
+        return;
+      }
     }
     setSelectedFile(file);
     if (!customName) {
@@ -174,18 +182,31 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
 
     try {
       setUploadProgress(60);
-      const res = await apiClient.datasets.upload(
-        selectedFile,
-        customName || selectedFile.name,
-        customDesc,
-        currentUser.role === 'ADMIN' ? targetCompanyId : undefined
-      );
-
-      setUploadProgress(100);
-      setActiveDatasetId(res.dataset_id);
+      const companyId = currentUser.role === 'ADMIN' ? targetCompanyId : currentUser.companyId;
       
-      // Load preview for mapping
-      await loadPreviewAndOpenMapping(res.dataset_id);
+      if (uploadType === 'knowledge') {
+        await apiClient.knowledge.upload(selectedFile, companyId || '');
+        setUploadProgress(100);
+        alert('Knowledge document uploaded and processed successfully! AI can now use this information.');
+        setActiveView('list');
+        setSelectedFile(null);
+        setCustomName('');
+        setCustomDesc('');
+        setUploading(false);
+      } else {
+        const res = await apiClient.datasets.upload(
+          selectedFile,
+          customName || selectedFile.name,
+          customDesc,
+          companyId
+        );
+
+        setUploadProgress(100);
+        setActiveDatasetId(res.dataset_id);
+        
+        // Load preview for mapping
+        await loadPreviewAndOpenMapping(res.dataset_id);
+      }
     } catch (err: any) {
       setError(err.message || 'Upload failed');
       setUploading(false);
@@ -294,14 +315,14 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold">
               <Database className="w-3.5 h-3.5" />
-              <span>Phase 4A Real Data Ingestion Engine</span>
+              <span>Real-Time Business Knowledge Engine</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Enterprise Dataset Management
+              Knowledge & Dataset Management
             </h1>
             <p className="text-sm text-slate-400 max-w-2xl">
-              Upload multi-format manufacturing and sales ledgers (.xlsx, .xls, .csv, .json).
-              New data accumulates historical business records for instant AI analytics.
+              Upload PDF/TXT documents for AI business knowledge, or multi-format manufacturing and sales ledgers (.xlsx, .csv).
+              AI will automatically use this knowledge to directly query the connected database via SQL.
             </p>
           </div>
 
@@ -323,7 +344,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/25 transition"
               >
                 <Upload className="w-4 h-4" />
-                <span>Upload New Dataset</span>
+                <span>Upload Data & Knowledge</span>
               </button>
             ) : (
               <button
@@ -522,10 +543,32 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
           <div className="border-b border-slate-800 pb-4">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <Upload className="w-5 h-5 text-blue-400" />
-              <span>Upload Business Ledger</span>
+              <span>Upload Data & Knowledge</span>
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Supports Excel (.xlsx, .xls), CSV (.csv), and JSON (.json) files up to 25MB.
+            <div className="flex gap-4 mt-4">
+              <button
+                type="button"
+                onClick={() => setUploadType('dataset')}
+                className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${
+                  uploadType === 'dataset' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                }`}
+              >
+                Business Ledger (CSV/Excel)
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadType('knowledge')}
+                className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${
+                  uploadType === 'knowledge' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                }`}
+              >
+                Business Knowledge (PDF/TXT)
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 mt-4">
+              {uploadType === 'dataset' 
+                ? 'Supports Excel (.xlsx, .xls), CSV (.csv), and JSON (.json) files up to 25MB.'
+                : 'Supports PDF (.pdf) and Text (.txt) files. AI will use this knowledge to understand your business and query the database directly.'}
             </p>
           </div>
 
@@ -548,7 +591,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".xlsx,.xls,.csv,.json"
+                accept={uploadType === 'dataset' ? ".xlsx,.xls,.csv,.json" : ".pdf,.txt"}
                 className="hidden"
                 onChange={e => {
                   if (e.target.files && e.target.files[0]) {
@@ -573,10 +616,10 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                     <Upload className="w-6 h-6" />
                   </div>
                   <div className="text-sm font-semibold text-white">
-                    Drop your spreadsheet or click to browse
+                    Drop your {uploadType === 'dataset' ? 'spreadsheet' : 'document'} or click to browse
                   </div>
                   <div className="text-xs text-slate-400">
-                    Excel (.xlsx, .xls), CSV (.csv), or JSON (.json)
+                    {uploadType === 'dataset' ? 'Excel (.xlsx, .xls), CSV (.csv), or JSON (.json)' : 'PDF (.pdf) or Text (.txt)'}
                   </div>
                 </div>
               )}

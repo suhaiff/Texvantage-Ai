@@ -12,6 +12,7 @@ from .api.analytics import router as analytics_router
 from .api.chat import router as chat_router
 from .api.datasets import router as datasets_router
 from .api.reports import router as reports_router
+from .api.knowledge import router as knowledge_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -54,6 +55,7 @@ app.include_router(analytics_router, prefix=settings.API_PREFIX)
 app.include_router(chat_router, prefix=settings.API_PREFIX)
 app.include_router(datasets_router, prefix=settings.API_PREFIX)
 app.include_router(reports_router, prefix=settings.API_PREFIX)
+app.include_router(knowledge_router, prefix=settings.API_PREFIX)
 
 @app.get("/api/health", tags=["Health"])
 def health_check():

@@ -25,13 +25,15 @@ TENANT & IDENTITY CONTEXT:
 - Authenticated User: {user_name} ({user_role})
 - Assigned Company Context: {company_scope}
 
+BUSINESS KNOWLEDGE & RULES:
+{knowledge_text}
+
 STRICT OPERATIONAL & GROUNDING RULES:
-1. ALWAYS use the provided business query and calculation tools to fetch facts before answering questions about revenue, profit, margins, units, growth, categories, or comparisons.
-2. NEVER calculate arithmetic in your head or invent numbers. If a tool returns ₹348.50 Lakh, use exactly ₹348.50 Lakh.
-3. If a tool reports that data or metric is unavailable (for example, COGS, units, or margins were not provided in uploaded data), explicitly state that to the user. NEVER fabricate missing numbers.
+1. When asked about metrics, data, or financials, ALWAYS use the `get_database_schema` tool first to understand the available tables, then use `execute_sql_query` to query the data safely.
+2. NEVER calculate arithmetic in your head or invent numbers. Run a SQL query.
+3. If a tool reports that data or metric is unavailable, explicitly state that to the user. NEVER fabricate missing numbers.
 4. If the tool returns an access violation, state the fact politely without hallucination.
-5. For general manufacturing concepts (e.g. "What is capacity utilization?", "Explain gross margin vs net profit"), answer directly without tools.
-6. Provide clear, professional, executive summaries suitable for C-suite textile mill owners with formatted bullet points, bold key figures, and succinct executive takeaways.
+5. Provide clear, professional, executive summaries suitable for C-suite textile mill owners.
 """
 
 class AIOrchestrator:
@@ -78,16 +80,31 @@ class AIOrchestrator:
             gemini = GeminiProvider()
             if gemini.is_configured():
                 return gemini
-            # If not configured in development and mock not explicitly set:
-            # We return GeminiProvider so unconfigured invocation fails cleanly with explicit error
-            return gemini
+            logger.info("GEMINI_API_KEY not configured. Falling back to local offline AI Engine for development.")
+            return MockAIProvider()
 
     def _build_system_instruction(self) -> str:
         comp_scope = "Global Administration (All 10 Companies)" if self.user.is_admin() else f"Company ID: {self.user.company_id}"
+        
+        knowledge_text = "No custom business knowledge documents found."
+        if hasattr(self.repository, "SessionLocal"):
+            try:
+                from sqlalchemy import select
+                from ...models.knowledge import CompanyKnowledge
+                with self.repository.SessionLocal() as session:
+                    # If admin, we could fetch all or none, but for safety fetch only if specific company scope is given, 
+                    # or fetch all if admin. Let's fetch based on user's company_id.
+                    docs = session.execute(select(CompanyKnowledge).where(CompanyKnowledge.company_id == self.user.company_id)).scalars().all()
+                    if docs:
+                        knowledge_text = "\n---\n".join([f"Document: {d.filename}\n{d.content}" for d in docs])
+            except Exception as e:
+                logger.error(f"Failed to fetch knowledge: {e}")
+        
         return SYSTEM_PROMPT_TEMPLATE.format(
             user_name=self.user.name,
             user_role=self.user.role,
-            company_scope=comp_scope
+            company_scope=comp_scope,
+            knowledge_text=knowledge_text
         )
 
     def _get_or_create_conversation(self, conversation_id: Optional[str] = None) -> Conversation:
@@ -291,7 +308,7 @@ class AIOrchestrator:
         words = final_content.split(" ")
         for i, word in enumerate(words):
             token_text = word if i == len(words) - 1 else word + " "
-            yield AIStreamEvent(type="token", content=token_text)
+            yield AIStreamEvent(type="token", content=token_text, text=token_text)
 
         yield AIStreamEvent(
             type="answer",

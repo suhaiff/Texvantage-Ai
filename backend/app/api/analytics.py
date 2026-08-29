@@ -80,3 +80,23 @@ def get_global_summary(
     """ADMIN ONLY: Portfolio-wide aggregation across all 10 companies."""
     service = BusinessQueryService(repository, current_user)
     return service.get_global_summary(period_months=period_months)
+
+@router.get("/schema")
+def get_database_schema(
+    current_user: AuthenticatedUser = Depends(get_current_user),
+    repository: IDataRepository = Depends(get_repository)
+):
+    """Reflect the database schema and return tables/columns."""
+    from sqlalchemy import inspect
+    if not hasattr(repository, "engine"):
+        return {"tables": []}
+    
+    engine = repository.engine
+    inspector = inspect(engine)
+    tables = []
+    
+    for table_name in inspector.get_table_names():
+        columns = [{"name": c["name"], "type": str(c["type"])} for c in inspector.get_columns(table_name)]
+        tables.append({"name": table_name, "columns": columns})
+        
+    return {"tables": tables}

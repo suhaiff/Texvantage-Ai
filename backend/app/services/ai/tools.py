@@ -173,6 +173,29 @@ TOOL_DEFINITIONS = [
             },
             "required": []
         }
+    },
+    {
+        "name": "get_database_schema",
+        "description": "Reflects the database to retrieve all table names, column names, and data types. Use this to understand the schema before generating SQL queries.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {},
+            "required": []
+        }
+    },
+    {
+        "name": "execute_sql_query",
+        "description": "Executes a SELECT SQL query against the database. Automatically scoped/limited for safety.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "query": {
+                    "type": "STRING",
+                    "description": "The SQL SELECT query to execute"
+                }
+            },
+            "required": ["query"]
+        }
     }
 ]
 
@@ -366,6 +389,46 @@ class ToolRegistry:
                 target_comp = arguments.get("company_id")
                 info = query_service.get_uploaded_datasets_info(target_comp)
                 return {"status": "success", "datasets_info": info}
+
+            # 10. get_database_schema
+            elif tool_name == "get_database_schema":
+                from sqlalchemy import inspect
+                if not hasattr(repository, "engine"):
+                    return {"status": "error", "message": "Database reflection is not supported on this repository instance."}
+                
+                engine = repository.engine
+                inspector = inspect(engine)
+                schema_info = {}
+                for table_name in inspector.get_table_names():
+                    columns = []
+                    for column in inspector.get_columns(table_name):
+                        columns.append({
+                            "name": column["name"],
+                            "type": str(column["type"])
+                        })
+                    schema_info[table_name] = columns
+                
+                return {"status": "success", "schema": schema_info}
+
+            # 11. execute_sql_query
+            elif tool_name == "execute_sql_query":
+                query = arguments.get("query", "").strip()
+                if not query.lower().startswith("select"):
+                    return {"status": "error", "message": "Security error: Only SELECT queries are permitted."}
+                
+                if not hasattr(repository, "SessionLocal"):
+                    return {"status": "error", "message": "Raw SQL execution is not supported on this repository instance."}
+                
+                from sqlalchemy import text
+                try:
+                    with repository.SessionLocal() as session:
+                        result_proxy = session.execute(text(query))
+                        columns = result_proxy.keys()
+                        rows = result_proxy.fetchmany(100) # strict limit to prevent massive payload
+                        results = [dict(zip(columns, row)) for row in rows]
+                        return {"status": "success", "results": results, "count": len(results)}
+                except Exception as e:
+                    return {"status": "error", "message": f"SQL Execution failed: {str(e)}"}
 
             else:
                 return {"status": "error", "message": f"Unknown tool: '{tool_name}'"}

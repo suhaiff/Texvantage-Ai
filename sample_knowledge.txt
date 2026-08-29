@@ -1,0 +1,24 @@
+TEXVANTAGE - ENTERPRISE BUSINESS KNOWLEDGE BASE
+===============================================
+Company: Vardhman Spinning & Weaving (Mill A)
+
+1. DATABASE SCHEMA CONTEXT
+---------------------------
+When queried about our financials, sales, or products, refer to the database schema tables. 
+- "monthly_financials" contains our high-level revenue and margins.
+- "product_metrics" breaks down our sales by fabric category.
+
+2. BUSINESS CONTEXT & KEY DEFINITIONS
+--------------------------------------
+- REVENUE: All revenue is recorded in Indian Rupees (INR) Lakhs. 1 Lakh = 100,000 INR.
+- COGS: Cost of Goods Sold includes raw cotton, spinning energy costs, and direct mill labor.
+- GROSS MARGIN: Calculated as (Revenue - COGS) / Revenue. Our target gross margin is 25%.
+- CATEGORIES: We specialize in "Premium Cotton", "Recycled Polyester", and "Jacquard Silk".
+
+3. STRATEGIC INITIATIVES (2026)
+--------------------------------
+- Sustainability: We aim to increase Recycled Polyester production by 40% to meet European export demands.
+- Energy Efficiency: We recently installed solar arrays at the Punjab facility, which is expected to reduce COGS by 3% in Q4.
+- Supply Chain: Raw cotton prices are currently highly volatile due to monsoon delays.
+
+Use this knowledge strictly when answering strategic questions or generating SQL queries.

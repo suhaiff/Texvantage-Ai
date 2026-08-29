@@ -7,6 +7,7 @@ from .dataset import Dataset, DatasetColumn
 from .chat import Conversation, Message
 from .artifact import Artifact, MessageArtifact
 from .audit import AuditLog
+from .knowledge import CompanyKnowledge
 
 __all__ = [
     "Base",
@@ -22,4 +23,5 @@ __all__ = [
     "Artifact",
     "MessageArtifact",
     "AuditLog",
+    "CompanyKnowledge",
 ]

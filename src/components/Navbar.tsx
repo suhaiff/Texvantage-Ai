@@ -123,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Database className="w-4 h-4 text-emerald-400" />
-              <span>My Data</span>
+              <span>Knowledge & Datasets</span>
             </button>
 
             {/* AI Advisor */}
@@ -282,7 +282,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Database className="w-3.5 h-3.5 text-emerald-400" />
-              <span>My Data</span>
+              <span>Knowledge & Datasets</span>
             </button>
 
             {/* AI Advisor */}

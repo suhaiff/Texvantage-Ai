@@ -47,6 +47,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [financials, setFinancials] = useState<any[]>([]);
   const [datasets, setDatasets] = useState<any[]>([]);
+  const [schema, setSchema] = useState<any>(null);
 
   // Interactive chart hover states
   const [hoveredSalesIdx, setHoveredSalesIdx] = useState<number | null>(null);
@@ -101,6 +102,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     setError(null);
 
     try {
+      const schemaRes = await apiClient.analytics.getSchema().catch(() => null);
+      setSchema(schemaRes);
+
       if (isGlobal) {
         const [globalRes, dsRes] = await Promise.all([
           apiClient.analytics.getGlobalSummary(6),
@@ -269,6 +273,74 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     (!summaryData || summaryData.period_months === 0);
 
   if (hasNoData) {
+    if (schema && schema.tables && schema.tables.length > 0) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+              Executive Overview
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+              {greeting}
+            </h1>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              {summaryData?.company_name || currentUser.companyName || 'Enterprise'}
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Database className="w-5 h-5 text-emerald-500" />
+                Connected to Production Database
+              </h2>
+              <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-xs font-semibold">
+                Live Schema Active
+              </span>
+            </div>
+            
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 max-w-3xl">
+              We've automatically detected the following tables in your database. 
+              Upload a <b>Business Knowledge</b> document (PDF or Text) in the Knowledge & Datasets tab to teach the AI how to interpret these tables, so you can start querying your metrics immediately.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {schema.tables.map((table: any, idx: number) => (
+                <div key={idx} className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 transition-all hover:shadow-md">
+                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2 mb-3">
+                    <Layers className="w-4 h-4 text-blue-500" />
+                    {table.name}
+                  </h3>
+                  <div className="max-h-40 overflow-y-auto no-scrollbar space-y-2 pr-2">
+                    {table.columns.map((col: any, cIdx: number) => (
+                      <div key={cIdx} className="flex justify-between text-xs">
+                        <span className="font-mono text-slate-700 dark:text-slate-300 truncate mr-2" title={col.name}>
+                          {col.name}
+                        </span>
+                        <span className="text-slate-500 dark:text-slate-500 shrink-0">
+                          {col.type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={() => (onNavigateTab ? onNavigateTab('datasets') : null)}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-semibold px-6 py-2.5 rounded-xl shadow-sm transition-all"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Teach AI via Knowledge Upload</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
         {/* Header */}

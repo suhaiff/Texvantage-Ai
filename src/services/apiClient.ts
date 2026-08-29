@@ -72,6 +72,13 @@ class ApiClient {
       } catch {
         // Fallback to generic message
       }
+
+      // Auto-logout on 401 Unauthorized
+      if (response.status === 401) {
+        this.setToken(null);
+        window.location.reload();
+      }
+
       throw new Error(errorMessage);
     }
 
@@ -193,6 +200,10 @@ class ApiClient {
 
     getGlobalSummary: async (periodMonths: number = 6) => {
       return this.request<any>(`/analytics/global-summary?period_months=${periodMonths}`);
+    },
+
+    getSchema: async () => {
+      return this.request<any>('/analytics/schema');
     }
   };
 
@@ -264,16 +275,50 @@ class ApiClient {
       mapping: Record<string, string>,
       mode: 'APPEND' | 'REPLACE' = 'APPEND'
     ) => {
-      return this.request<any>(`/datasets/${datasetId}/mapping`, {
+      const response = await this.request<any>(`/datasets/${datasetId}/mapping`, {
         method: 'POST',
         body: JSON.stringify({ mapping, mode })
       });
+      const json = await response.json();
+      return json;
     },
 
-    delete: async (datasetId: string) => {
-      return this.request<any>(`/datasets/${datasetId}`, {
-        method: 'DELETE'
+    delete: async (datasetId: string, companyId?: string) => {
+      const query = companyId ? `?company_id=${encodeURIComponent(companyId)}` : '';
+      return this.request<any>(`/datasets/${datasetId}${query}`, { method: 'DELETE' });
+    }
+  };
+
+  // ----------------------------------------------------
+  // KNOWLEDGE APIs
+  // ----------------------------------------------------
+  public knowledge = {
+    upload: async (file: File, companyId: string) => {
+      const url = `${BASE_URL}/knowledge/upload`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('company_id', companyId);
+
+      const headers: Record<string, string> = {};
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData
       });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.detail) errorMessage = errorData.detail;
+        } catch { }
+        throw new Error(errorMessage);
+      }
+      return response.json();
     }
   };
 
@@ -403,7 +448,13 @@ class ApiClient {
         } catch {
           // ignore
         }
-        callbacks.onError?.(errText);
+
+        if (response.status === 401) {
+          this.setToken(null);
+          window.location.reload();
+        }
+
+        if (callbacks.onError) callbacks.onError(errText);
         return;
       }
 
@@ -444,7 +495,7 @@ class ApiClient {
               } else if (event.type === 'tool_complete') {
                 callbacks.onToolComplete?.(event.tool, event.resultSummary, event.result);
               } else if (event.type === 'token') {
-                callbacks.onToken?.(event.text);
+                callbacks.onToken?.(event.text || event.content || '');
               } else if (event.type === 'artifact') {
                 callbacks.onArtifact?.(event.artifact);
               } else if (event.type === 'done') {
