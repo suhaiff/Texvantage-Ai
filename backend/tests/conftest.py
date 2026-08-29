@@ -1,15 +1,56 @@
+"""
+Test configuration for TexVantage AI backend.
+
+IMPORTANT: Tests MUST NOT touch the production SQL Server database.
+All test fixtures use an isolated SQLite in-memory DevRepository so the
+live texvantage SQL Server data is never modified by the test suite.
+
+The global ``repo`` singleton and the FastAPI dependency ``get_repository``
+are both overridden here so that every test—including API-level tests via
+TestClient—exclusively hits the isolated SQLite database.
+"""
+
+import os
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
+
+# ── Force test environment BEFORE importing app modules ─────────────────────
+os.environ.setdefault("APP_ENV", "test")
+
 from app.main import app
-from app.repositories.dev_repo import repo
+from app.repositories.dev_repo import DevRepository
 from app.models.user import User
 from app.models.company import Company
 from app.models.financials import MonthlyFinancials
 from app.models.product import ProductMetric
 from datetime import date
-from app.core.security import get_password_hash
-from app.core.security import create_access_token
+from app.core.security import get_password_hash, create_access_token
+from app.core.dependencies import get_repository
+
+# ---------------------------------------------------------------------------
+# Isolated SQLite test repository (never touches SQL Server)
+# ---------------------------------------------------------------------------
+# Use a fixed temp file so test processes share the same schema within a run.
+_TEST_DB_URL = "sqlite:///./texvantage_test_runtime.db"
+test_repo = DevRepository(db_url=_TEST_DB_URL)
+
+# Patch the production singleton so imports of `repo` in tests also hit SQLite
+import app.repositories.dev_repo as _dev_repo_module
+import app.repositories as _repo_pkg
+import app.api.datasets as _datasets_api
+import app.main as _main_module
+_dev_repo_module.repo = test_repo
+_repo_pkg.repo = test_repo
+_datasets_api.repo = test_repo     # datasets.py imports repo directly
+_main_module.repo = test_repo       # main.py uses repo for health check
+
+# Override the FastAPI dependency so TestClient API calls hit SQLite too
+app.dependency_overrides[get_repository] = lambda: test_repo
+
+# Keep a module-level alias for backward compat with tests that do
+# ``from app.repositories.dev_repo import repo``
+repo = test_repo
 
 @pytest.fixture(scope="function", autouse=True)
 def clean_db():

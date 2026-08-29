@@ -30,19 +30,54 @@ class BusinessQueryService:
         if not self.user.is_admin():
             if not self.user.company_id:
                 raise ForbiddenError("User has no associated company context")
-            if target_company_id and target_company_id != self.user.company_id:
+            if target_company_id:
+                try:
+                    resolved_company_id = self._resolve_company_identifier(target_company_id)
+                except NotFoundError as exc:
+                    # Do not disclose whether arbitrary company identifiers exist.
+                    raise ForbiddenError(f"Access denied: You are not authorized to query company '{target_company_id}'.") from exc
+            else:
+                resolved_company_id = None
+            if resolved_company_id and resolved_company_id != self.user.company_id:
                 raise ForbiddenError(f"Access denied: User is not authorized to query company '{target_company_id}'.")
             return self.user.company_id
+
+        resolved_company_id = self._resolve_company_identifier(target_company_id) if target_company_id else None
         
         # Admin
-        if target_company_id:
-            return target_company_id
+        if resolved_company_id:
+            return resolved_company_id
         
         # If Admin gave no specific target, default to first available company or raise
         all_comps = self.repository.get_companies()
         if not all_comps:
             raise NotFoundError("No companies registered in the system")
         return all_comps[0].id
+
+    def _resolve_company_identifier(self, identifier: str) -> str:
+        """Resolve a trusted company id, code, name, or city without raw AI SQL."""
+        normalized = identifier.strip().casefold()
+        if not normalized:
+            raise NotFoundError("A company identifier is required")
+
+        company = self.repository.get_company_by_id(identifier)
+        if company:
+            return company.id
+
+        matches = [
+            company for company in self.repository.get_companies()
+            if normalized in {
+                company.id.casefold(),
+                company.code.casefold(),
+                company.name.casefold(),
+                company.city.casefold(),
+            }
+        ]
+        if len(matches) == 1:
+            return matches[0].id
+        if not matches:
+            raise NotFoundError(f"Company '{identifier}' not found")
+        raise BadRequestError(f"Company identifier '{identifier}' is ambiguous")
 
     def get_company_summary(self, company_id: Optional[str] = None) -> Dict[str, Any]:
         """

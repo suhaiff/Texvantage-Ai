@@ -49,13 +49,22 @@ class MockAIProvider(AIProvider):
                     arguments={}
                 )]
             )
-        elif "highest revenue" in content or "peak" in content:
+        elif "pie chart" in content or "product category" in content or "category" in content or "top product" in content or "fabric" in content:
+            return AIProviderResponse(
+                content=None,
+                tool_calls=[AIToolCall(
+                    id=f"call_{uuid.uuid4().hex[:8]}",
+                    name="get_top_products",
+                    arguments={"company_id": "Bangalore" if "bangalore" in content else None, "limit": 10}
+                )]
+            )
+        elif "how is" in content or "performing" in content or "highest revenue" in content or "peak" in content:
             return AIProviderResponse(
                 content=None,
                 tool_calls=[AIToolCall(
                     id=f"call_{uuid.uuid4().hex[:8]}",
                     name="get_company_summary",
-                    arguments={}
+                    arguments={"company_id": "Bangalore" if "bangalore" in content else None}
                 )]
             )
         elif "compare" in content:
@@ -98,15 +107,6 @@ class MockAIProvider(AIProvider):
                     id=f"call_{uuid.uuid4().hex[:8]}",
                     name="get_global_summary",
                     arguments={"period_months": 6}
-                )]
-            )
-        elif "top product" in content or "fabric" in content or "category" in content:
-            return AIProviderResponse(
-                content=None,
-                tool_calls=[AIToolCall(
-                    id=f"call_{uuid.uuid4().hex[:8]}",
-                    name="get_top_products",
-                    arguments={"limit": 5}
                 )]
             )
         else:

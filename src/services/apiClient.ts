@@ -372,7 +372,7 @@ class ApiClient {
       }
 
       // Extract filename from header
-      let filename = 'TexVantage_Executive_Report.xlsx';
+      let filename = 'Jeevan_Infotech_AI_Executive_Report.xlsx';
       const disposition = response.headers.get('Content-Disposition');
       if (disposition) {
         const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/);
@@ -466,52 +466,95 @@ class ApiClient {
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
+      let finished = false;
+
+      const emitArtifacts = (event: any) => {
+        const bundled = [
+          event?.artifact,
+          ...(Array.isArray(event?.artifacts) ? event.artifacts : [])
+        ].filter(Boolean);
+        bundled.forEach((artifact: any) => callbacks.onArtifact?.(artifact));
+      };
+
+      const dispatchEvent = (rawBlock: string) => {
+        const dataLines: string[] = [];
+        rawBlock.split(/\r?\n/).forEach(line => {
+          if (line.startsWith('data:')) {
+            dataLines.push(line.replace(/^data:\s?/, ''));
+          }
+        });
+        if (dataLines.length === 0) return;
+
+        const payloadStr = dataLines.join('\n').trim();
+        if (!payloadStr) return;
+        if (payloadStr === '[DONE]') {
+          finished = true;
+          callbacks.onDone?.();
+          return;
+        }
+
+        try {
+          const event = JSON.parse(payloadStr);
+          if (event.type === 'status') {
+            callbacks.onStatus?.(event.message);
+          } else if (event.type === 'tool_start') {
+            callbacks.onToolStart?.(event.tool, event.arguments);
+          } else if (event.type === 'tool_complete') {
+            callbacks.onToolComplete?.(
+              event.tool,
+              event.resultSummary || event.message,
+              event.result || event.data
+            );
+          } else if (event.type === 'token') {
+            callbacks.onToken?.(event.text || event.content || '');
+          } else if (event.type === 'artifact') {
+            emitArtifacts(event);
+          } else if (event.type === 'answer' || event.type === 'complete') {
+            emitArtifacts(event);
+            if (event.type === 'complete') {
+              finished = true;
+              callbacks.onDone?.();
+            }
+          } else if (event.type === 'done') {
+            emitArtifacts(event);
+            finished = true;
+            callbacks.onDone?.();
+          } else if (event.type === 'error') {
+            callbacks.onError?.(event.message);
+          }
+        } catch (jsonErr) {
+          console.warn('Failed to parse SSE line:', payloadStr, jsonErr);
+        }
+      };
+
+      const consumeBuffer = (flush: boolean) => {
+        const parts = buffer.split(/\r?\n\r?\n/);
+        buffer = flush ? '' : parts.pop() || '';
+        parts.forEach(part => {
+          if (part.trim()) dispatchEvent(part);
+        });
+        if (flush && buffer.trim()) {
+          dispatchEvent(buffer);
+          buffer = '';
+        }
+      };
 
       try {
-        while (true) {
+        while (!finished) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            buffer += decoder.decode();
+            consumeBuffer(true);
+            break;
+          }
 
           buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith('data:')) continue;
-
-            const payloadStr = trimmed.replace(/^data:\s*/, '');
-            if (payloadStr === '[DONE]') {
-              callbacks.onDone?.();
-              return;
-            }
-
-            try {
-              const event = JSON.parse(payloadStr);
-              if (event.type === 'status') {
-                callbacks.onStatus?.(event.message);
-              } else if (event.type === 'tool_start') {
-                callbacks.onToolStart?.(event.tool, event.arguments);
-              } else if (event.type === 'tool_complete') {
-                callbacks.onToolComplete?.(event.tool, event.resultSummary, event.result);
-              } else if (event.type === 'token') {
-                callbacks.onToken?.(event.text || event.content || '');
-              } else if (event.type === 'artifact') {
-                callbacks.onArtifact?.(event.artifact);
-              } else if (event.type === 'done') {
-                callbacks.onDone?.();
-              } else if (event.type === 'error') {
-                callbacks.onError?.(event.message);
-              }
-            } catch (jsonErr) {
-              console.warn('Failed to parse SSE line:', payloadStr, jsonErr);
-            }
-          }
+          consumeBuffer(false);
         }
       } catch (err: any) {
         callbacks.onError?.(err?.message || 'Error while reading stream');
       } finally {
-        callbacks.onDone?.();
+        if (!finished) callbacks.onDone?.();
       }
     }
   };

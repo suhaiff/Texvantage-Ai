@@ -13,5 +13,6 @@ class AIStreamEvent(BaseModel):
     result: Optional[Dict[str, Any]] = None
     resultSummary: Optional[str] = None
     artifact: Optional[Dict[str, Any]] = None
+    artifacts: Optional[List[Dict[str, Any]]] = None
     conversation_id: Optional[str] = None
     message_id: Optional[str] = None

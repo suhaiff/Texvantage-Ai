@@ -4,6 +4,7 @@
 
 import { apiClient } from './apiClient';
 import { AIArtifact, ToolExecutionStep } from '../types';
+import { normalizeArtifact } from '../utils/normalizeArtifact';
 
 export interface AIServiceStreamCallbacks {
   onStatus?: (message: string) => void;
@@ -48,7 +49,8 @@ export class AIService {
         callbacks.onToken?.(token);
       },
       onArtifact: artifact => {
-        callbacks.onArtifact?.(artifact);
+        const normalized = normalizeArtifact(artifact);
+        if (normalized) callbacks.onArtifact?.(normalized);
       },
       onDone: () => {
         callbacks.onDone?.();

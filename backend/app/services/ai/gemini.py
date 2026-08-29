@@ -69,23 +69,55 @@ class GeminiProvider(AIProvider):
                     parts=[types.Part.from_text(text=m["content"])]
                 ))
             elif role == "model":
+                # Gemini attaches an opaque thought_signature to model parts
+                # containing function calls.  Reconstructing those parts from
+                # only name/args/id loses the signature and causes Gemini to
+                # reject the next tool turn with HTTP 400.
+                if m.get("gemini_content") is not None:
+                    contents.append(m["gemini_content"])
+                    continue
+
                 parts = []
                 if m.get("content"):
                     parts.append(types.Part.from_text(text=m["content"]))
                 if m.get("tool_calls"):
                     for tc in m["tool_calls"]:
-                        parts.append(types.Part.from_function_call(
-                            name=tc["name"],
-                            args=tc["arguments"]
+                        parts.append(types.Part(
+                            function_call=types.FunctionCall(
+                                name=tc["name"],
+                                args=tc["arguments"],
+                                id=tc.get("id")
+                            )
                         ))
                 contents.append(types.Content(role="model", parts=parts))
             elif role == "function":
-                # Function response part
+                # Keep every response from one model tool-call turn together.
+                # This preserves the required model-call -> function-response
+                # ordering for parallel Gemini function calls.
+                function_responses = m.get("responses")
+                if function_responses is not None:
+                    parts = [
+                        types.Part(
+                            function_response=types.FunctionResponse(
+                                name=response["name"],
+                                response={"result": response["content"]},
+                                id=response.get("id")
+                            )
+                        )
+                        for response in function_responses
+                    ]
+                    contents.append(types.Content(role="user", parts=parts))
+                    continue
+
+                # Backwards-compatible handling for a single function response.
                 contents.append(types.Content(
                     role="user",
-                    parts=[types.Part.from_function_response(
-                        name=m["name"],
-                        response={"result": m["content"]}
+                    parts=[types.Part(
+                        function_response=types.FunctionResponse(
+                            name=m["name"],
+                            response={"result": m["content"]},
+                            id=m.get("id")
+                        )
                     )]
                 ))
 
@@ -108,6 +140,7 @@ class GeminiProvider(AIProvider):
             if response.function_calls:
                 for fc in response.function_calls:
                     tool_calls.append(AIToolCall(
+                        id=fc.id or str(uuid.uuid4()),
                         name=fc.name,
                         arguments=dict(fc.args) if fc.args else {}
                     ))
@@ -116,7 +149,9 @@ class GeminiProvider(AIProvider):
             return AIProviderResponse(
                 content=content,
                 tool_calls=tool_calls,
-                raw_response=response
+                # Do not decompose this content.  It includes thought
+                # signatures that Gemini requires on the next request.
+                model_content=(response.candidates[0].content if response.candidates else None)
             )
 
         except Exception as e:

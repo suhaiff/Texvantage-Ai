@@ -107,16 +107,16 @@ CREATE TABLE product_metrics (
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
             <Shield className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+            <h1 className="text-xl font-bold text-tv-text-primary">
               Data Governance & Multi-Tenant Isolation
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-tv-text-secondary">
               Server-side TenantGuard verification, live JWT claims inspection, and ANSI SQL schema
             </p>
           </div>
@@ -127,8 +127,8 @@ CREATE TABLE product_metrics (
         {/* Token Claims & Boundary Simulator */}
         <div className="space-y-6">
           {/* JWT Token Claims Card */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="bg-tv-surface border border-tv-border rounded-2xl p-5 shadow-sm space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-tv-text-muted">
               <KeyRound className="w-4 h-4 text-blue-500" />
               <span>Active Backend JWT Identity & Tenant Claims</span>
             </div>
@@ -155,7 +155,7 @@ CREATE TABLE product_metrics (
                 ,
               </div>
               <div>
-                <span className="text-blue-400">"job_title"</span>: <span className="text-slate-400">"{currentUser.jobTitle}"</span>,
+                <span className="text-blue-400">"job_title"</span>: <span className="text-tv-text-muted">"{currentUser.jobTitle}"</span>,
               </div>
               <div>
                 <span className="text-blue-400">"isolation_enforcement"</span>:{' '}
@@ -167,12 +167,12 @@ CREATE TABLE product_metrics (
           </div>
 
           {/* Interactive Boundary Test Simulator (Hitting real FastAPI endpoint) */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="bg-tv-surface border border-tv-border rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-tv-text-muted">
               <Lock className="w-4 h-4 text-amber-500" />
               <span>Live FastAPI Boundary Enforcement Test</span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-tv-text-secondary">
               Select a target enterprise to trigger a live backend analytical query under your currently authenticated Bearer token:
             </p>
 
@@ -180,7 +180,7 @@ CREATE TABLE product_metrics (
               <select
                 value={testTargetCompId}
                 onChange={e => setTestTargetCompId(e.target.value)}
-                className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none"
+                className="flex-1 bg-tv-base border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-3 py-2 text-tv-text-primary focus:outline-none"
               >
                 <option value="comp_textile_a">Textile A (Apex Spinners) - [TEX-A]</option>
                 <option value="comp_textile_b">Textile B (Boutique Silks) - [TEX-B]</option>
@@ -191,7 +191,7 @@ CREATE TABLE product_metrics (
               <button
                 onClick={runSecurityTest}
                 disabled={testing}
-                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-tv-accent-hover disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
               >
                 {testing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                 <span>{testing ? 'Testing...' : 'Execute Request'}</span>
@@ -223,8 +223,8 @@ CREATE TABLE product_metrics (
         {/* Database Schema & Formularies */}
         <div className="space-y-6">
           {/* ANSI SQL Schema */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="bg-tv-surface border border-tv-border rounded-2xl p-5 shadow-sm space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-tv-text-muted">
               <Database className="w-4 h-4 text-purple-500" />
               <span>FastAPI ANSI SQL Relational Schema</span>
             </div>
@@ -234,21 +234,21 @@ CREATE TABLE product_metrics (
           </div>
 
           {/* Verified Calculation Formularies */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="bg-tv-surface border border-tv-border rounded-2xl p-5 shadow-sm space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-tv-text-muted">
               <FileCheck className="w-4 h-4 text-emerald-500" />
               <span>Deterministic Server Calculation Formularies</span>
             </div>
-            <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300">
-              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 font-mono">
+            <div className="space-y-2 text-xs text-tv-text-secondary">
+              <div className="p-2.5 rounded-lg bg-tv-base/60 font-mono">
                 <span className="text-blue-600 dark:text-blue-400 font-bold">Gross Margin %:</span>{' '}
                 <code>(Gross_Profit_Lakh / Revenue_Lakh) * 100</code>
               </div>
-              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 font-mono">
+              <div className="p-2.5 rounded-lg bg-tv-base/60 font-mono">
                 <span className="text-blue-600 dark:text-blue-400 font-bold">MoM Growth %:</span>{' '}
                 <code>((Revenue_Current - Revenue_Previous) / Revenue_Previous) * 100</code>
               </div>
-              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 font-mono">
+              <div className="p-2.5 rounded-lg bg-tv-base/60 font-mono">
                 <span className="text-blue-600 dark:text-blue-400 font-bold">Average Realization:</span>{' '}
                 <code>(Revenue_Lakh * 100,000) / Units_Sold</code>
               </div>

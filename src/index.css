@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@theme {
+  --color-tv-base: #0B0D0F;
+  --color-tv-sidebar: #101214;
+  --color-tv-surface: #15181B;
+  --color-tv-border: #272B30;
+  --color-tv-text-primary: #F2F3F5;
+  --color-tv-text-secondary: #949AA3;
+  --color-tv-text-muted: #636A73;
+  --color-tv-accent: #D6FF4B;
+  --color-tv-accent-hover: #C5F525;
+}
+
 @layer utilities {
   /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
