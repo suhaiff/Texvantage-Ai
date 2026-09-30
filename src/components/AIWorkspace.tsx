@@ -11,7 +11,9 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
-  Mic
+  Mic,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { User, ChatMessage, ToolExecutionStep, AIArtifact } from '../types';
 import { AIService } from '../services/aiService';
@@ -62,6 +64,16 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
     } else {
       recognitionRef.current?.start();
     }
+  };
+
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const speakText = (text: string) => {
+    if (!voiceEnabled || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/[*#_`]/g, '').replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.05;
+    window.speechSynthesis.speak(utterance);
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -151,6 +163,7 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
           setMessages(prev =>
             prev.map(m => (m.id === assistantMsgId ? { ...m, isStreaming: false } : m))
           );
+          speakText(accumulatedText);
         },
         onError: errMsg => {
           accumulatedText += `\n\n⚠️ **Error**: ${errMsg}`;
@@ -302,13 +315,25 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
               <span className="text-[13px] font-semibold text-tv-text-primary">Jeevan Infotech AI</span>
               <span className="text-[11px] text-tv-text-muted">Enterprise BI</span>
             </div>
-            <button
-              onClick={() => setMessages([])}
-              className="text-[12px] text-tv-text-secondary hover:text-tv-text-primary flex items-center gap-1.5 cursor-pointer"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>New chat</span>
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  setVoiceEnabled(!voiceEnabled);
+                  if (voiceEnabled) window.speechSynthesis?.cancel();
+                }}
+                className={`text-[12px] flex items-center gap-1.5 cursor-pointer transition-colors ${voiceEnabled ? 'text-tv-accent' : 'text-tv-text-secondary hover:text-tv-text-primary'}`}
+              >
+                {voiceEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                <span>Voice</span>
+              </button>
+              <button
+                onClick={() => setMessages([])}
+                className="text-[12px] text-tv-text-secondary hover:text-tv-text-primary flex items-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>New chat</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto pt-16 pb-32 px-4 sm:px-6 md:px-8 custom-scrollbar">
