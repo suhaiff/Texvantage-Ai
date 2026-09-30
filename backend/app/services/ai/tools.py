@@ -174,6 +174,52 @@ TOOL_DEFINITIONS = [
             "required": []
         }
     },
+    {
+        "name": "get_database_schema",
+        "description": "Reflects the database to retrieve all table names, column names, and data types. Use this to understand the schema before generating SQL queries.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {},
+            "required": []
+        }
+    },
+    {
+        "name": "execute_sql_query",
+        "description": "Executes a raw SQL query on the database. NEVER execute DELETE or UPDATE statements.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "query": {
+                    "type": "STRING",
+                    "description": "The SELECT query to execute."
+                }
+            },
+            "required": ["query"]
+        }
+    },
+    {
+        "name": "render_custom_chart",
+        "description": "Renders a custom React chart component in the UI. Pass the SQL query results directly into data_points.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "title": {"type": "STRING"},
+                "chart_type": {"type": "STRING", "description": "bar, line, area, or pie"},
+                "x_key": {"type": "STRING", "description": "The exact key in data_points used for the x-axis"},
+                "series": {
+                    "type": "ARRAY",
+                    "items": {"type": "STRING"},
+                    "description": "Array of keys to be plotted on the y-axis"
+                },
+                "data_points": {
+                    "type": "ARRAY",
+                    "items": {"type": "OBJECT"},
+                    "description": "The raw JSON array of records returned by execute_sql_query"
+                }
+            },
+            "required": ["title", "chart_type", "x_key", "series", "data_points"]
+        }
+    }
 ]
 
 # 2. TOOL EXECUTION ENGINE (WITH STRICT CONTEXT VALIDATION)
@@ -366,6 +412,33 @@ class ToolRegistry:
                 target_comp = arguments.get("company_id")
                 info = query_service.get_uploaded_datasets_info(target_comp)
                 return {"status": "success", "datasets_info": info}
+
+            # 10. get_database_schema
+            elif tool_name == "get_database_schema":
+                from sqlalchemy import inspect
+                inspector = inspect(repository.engine)
+                schema = {}
+                for table in inspector.get_table_names():
+                    columns = []
+                    for col in inspector.get_columns(table):
+                        columns.append(f"{col['name']} ({col['type']})")
+                    schema[table] = columns
+                return {"status": "success", "schema": schema}
+                
+            # 11. execute_sql_query
+            elif tool_name == "execute_sql_query":
+                from sqlalchemy import text
+                with repository.SessionLocal() as session:
+                    result = session.execute(text(arguments["query"]))
+                    rows = [dict(row._mapping) for row in result]
+                return {"status": "success", "results": rows}
+                
+            # 12. render_custom_chart
+            elif tool_name == "render_custom_chart":
+                return {
+                    "status": "success",
+                    "chart_data": arguments
+                }
 
             else:
                 return {"status": "error", "message": f"Unknown tool: '{tool_name}'"}
