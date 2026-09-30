@@ -36,6 +36,7 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const handleSendRef = useRef<any>(null);
 
   useEffect(() => {
     // @ts-ignore
@@ -49,7 +50,16 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
       recognition.onstart = () => setIsRecording(true);
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
-        setInputPrompt(prev => (prev ? prev + ' ' + transcript : transcript));
+        setInputPrompt(prev => {
+          const combined = prev ? prev + ' ' + transcript : transcript;
+          // Auto-send after a tiny delay to let UI reflect
+          setTimeout(() => {
+            if (handleSendRef.current) {
+              handleSendRef.current(combined);
+            }
+          }, 100);
+          return combined;
+        });
       };
       recognition.onerror = () => setIsRecording(false);
       recognition.onend = () => setIsRecording(false);
@@ -93,6 +103,10 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, liveSteps, loading, statusMessage]);
+
+  useEffect(() => {
+    handleSendRef.current = handleSend;
+  });
 
   const handleSend = async (customPrompt?: string) => {
     const textToSend = (customPrompt || inputPrompt).trim();
