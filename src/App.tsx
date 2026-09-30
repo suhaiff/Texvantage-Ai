@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from './types';
-import { Navbar } from './components/Navbar';
+import { Sidebar } from './components/Sidebar';
 import { AIWorkspace } from './components/AIWorkspace';
 import { DashboardView } from './components/DashboardView';
 import { LedgerView } from './components/LedgerView';
@@ -14,7 +14,7 @@ import { RefreshCw } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<'ai' | 'dashboard' | 'ledger' | 'datasets' | 'benchmark' | 'governance'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'ai' | 'dashboard' | 'ledger' | 'datasets' | 'benchmark' | 'governance'>('ai');
   const [initialAIQuery, setInitialAIQuery] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
 
@@ -47,14 +47,14 @@ export default function App() {
 
   const handleAuthSuccess = (user: User) => {
     setCurrentUser(user);
-    setActiveTab(user.role === 'ADMIN' ? 'benchmark' : 'dashboard');
+    setActiveTab('ai');
   };
 
   if (initializing) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4 text-white">
-        <RefreshCw className="w-8 h-8 text-blue-500 animate-spin" />
-        <p className="text-sm font-mono text-slate-400">Loading...</p>
+      <div className="min-h-screen bg-tv-base flex flex-col items-center justify-center space-y-4 text-white">
+        <RefreshCw className="w-8 h-8 text-tv-accent animate-spin" />
+        <p className="text-sm font-mono text-tv-text-muted">Loading...</p>
       </div>
     );
   }
@@ -67,9 +67,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-blue-500 selection:text-white">
-      {/* Top Navigation & Persona Switcher */}
-      <Navbar
+    <div className="min-h-screen bg-tv-base text-tv-text-primary flex flex-row font-sans selection:bg-tv-accent selection:text-slate-900">
+      {/* Sidebar Navigation */}
+      <Sidebar
         currentUser={currentUser}
         onSelectUser={user => {
           if (!user) {
@@ -83,8 +83,8 @@ export default function App() {
       />
 
       {/* Main Tab Views */}
-      <main className="flex-1">
-        {activeTab === 'ai' && <AIWorkspace key={currentUser.id} currentUser={currentUser} />}
+      <main className="flex-1 overflow-y-auto h-screen relative">
+        {activeTab === 'ai' && <AIWorkspace key={currentUser.id} currentUser={currentUser} initialQuery={initialAIQuery} />}
 
         {activeTab === 'dashboard' && (
           <DashboardView

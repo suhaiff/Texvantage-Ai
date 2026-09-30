@@ -146,7 +146,7 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ currentUser }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
@@ -154,7 +154,7 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ currentUser }) => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h1 className="text-xl font-bold text-tv-text-primary">
                   Audited Financial Statements Ledger
                 </h1>
                 <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -162,7 +162,7 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ currentUser }) => {
                   FastAPI Protected
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-tv-text-secondary">
                 12-Month Audited General Ledger Statements Grounded in Relational Database
               </p>
             </div>
@@ -177,7 +177,7 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ currentUser }) => {
                 <select
                   value={selectedCompId}
                   onChange={e => setSelectedCompId(e.target.value)}
-                  className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-3 py-2 text-slate-900 dark:text-white focus:outline-none"
+                  className="bg-tv-base border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-3 py-2 text-tv-text-primary focus:outline-none"
                 >
                   {companies.map(c => (
                     <option key={c.id} value={c.id}>
@@ -191,7 +191,7 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ currentUser }) => {
             <button
               onClick={handleExportCSV}
               disabled={loading || filtered.length === 0}
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-300" /> : <Download className="w-4 h-4" />}
               <span>{copied ? 'Exported!' : 'Export CSV'}</span>
@@ -202,46 +202,46 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ currentUser }) => {
 
       {/* Summary Chips */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-3.5 shadow-sm">
           <div className="text-[11px] text-slate-500 font-medium">12-Month Revenue</div>
-          <div className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+          <div className="text-base font-bold text-tv-text-primary mt-0.5">
             ₹{totalRev.toFixed(2)} Lakhs
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-3.5 shadow-sm">
           <div className="text-[11px] text-slate-500 font-medium">12-Month Gross Profit</div>
           <div className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
             {totalProfit != null ? `₹${totalProfit.toFixed(2)} Lakhs` : 'Not available'}
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-3.5 shadow-sm">
           <div className="text-[11px] text-slate-500 font-medium">Weighted Profit Margin</div>
           <div className="text-base font-bold text-blue-600 dark:text-blue-400 mt-0.5">
             {avgMargin != null ? `${avgMargin.toFixed(2)}%` : 'Not available'}
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 shadow-sm">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-3.5 shadow-sm">
           <div className="text-[11px] text-slate-500 font-medium">Cumulative Units Sold</div>
-          <div className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+          <div className="text-base font-bold text-tv-text-primary mt-0.5">
             {totalUnits != null ? `${totalUnits.toLocaleString()} ${records[0]?.unitOfMeasure || ''}` : 'Not available'}
           </div>
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-3">
-        <Search className="w-4 h-4 text-slate-400" />
+      <div className="bg-tv-surface border border-tv-border rounded-2xl p-4 shadow-sm flex items-center gap-3">
+        <Search className="w-4 h-4 text-tv-text-muted" />
         <input
           type="text"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           placeholder="Filter ledger by month or year (e.g., Oct 2025)..."
-          className="w-full bg-transparent border-0 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+          className="w-full bg-transparent border-0 text-xs sm:text-sm text-tv-text-primary placeholder-slate-400 focus:outline-none"
         />
       </div>
 
       {/* Table Container */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl shadow-sm overflow-hidden">
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center space-y-3">
             <RefreshCw className="w-6 h-6 text-blue-600 animate-spin" />
@@ -255,7 +255,7 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ currentUser }) => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+              <thead className="bg-tv-base/60 text-tv-text-secondary uppercase font-semibold text-[10px] tracking-wider border-b border-tv-border">
                 <tr>
                   <th
                     onClick={() => toggleSort('periodDate')}
@@ -328,10 +328,10 @@ export const LedgerView: React.FC<LedgerViewProps> = ({ currentUser }) => {
                     key={r.id || idx}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors font-mono"
                   >
-                    <td className="py-3 px-4 font-sans font-medium text-slate-900 dark:text-white">
+                    <td className="py-3 px-4 font-sans font-medium text-tv-text-primary">
                       {r.monthName}
                     </td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-white">
+                    <td className="py-3 px-4 text-right font-bold text-tv-text-primary">
                       {r.revenueLakh != null ? `₹${r.revenueLakh.toFixed(2)}` : '—'}
                     </td>
                     <td className="py-3 px-4 text-right text-slate-500">

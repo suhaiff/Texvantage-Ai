@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
@@ -60,11 +60,20 @@ app.include_router(knowledge_router, prefix=settings.API_PREFIX)
 @app.get("/api/health", tags=["Health"])
 def health_check():
     """System Health Check & Tenant Engine Status."""
+    try:
+        repo.check_connection()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database connection is unavailable. Check DATABASE_URL and the SQL Server service.",
+        ) from exc
+
     return {
         "status": "healthy",
         "app_name": settings.APP_NAME,
         "environment": settings.APP_ENV,
         "database": "connected",
+        "database_dialect": repo.engine.dialect.name,
         "tenant_isolation": "enforced_server_side",
         "companies_seeded": len(repo.get_companies())
     }

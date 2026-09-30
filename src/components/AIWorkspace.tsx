@@ -3,33 +3,27 @@ import {
   Send,
   Sparkles,
   Bot,
-  User as UserIcon,
   CheckCircle2,
   AlertCircle,
-  Clock,
-  Terminal,
-  ChevronDown,
-  ChevronUp,
   RefreshCw,
   Zap,
-  Lock,
-  Layers,
+  Plus,
   ArrowRight,
-  Mic,
-  MicOff,
-  Volume2,
-  VolumeX
+  ChevronDown,
+  ChevronUp,
+  Mic
 } from 'lucide-react';
 import { User, ChatMessage, ToolExecutionStep, AIArtifact } from '../types';
 import { AIService } from '../services/aiService';
-import { getTenantDisplayName } from './Navbar';
+import { getTenantDisplayName } from './Sidebar';
 import { KPICard, InteractiveChart, TableArtifactView, FileArtifactDownload } from './ArtifactComponents';
 
 interface AIWorkspaceProps {
   currentUser: User;
+  initialQuery?: string | null;
 }
 
-export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
+export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQuery }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputPrompt, setInputPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,93 +31,52 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
   const [liveSteps, setLiveSteps] = useState<ToolExecutionStep[]>([]);
   const [expandedSteps, setExpandedSteps] = useState<Record<string, boolean>>({});
 
-  // Voice features
-  const [isListening, setIsListening] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    // @ts-ignore
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      setIsSpeechSupported(true);
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onstart = () => setIsRecording(true);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputPrompt(prev => (prev ? prev + ' ' + transcript : transcript));
+      };
+      recognition.onerror = () => setIsRecording(false);
+      recognition.onend = () => setIsRecording(false);
+      
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+    } else {
+      recognitionRef.current?.start();
+    }
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUser.role === 'OWNER';
   const tenantLabel = getTenantDisplayName(currentUser);
+  
+  // Track if we have already processed the initial query
+  const [processedInitial, setProcessedInitial] = useState(false);
 
-  // Initialize Speech Recognition
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = true;
-        
-        recognition.onresult = (event: any) => {
-          let currentTranscript = '';
-          for (let i = 0; i < event.results.length; i++) {
-            currentTranscript += event.results[i][0].transcript;
-          }
-          setInputPrompt(currentTranscript);
-        };
-
-        recognition.onerror = (event: any) => {
-          console.error('Speech recognition error', event.error);
-          setIsListening(false);
-        };
-
-        recognition.onend = () => {
-          setIsListening(false);
-        };
-
-        recognitionRef.current = recognition;
-      }
+    if (initialQuery && !processedInitial && messages.length === 0) {
+      setProcessedInitial(true);
+      handleSend(initialQuery);
     }
-  }, []);
-
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in this browser.');
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      setInputPrompt(''); // clear previous input before listening
-      recognitionRef.current.start();
-      setIsListening(true);
-    }
-  };
-
-  const speakText = (text: string) => {
-    if (!voiceEnabled || !window.speechSynthesis) return;
-    
-    // Stop any ongoing speech
-    window.speechSynthesis.cancel();
-    
-    // Strip markdown for natural speech
-    const cleanText = text.replace(/[*#_`]/g, '').replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-    
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 1.05;
-    window.speechSynthesis.speak(utterance);
-  };
-
-  // Initialize greeting on persona change
-  useEffect(() => {
-    const currentTenantLabel = getTenantDisplayName(currentUser);
-    const initialGreeting: ChatMessage = {
-      id: `init_${Date.now()}`,
-      senderRole: 'assistant',
-      content: isOwner
-        ? `Hello **${currentUser.name}**. I am your executive business intelligence advisor for **${currentTenantLabel}**.\n\nI am connected to the real-time FastAPI analytics engine with row-level security. Ask me about monthly sales, margin trajectories, product economics, or request executive briefing reports.`
-        : `Welcome **Alexander Sterling** (Central Portfolio & Operations Director).\n\nI am connected to the central FastAPI orchestrator with access across all **10 Textile Enterprises**. Ask me to benchmark revenue, compare operating margins across mills, or generate consolidated portfolio briefs.`,
-      createdAt: new Date().toLocaleTimeString(),
-      toolSteps: []
-    };
-
-    setMessages([initialGreeting]);
-    setLiveSteps([]);
-    setStatusMessage(null);
-  }, [currentUser.id, currentUser.companyId, currentUser.companyName]);
+  }, [initialQuery, processedInitial, messages.length]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -136,7 +89,7 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
     setInputPrompt('');
     setLoading(true);
     setLiveSteps([]);
-    setStatusMessage('Connecting to FastAPI AI Orchestrator...');
+    setStatusMessage('Analyzing intent...');
 
     const userMsg: ChatMessage = {
       id: `msg_user_${Date.now()}`,
@@ -168,7 +121,6 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
           setStatusMessage(msg);
         },
         onToolStep: step => {
-          // Update or add step
           const existingIdx = collectedSteps.findIndex(s => s.tool === step.tool);
           if (existingIdx >= 0) {
             collectedSteps[existingIdx] = step;
@@ -187,6 +139,7 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
           );
         },
         onArtifact: artifact => {
+          if (collectedArtifacts.some(existing => existing.id === artifact.id)) return;
           collectedArtifacts.push(artifact);
           setMessages(prev =>
             prev.map(m =>
@@ -198,7 +151,6 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
           setMessages(prev =>
             prev.map(m => (m.id === assistantMsgId ? { ...m, isStreaming: false } : m))
           );
-          speakText(accumulatedText);
         },
         onError: errMsg => {
           accumulatedText += `\n\n⚠️ **Error**: ${errMsg}`;
@@ -215,7 +167,7 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
           m.id === assistantMsgId
             ? {
                 ...m,
-                content: `⚠️ **Connection Error**: ${err?.message || 'Failed to stream response from backend server.'}`,
+                content: `⚠️ **Error**: ${err?.message || 'Failed to stream response.'}`,
                 isStreaming: false
               }
             : m
@@ -238,300 +190,318 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
   const getSuggestions = () => {
     if (currentUser.role === 'ADMIN') {
       return [
-        'Generate 10-enterprise consolidated executive Excel report',
-        'Compare all 10 textile companies by revenue and margin',
-        'What datasets have been uploaded across the portfolio?',
-        'Which mill had the highest margin in Q4?',
-        'Show 12-month summary for Vardhman Spinning'
+        'Compare portfolio revenue',
+        'Find the highest Q4 margin',
+        'Analyze Vardhman Spinning',
+        'Generate executive report'
       ];
     }
-
     return [
-      `Generate executive Excel report for ${tenantLabel}`,
-      `What datasets have I uploaded and what period is covered?`,
+      `Generate executive report for ${tenantLabel}`,
+      `What datasets have I uploaded?`,
       `What were our total sales and margin this month?`,
-      `What was our month-over-month revenue growth?`,
       `Break down our product categories and margins`
     ];
   };
 
+  const isEmpty = messages.length === 0;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] max-w-6xl mx-auto px-4 py-4">
-      {/* Workspace Header Subtext */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mb-4 shadow-sm flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                Executive AI Intelligence Engine
-              </h2>
-              <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                FastAPI SSE Connected
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {isOwner
-                ? `Authorized Tenant: ${tenantLabel} (Row-Level Security Active)`
-                : 'Central Portfolio Mode (Access across all 10 Textile Enterprises)'}
+    <div className="flex flex-col h-full w-full">
+      {isEmpty ? (
+        /* HERO LANDING PAGE */
+        <div className="flex-1 flex flex-col items-center justify-center max-w-4xl mx-auto w-full px-6 animate-in fade-in duration-500 pb-16">
+          <div className="text-center mb-10 w-full">
+            <div className="text-tv-text-muted mb-2 font-medium">Good morning, Admin.</div>
+            <h1 className="text-[42px] sm:text-[52px] font-medium tracking-tight text-tv-text-primary mb-2">
+              HOW SHOULD I HELP YOU TODAY?
+            </h1>
+            <p className="text-[18px] text-tv-text-secondary">
+              Your portfolio intelligence is ready when you are.
             </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              setVoiceEnabled(!voiceEnabled);
-              if (voiceEnabled) window.speechSynthesis?.cancel();
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              handleSend();
             }}
-            className={`text-xs p-2 rounded-lg transition-colors flex items-center gap-1.5 ${voiceEnabled ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'text-slate-400 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-800'}`}
-            title="Toggle Voice Feedback"
+            className="w-full relative bg-tv-surface border border-tv-border rounded-[16px] p-2 shadow-2xl focus-within:ring-1 focus-within:ring-tv-accent transition-all mb-10"
           >
-            {voiceEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">Voice</span>
-          </button>
-          <button
-            onClick={() => setMessages([])}
-            className="text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:text-slate-200 p-2 rounded-lg dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
-            title="Clear Chat History"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Clear Chat</span>
-          </button>
-        </div>
-      </div>
+            <div className="flex items-center gap-2">
+              <textarea
+                rows={1}
+                value={inputPrompt}
+                onChange={e => setInputPrompt(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="Ask about your portfolio..."
+                disabled={loading}
+                className="flex-1 bg-transparent border-0 resize-none text-[16px] text-tv-text-primary placeholder-tv-text-muted focus:outline-none px-4 py-3 max-h-32"
+              />
 
-      {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-        {messages.map(msg => {
-          const isUser = msg.senderRole === 'user';
-          const isExpanded = !!expandedSteps[msg.id];
-          const hasSteps = msg.toolSteps && msg.toolSteps.length > 0;
-          const hasArtifacts = msg.artifacts && msg.artifacts.length > 0;
-
-          return (
-            <div
-              key={msg.id}
-              className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in duration-150`}
-            >
-              {!isUser && (
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-1">
-                  <Bot className="w-4 h-4" />
-                </div>
+              {isSpeechSupported && (
+                <button
+                  type="button"
+                  onClick={toggleRecording}
+                  disabled={loading}
+                  className={`p-3 rounded-[12px] transition-colors shrink-0 cursor-pointer ${
+                    isRecording 
+                      ? 'bg-rose-500 text-white animate-pulse' 
+                      : 'bg-transparent text-tv-text-muted hover:text-tv-text-primary hover:bg-tv-surface'
+                  }`}
+                  title="Use voice input"
+                >
+                  <Mic className="w-5 h-5" />
+                </button>
               )}
 
-              <div
-                className={`max-w-3xl rounded-2xl p-4 shadow-sm space-y-3 ${
-                  isUser
-                    ? 'bg-blue-600 text-white rounded-br-none'
-                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none'
-                }`}
+              <button
+                type="submit"
+                disabled={!inputPrompt.trim() || loading}
+                className="bg-tv-accent hover:bg-tv-accent-hover disabled:bg-tv-border disabled:text-tv-text-muted text-slate-900 p-3 rounded-[12px] transition-colors shadow-sm shrink-0 font-bold cursor-pointer"
               >
-                {/* Tool Execution Step Trace (Collapsible) */}
-                {!isUser && hasSteps && (
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950/60 mb-3">
-                    <button
-                      onClick={() => toggleStepExpand(msg.id)}
-                      className="w-full px-3 py-2 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Terminal className="w-3.5 h-3.5 text-blue-500" />
-                        <span>
-                          FastAPI Engine Traces ({msg.toolSteps?.length} tool
-                          {msg.toolSteps && msg.toolSteps.length > 1 ? 's' : ''} executed)
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
-                        <span>{isExpanded ? 'Hide' : 'Inspect'}</span>
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </div>
-                    </button>
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-5 px-4 pb-2 text-[13px] text-tv-text-muted font-mono">
+              <span className="flex items-center gap-1.5 cursor-pointer hover:text-tv-text-primary transition-colors"><Plus className="w-3.5 h-3.5" /> Add data</span>
+              <span className="flex items-center gap-1.5 cursor-pointer hover:text-tv-text-primary transition-colors">/ Commands</span>
+              <span className="flex items-center gap-1.5 cursor-pointer hover:text-tv-text-primary transition-colors">@ Companies</span>
+            </div>
+          </form>
 
-                    {isExpanded && (
-                      <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-2 text-xs font-mono">
-                        {msg.toolSteps?.map((step, sIdx) => (
-                          <div
-                            key={sIdx}
-                            className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                <span className="font-bold text-blue-600 dark:text-blue-400">{step.tool}()</span>
+          <div className="w-full text-left max-w-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <h3 className="text-[14px] font-medium text-tv-text-muted uppercase tracking-wider">Try asking</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {getSuggestions().map((sug, sIdx) => (
+                <button
+                  key={sIdx}
+                  type="button"
+                  onClick={() => handleSend(sug)}
+                  disabled={loading}
+                  className="text-[14px] bg-transparent hover:bg-tv-surface border border-tv-border hover:border-tv-text-secondary text-tv-text-secondary hover:text-tv-text-primary px-4 py-3 rounded-[8px] transition-colors text-left flex items-start gap-2 cursor-pointer"
+                >
+                  <span className="flex-1 leading-snug">{sug}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* CONVERSATION VIEW */
+        <div className="flex flex-col h-full relative">
+          <div className="absolute top-0 right-0 p-4 z-10 bg-tv-base/90 backdrop-blur-sm border-b border-tv-border w-full flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-semibold text-tv-text-primary">Jeevan Infotech AI</span>
+              <span className="text-[11px] text-tv-text-muted">Enterprise BI</span>
+            </div>
+            <button
+              onClick={() => setMessages([])}
+              className="text-[12px] text-tv-text-secondary hover:text-tv-text-primary flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>New chat</span>
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto pt-16 pb-32 px-4 sm:px-6 md:px-8 custom-scrollbar">
+            <div className="max-w-4xl mx-auto space-y-8">
+              {messages.map(msg => {
+                const isUser = msg.senderRole === 'user';
+                const isExpanded = !!expandedSteps[msg.id];
+                const hasSteps = msg.toolSteps && msg.toolSteps.length > 0;
+                const hasArtifacts = msg.artifacts && msg.artifacts.length > 0;
+
+                return (
+                  <div key={msg.id} className="animate-in fade-in duration-300">
+                    {isUser ? (
+                      <div className="flex justify-end">
+                        <div className="max-w-[85%] sm:max-w-[70%]">
+                          <div className="text-[11px] font-bold text-tv-text-muted mb-1 uppercase tracking-wider text-right">You</div>
+                          <div className="bg-tv-surface border border-tv-border text-tv-text-primary text-[15px] px-5 py-3.5 rounded-[16px] rounded-tr-[4px] leading-relaxed whitespace-pre-wrap">
+                            {msg.content}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-start">
+                        <div className="max-w-full w-full">
+                          <div className="text-[11px] font-bold text-tv-text-muted mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                            <Bot className="w-3.5 h-3.5 text-tv-accent" />
+                            <span>Jeevan Infotech AI</span>
+                          </div>
+
+                          <div className="space-y-4 text-tv-text-primary">
+                            {/* Hidden/Collapsible Traces */}
+                            {hasSteps && (
+                              <div className="border border-tv-border rounded-[8px] bg-tv-base overflow-hidden">
+                                <button
+                                  onClick={() => toggleStepExpand(msg.id)}
+                                  className="w-full flex items-center justify-between px-4 py-2.5 bg-tv-surface hover:bg-tv-surface/80 transition-colors cursor-pointer text-[12px] text-tv-text-secondary"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                    <span>Verified against portfolio records ({msg.toolSteps?.length} source{msg.toolSteps?.length !== 1 ? 's' : ''})</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span>Details</span>
+                                    {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                  </div>
+                                </button>
+                                
+                                {isExpanded && (
+                                  <div className="p-4 border-t border-tv-border bg-tv-base space-y-2">
+                                    <div className="text-[11px] text-tv-text-muted font-mono mb-2">Execution details</div>
+                                    {msg.toolSteps?.map((step, idx) => (
+                                      <div key={idx} className="flex flex-col gap-1 text-[12px] font-mono bg-tv-surface p-2 rounded">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-tv-accent">{step.tool}()</span>
+                                          <span className="text-tv-text-muted">{step.timestamp}</span>
+                                        </div>
+                                        {step.resultSummary && (
+                                          <div className="text-tv-text-secondary pl-2 border-l border-tv-border mt-1">
+                                            {step.resultSummary}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                              <span className="text-[10px] text-slate-400">{step.timestamp}</span>
-                            </div>
-                            {step.resultSummary && (
-                              <p className="text-[11px] text-slate-600 dark:text-slate-400 pl-4 border-l-2 border-slate-300 dark:border-slate-700">
-                                {step.resultSummary}
-                              </p>
+                            )}
+
+                            {/* Message Text */}
+                            {msg.content && (
+                              <div className="prose prose-invert max-w-none text-[15px] leading-relaxed">
+                                {msg.content}
+                              </div>
+                            )}
+                            {!msg.content && msg.isStreaming && (
+                              <div className="flex items-center gap-2 text-tv-text-secondary text-[15px]">
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                Analyzing...
+                              </div>
+                            )}
+
+                            {/* Artifacts (Inline) */}
+                            {hasArtifacts && (
+                              <div className="pt-2 space-y-6">
+                                {(() => {
+                                  const arts = msg.artifacts || [];
+                                  const kpis = arts.filter(a => a.type === 'kpi');
+                                  const rest = arts.filter(a => a.type !== 'kpi');
+                                  return (
+                                    <>
+                                      {kpis.length > 0 && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                          {kpis.map(art => (
+                                            <KPICard key={art.id} title={art.title} data={art.data as any} />
+                                          ))}
+                                        </div>
+                                      )}
+                                      {rest.map(art => {
+                                        if (art.type === 'chart') {
+                                          return <div key={art.id} className="border border-tv-border rounded-[12px] bg-tv-surface p-4"><InteractiveChart title={art.title} data={art.data as any} /></div>;
+                                        }
+                                        if (art.type === 'table') {
+                                          return <TableArtifactView key={art.id} title={art.title} data={art.data as any} />;
+                                        }
+                                        if (art.type === 'file') {
+                                          return <FileArtifactDownload key={art.id} data={art.data as any} />;
+                                        }
+                                        return null;
+                                      })}
+                                    </>
+                                  );
+                                })()}
+                              </div>
                             )}
                           </div>
-                        ))}
+                        </div>
                       </div>
                     )}
                   </div>
-                )}
+                );
+              })}
 
-                {/* Message Body Content */}
-                <div className="prose dark:prose-invert max-w-none text-xs leading-relaxed whitespace-pre-wrap">
-                  {msg.content || (msg.isStreaming ? 'Analyzing verified records...' : '')}
-                </div>
-
-                {/* Rich Structured Artifacts */}
-                {!isUser && hasArtifacts && (
-                  <div className="pt-2 space-y-4">
-                    {msg.artifacts?.map(art => {
-                      if (art.type === 'kpi') {
-                        return <KPICard key={art.id} {...(art.data as any)} />;
-                      }
-                      if (art.type === 'chart') {
-                        return <InteractiveChart key={art.id} title={art.title} {...(art.data as any)} />;
-                      }
-                      if (art.type === 'table') {
-                        return <TableArtifactView key={art.id} title={art.title} {...(art.data as any)} />;
-                      }
-                      if (art.type === 'file') {
-                        return <FileArtifactDownload key={art.id} {...(art.data as any)} />;
-                      }
-                      return null;
-                    })}
-                  </div>
-                )}
-
-                {/* Timestamp & Role Indicator */}
-                <div
-                  className={`text-[10px] pt-1 flex items-center justify-between ${
-                    isUser ? 'text-blue-200' : 'text-slate-400'
-                  }`}
-                >
-                  <span>{isUser ? 'You' : 'TexVantage FastAPI Engine'}</span>
-                  <span>{msg.createdAt}</span>
-                </div>
-              </div>
-
-              {isUser && (
-                <div className="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center shrink-0 shadow-sm mt-1">
-                  <UserIcon className="w-4 h-4" />
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Live Streaming Indicator & In-Progress Steps */}
-        {loading && (
-          <div className="flex gap-3 justify-start animate-in fade-in duration-150">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-1 animate-pulse">
-              <Bot className="w-4 h-4" />
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-bl-none p-4 shadow-sm max-w-2xl w-full space-y-3">
-              <div className="flex items-center gap-2 text-xs font-medium text-blue-600 dark:text-blue-400">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span>{statusMessage || 'Processing query with server tools...'}</span>
-              </div>
-
-              {/* Live tool step cards */}
-              {liveSteps.length > 0 && (
-                <div className="space-y-1.5 pt-1">
-                  {liveSteps.map((step, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-slate-50 dark:bg-slate-950/80 p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-mono flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2">
-                        {step.status === 'running' ? (
-                          <div className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-                        ) : (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                        )}
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">
-                          {step.tool}()
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-slate-400">
-                        {step.status === 'running' ? 'Executing...' : 'Completed'}
-                      </span>
+              {/* Loading Indicator */}
+              {loading && !messages.find(m => m.senderRole === 'assistant' && m.isStreaming) && (
+                <div className="flex justify-start animate-in fade-in duration-300">
+                  <div className="max-w-full w-full">
+                    <div className="text-[11px] font-bold text-tv-text-muted mb-2 uppercase tracking-wider flex items-center gap-1.5">
+                      <Bot className="w-3.5 h-3.5 text-tv-accent" />
+                      <span>Jeevan Infotech AI</span>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-3 text-[14px] text-tv-text-secondary">
+                      <RefreshCw className="w-4 h-4 animate-spin text-tv-accent" />
+                      {statusMessage || 'Processing query...'}
+                    </div>
+                  </div>
                 </div>
               )}
+
+              <div ref={messagesEndRef} className="h-4" />
             </div>
           </div>
-        )}
 
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Suggestion Prompts */}
-      <div className="py-2 flex flex-wrap items-center gap-1.5 overflow-x-auto no-scrollbar">
-        <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1 shrink-0 mr-1">
-          <Zap className="w-3 h-3 text-amber-400" />
-          Suggested:
-        </span>
-        {getSuggestions().map((sug, sIdx) => (
-          <button
-            key={sIdx}
-            type="button"
-            onClick={() => handleSend(sug)}
-            disabled={loading}
-            className="text-xs bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-full transition-colors shadow-xs cursor-pointer text-left"
-          >
-            {sug}
-          </button>
-        ))}
-      </div>
-
-      {/* Chat Input Box */}
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          handleSend();
-        }}
-        className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 shadow-lg focus-within:ring-2 focus-within:ring-blue-500/50 transition-all"
-      >
-        <div className="flex items-center gap-2">
-          <textarea
-            rows={1}
-            value={inputPrompt}
-            onChange={e => setInputPrompt(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder={
-              isOwner
-                ? `Ask about ${tenantLabel} sales, margins, or economics...`
-                : 'Ask for global comparisons, rankings, or 10-mill portfolio briefs...'
-            }
-            disabled={loading}
-            className="flex-1 bg-transparent border-0 resize-none text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none px-3 py-2 max-h-32"
-          />
-
-          <button
-            type="button"
-            onClick={toggleListening}
-            className={`p-2.5 rounded-xl transition-colors shadow-sm shrink-0 ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-            title="Voice Input"
-          >
-            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-          </button>
-          
-          <button
-            type="submit"
-            disabled={!inputPrompt.trim() || loading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white p-2.5 rounded-xl transition-colors shadow-sm shrink-0"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+          {/* Sticky Bottom Input */}
+          <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-tv-base via-tv-base to-transparent pt-12 pb-6 px-4 sm:px-6 md:px-8">
+            <div className="max-w-4xl mx-auto">
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  handleSend();
+                }}
+                className="relative bg-tv-surface border border-tv-border rounded-[14px] p-1.5 shadow-2xl focus-within:ring-1 focus-within:ring-tv-accent transition-all flex items-center gap-2"
+              >
+                <textarea
+                  rows={1}
+                  value={inputPrompt}
+                  onChange={e => setInputPrompt(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder="Ask a follow-up..."
+                  disabled={loading}
+                  className="flex-1 bg-transparent border-0 resize-none text-[15px] text-tv-text-primary placeholder-tv-text-muted focus:outline-none px-4 py-2 max-h-32 custom-scrollbar"
+                />
+                {isSpeechSupported && (
+                  <button
+                    type="button"
+                    onClick={toggleRecording}
+                    disabled={loading}
+                    className={`p-2.5 rounded-[10px] transition-colors shrink-0 cursor-pointer ${
+                      isRecording 
+                        ? 'bg-rose-500 text-white animate-pulse' 
+                        : 'bg-transparent text-tv-text-muted hover:text-tv-text-primary hover:bg-tv-surface'
+                    }`}
+                    title="Use voice input"
+                  >
+                    <Mic className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={!inputPrompt.trim() || loading}
+                  className="bg-tv-accent hover:bg-tv-accent-hover disabled:bg-tv-border disabled:text-tv-text-muted text-slate-900 p-2.5 rounded-[10px] transition-colors shadow-sm shrink-0 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
-      </form>
+      )}
     </div>
   );
 };

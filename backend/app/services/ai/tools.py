@@ -174,62 +174,6 @@ TOOL_DEFINITIONS = [
             "required": []
         }
     },
-    {
-        "name": "get_database_schema",
-        "description": "Reflects the database to retrieve all table names, column names, and data types. Use this to understand the schema before generating SQL queries.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {},
-            "required": []
-        }
-    },
-    {
-        "name": "execute_sql_query",
-        "description": "Executes a SELECT SQL query against the database. Automatically scoped/limited for safety.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "query": {
-                    "type": "STRING",
-                    "description": "The SQL SELECT query to execute"
-                }
-            },
-            "required": ["query"]
-        }
-    },
-    {
-        "name": "render_custom_chart",
-        "description": "Renders a custom visualization chart (bar, line, area, or donut) based on data. Use this after running a SQL query if the user asks for a chart or visual.",
-        "parameters": {
-            "type": "OBJECT",
-            "properties": {
-                "title": { "type": "STRING", "description": "Title of the chart" },
-                "chart_type": { "type": "STRING", "description": "'bar', 'line', 'area', or 'donut'" },
-                "x_key": { "type": "STRING", "description": "The key in the data points representing the X-axis label" },
-                "series": {
-                    "type": "ARRAY",
-                    "items": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "key": { "type": "STRING", "description": "Data key for the Y-axis value" },
-                            "name": { "type": "STRING", "description": "Display name for the legend" },
-                            "color": { "type": "STRING", "description": "Hex color like #2563EB or #10B981" },
-                            "type": { "type": "STRING", "description": "Chart type for this series ('bar', 'line', 'area', 'donut')" }
-                        }
-                    }
-                },
-                "data_points": {
-                    "type": "ARRAY",
-                    "items": {
-                        "type": "OBJECT",
-                        "additionalProperties": True
-                    },
-                    "description": "Array of JSON objects containing the row data, typically from execute_sql_query results"
-                }
-            },
-            "required": ["title", "chart_type", "x_key", "series", "data_points"]
-        }
-    }
 ]
 
 # 2. TOOL EXECUTION ENGINE (WITH STRICT CONTEXT VALIDATION)
@@ -422,54 +366,6 @@ class ToolRegistry:
                 target_comp = arguments.get("company_id")
                 info = query_service.get_uploaded_datasets_info(target_comp)
                 return {"status": "success", "datasets_info": info}
-
-            # 10. get_database_schema
-            elif tool_name == "get_database_schema":
-                from sqlalchemy import inspect
-                if not hasattr(repository, "engine"):
-                    return {"status": "error", "message": "Database reflection is not supported on this repository instance."}
-                
-                engine = repository.engine
-                inspector = inspect(engine)
-                schema_info = {}
-                for table_name in inspector.get_table_names():
-                    columns = []
-                    for column in inspector.get_columns(table_name):
-                        columns.append({
-                            "name": column["name"],
-                            "type": str(column["type"])
-                        })
-                    schema_info[table_name] = columns
-                
-                return {"status": "success", "schema": schema_info}
-
-            # 11. execute_sql_query
-            elif tool_name == "execute_sql_query":
-                query = arguments.get("query", "").strip()
-                if not query.lower().startswith("select"):
-                    return {"status": "error", "message": "Security error: Only SELECT queries are permitted."}
-                
-                if not hasattr(repository, "SessionLocal"):
-                    return {"status": "error", "message": "Raw SQL execution is not supported on this repository instance."}
-                
-                from sqlalchemy import text
-                try:
-                    with repository.SessionLocal() as session:
-                        result_proxy = session.execute(text(query))
-                        columns = result_proxy.keys()
-                        rows = result_proxy.fetchmany(100) # strict limit to prevent massive payload
-                        results = [dict(zip(columns, row)) for row in rows]
-                        return {"status": "success", "results": results, "count": len(results)}
-                except Exception as e:
-                    return {"status": "error", "message": f"SQL Execution failed: {str(e)}"}
-
-            # 12. render_custom_chart
-            elif tool_name == "render_custom_chart":
-                return {
-                    "status": "success",
-                    "action": "render_custom_chart",
-                    "chart_data": arguments
-                }
 
             else:
                 return {"status": "error", "message": f"Unknown tool: '{tool_name}'"}

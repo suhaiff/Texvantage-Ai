@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     
     # Database - SQL Server compatible models; SQLite for fast dev zero-setup
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./texvantage_dev.db")
+    # Existing SQL Server schemas are managed outside this application.  SQLite is
+    # the only supported auto-create target used by the isolated test/dev fallback.
+    DATABASE_CONNECT_TIMEOUT_SECONDS: int = int(os.getenv("DATABASE_CONNECT_TIMEOUT_SECONDS", "10"))
     SEED_DEMO_DATA: bool = os.getenv("SEED_DEMO_DATA", "false").lower() in ("true", "1", "yes")
     
     # AI Provider configuration

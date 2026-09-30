@@ -279,6 +279,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
           );
         },
         onArtifact: artifact => {
+          if (collectedArtifacts.some(existing => existing.id === artifact.id)) return;
           collectedArtifacts.push(artifact);
           setAiMessages(prev =>
             prev.map(m =>
@@ -483,21 +484,21 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             <Shield className="w-3.5 h-3.5" />
             <span>FastAPI Multi-Tenant Access Boundary Enforced</span>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-tv-text-primary">
             Portfolio Command Center Restricted to Central Administrators
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+          <p className="text-sm text-tv-text-secondary max-w-xl mx-auto">
             You are authenticated as <strong>{currentUser.name}</strong>, scoped strictly to{' '}
             <strong>{currentUser.companyName || currentUser.companyId}</strong>. Cross-enterprise competitive
             portfolios, multi-company benchmarking, and peer mill ledgers are isolated by server-side row-level policies.
           </p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-left max-w-lg mx-auto shadow-sm space-y-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+        <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 text-left max-w-lg mx-auto shadow-sm space-y-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-tv-text-muted">
             FastAPI Boundary Verification Check
           </h4>
-          <div className="text-xs space-y-2 text-slate-600 dark:text-slate-300 font-mono">
+          <div className="text-xs space-y-2 text-tv-text-secondary font-mono">
             <div className="flex justify-between">
               <span>Authenticated Role:</span>
               <span className="text-emerald-500 font-bold">OWNER (Single-Tenant)</span>
@@ -511,10 +512,10 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
               <span className="text-rose-500 font-bold">DENIED (HTTP 403 Forbidden)</span>
             </div>
           </div>
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="pt-3 border-t border-tv-border">
             <button
               onClick={onSwitchToAdmin}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 rounded-xl transition-colors shadow"
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-bold py-2.5 rounded-xl transition-colors shadow"
             >
               <span>Switch to Central Administrator (Alexander Sterling)</span>
               <ArrowRight className="w-4 h-4" />
@@ -532,19 +533,19 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-pulse">
         {/* Header Skeleton */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-          <div className="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded mb-2" />
-          <div className="h-8 w-80 bg-slate-200 dark:bg-slate-800 rounded mb-2" />
-          <div className="h-4 w-96 bg-slate-200 dark:bg-slate-800 rounded" />
+        <div className="bg-tv-surface border border-tv-border rounded-2xl p-6">
+          <div className="h-4 w-40 bg-tv-border rounded mb-2" />
+          <div className="h-8 w-80 bg-tv-border rounded mb-2" />
+          <div className="h-4 w-96 bg-tv-border rounded" />
         </div>
 
         {/* 5 KPI Skeletons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
-              <div className="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded mb-2" />
-              <div className="h-7 w-28 bg-slate-200 dark:bg-slate-800 rounded mb-2" />
-              <div className="h-3 w-32 bg-slate-200 dark:bg-slate-800 rounded" />
+            <div key={i} className="bg-tv-surface border border-tv-border rounded-xl p-4">
+              <div className="h-3 w-24 bg-tv-border rounded mb-2" />
+              <div className="h-7 w-28 bg-tv-border rounded mb-2" />
+              <div className="h-3 w-32 bg-tv-border rounded" />
             </div>
           ))}
         </div>
@@ -552,12 +553,12 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         {/* Leaders Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 h-28" />
+            <div key={i} className="bg-tv-surface border border-tv-border rounded-xl p-5 h-28" />
           ))}
         </div>
 
         {/* Charts & Matrix Skeleton */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 h-80" />
+        <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 h-80" />
       </div>
     );
   }
@@ -571,11 +572,11 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         <div className="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center border border-rose-200 dark:border-rose-900/60">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Unable to Load Portfolio Data</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{error}</p>
+        <h3 className="text-lg font-bold text-tv-text-primary">Unable to Load Portfolio Data</h3>
+        <p className="text-sm text-tv-text-secondary max-w-md mx-auto">{error}</p>
         <button
           onClick={fetchPortfolioData}
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition-colors"
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Retry</span>
@@ -593,14 +594,14 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center border border-blue-200 dark:border-blue-900/60">
           <Database className="w-7 h-7" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">No portfolio data available yet.</h2>
+        <h2 className="text-xl font-bold text-tv-text-primary">No portfolio data available yet.</h2>
         <p className="text-sm text-slate-500 max-w-md mx-auto">
           No textile enterprise financial records or datasets have been imported yet.
         </p>
         {onNavigateTab && (
           <button
             onClick={() => onNavigateTab('datasets')}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl"
+            className="inline-flex items-center gap-2 bg-tv-accent text-slate-900 text-xs font-semibold px-4 py-2 rounded-xl"
           >
             <FileSpreadsheet className="w-4 h-4" />
             <span>Manage Datasets</span>
@@ -618,7 +619,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       {/* 1. EXECUTIVE PAGE HEADER */}
       {/* ================================================== */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
@@ -628,10 +629,10 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
               ADMIN COMMAND
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
             Portfolio Command Center
           </h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs sm:text-sm text-tv-text-secondary">
             <span className="font-semibold text-slate-900 dark:text-slate-200">
               {companiesCount} Textile Enterprises
             </span>
@@ -639,9 +640,9 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             <span>Monitor performance, compare companies, and ask Portfolio AI</span>
             {portfolioFreshness && (
               <>
-                <span className="text-slate-400 dark:text-slate-600">·</span>
-                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-400 inline" />
+                <span className="text-tv-text-muted dark:text-slate-600">·</span>
+                <span className="text-tv-text-secondary flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-tv-text-muted inline" />
                   Latest portfolio data: {portfolioFreshness}
                 </span>
               </>
@@ -651,12 +652,12 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
         <div className="flex items-center gap-3 flex-wrap">
           {/* Period selector */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+          <div className="flex items-center gap-1 bg-tv-base p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
             <button
               onClick={() => setPeriodMonths(6)}
               className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
                 periodMonths === 6
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold'
+                  ? 'bg-tv-surface text-tv-text-primary shadow-xs font-bold'
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -666,7 +667,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
               onClick={() => setPeriodMonths(12)}
               className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
                 periodMonths === 12
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs font-bold'
+                  ? 'bg-tv-surface text-tv-text-primary shadow-xs font-bold'
                   : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -710,7 +711,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
           <button
             onClick={handleExportMatrix}
-            className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors border border-slate-200 dark:border-slate-700"
+            className="inline-flex items-center gap-2 bg-slate-100 hover:bg-tv-border dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors border border-slate-200 dark:border-slate-700"
           >
             {exported ? <Check className="w-4 h-4 text-emerald-500" /> : <Download className="w-4 h-4" />}
             <span>Export CSV</span>
@@ -718,7 +719,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
           <button
             onClick={() => handleSendPortfolioAI('Give me a full executive performance briefing across all textile companies')}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm"
           >
             <Sparkles className="w-4 h-4 text-amber-300" />
             <span>Consult Portfolio AI</span>
@@ -731,28 +732,28 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* KPI 1: Total Portfolio Revenue */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
             <span>Total Revenue</span>
-            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px] font-medium text-slate-600 dark:text-slate-300">
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[10px] font-medium text-tv-text-secondary">
               {periodMonths}M Total
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+          <div className="text-2xl font-bold text-tv-text-primary mt-1">
             {portfolioSummary.total_portfolio_revenue_lakh != null
               ? `₹${Number(portfolioSummary.total_portfolio_revenue_lakh).toLocaleString('en-IN')}L`
               : 'Not available'}
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">
+          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
             Across {companiesCount} Textile Mills
           </div>
         </div>
 
         {/* KPI 2: Weighted Gross Margin */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
             <span>Avg Gross Margin</span>
-            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px] font-medium text-slate-600 dark:text-slate-300">
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[10px] font-medium text-tv-text-secondary">
               Weighted
             </span>
           </div>
@@ -761,7 +762,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
               ? `${Number(portfolioSummary.portfolio_weighted_margin_pct).toFixed(2)}%`
               : 'Not available'}
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">
+          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
             {portfolioSummary.total_portfolio_gross_profit_lakh != null
               ? `₹${Number(portfolioSummary.total_portfolio_gross_profit_lakh).toFixed(2)}L Gross Profit`
               : 'Portfolio Gross Profit'}
@@ -769,49 +770,49 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         </div>
 
         {/* KPI 3: Companies Tracked */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
             <span>Enterprises</span>
             <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-2 py-0.5 rounded text-[10px] font-medium">
               Active
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+          <div className="text-2xl font-bold text-tv-text-primary mt-1">
             {companiesCount}
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">
+          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
             Pan-India Textile Clusters
           </div>
         </div>
 
         {/* KPI 4: Total Units Sold / Volume */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
             <span>Total Units</span>
-            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px] font-medium text-slate-600 dark:text-slate-300">
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[10px] font-medium text-tv-text-secondary">
               Volume
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+          <div className="text-2xl font-bold text-tv-text-primary mt-1">
             {totalPortfolioUnits != null ? totalPortfolioUnits.toLocaleString('en-IN') : 'Not available'}
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">
+          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
             Reported Sales Output
           </div>
         </div>
 
         {/* KPI 5: Dataset Coverage */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
             <span>Datasets</span>
             <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 px-2 py-0.5 rounded text-[10px] font-medium">
               Audited
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+          <div className="text-2xl font-bold text-tv-text-primary mt-1">
             {datasetsList.length > 0 ? datasetsList.length : '10'}
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 truncate">
+          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
             Verified Source Ledgers
           </div>
         </div>
@@ -822,23 +823,23 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* PORTFOLIO LEADERS (2 Cols) */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div className="lg:col-span-2 bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-tv-border pb-3">
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-amber-500" />
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Portfolio Performance Leaders</h2>
+              <h2 className="text-sm font-bold text-tv-text-primary">Portfolio Performance Leaders</h2>
             </div>
             <span className="text-xs text-slate-500">Derived from {periodMonths}M backend analysis</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Revenue Leader */}
-            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border flex flex-col justify-between">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-tv-text-muted">
                   Revenue Leader
                 </div>
-                <div className="text-sm font-bold text-slate-900 dark:text-white mt-1 truncate">
+                <div className="text-sm font-bold text-tv-text-primary mt-1 truncate">
                   {portfolioSummary.top_revenue_performer || 'Top Enterprise'}
                 </div>
               </div>
@@ -850,12 +851,12 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             </div>
 
             {/* Margin Leader */}
-            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border flex flex-col justify-between">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-tv-text-muted">
                   Margin Leader
                 </div>
-                <div className="text-sm font-bold text-slate-900 dark:text-white mt-1 truncate">
+                <div className="text-sm font-bold text-tv-text-primary mt-1 truncate">
                   {portfolioSummary.highest_margin_performer || 'Artisanal Silk'}
                 </div>
               </div>
@@ -870,12 +871,12 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             </div>
 
             {/* Growth Leader */}
-            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border flex flex-col justify-between">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-tv-text-muted">
                   Growth Leader
                 </div>
-                <div className="text-sm font-bold text-slate-900 dark:text-white mt-1 truncate">
+                <div className="text-sm font-bold text-tv-text-primary mt-1 truncate">
                   {portfolioSummary.fastest_growth_performer || 'Fastest Growth'}
                 </div>
               </div>
@@ -890,14 +891,14 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         </div>
 
         {/* COMPANIES REQUIRING ATTENTION (1 Col) */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-3 flex flex-col justify-between">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm space-y-3 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+            <div className="flex items-center justify-between border-b border-tv-border pb-2.5">
               <div className="flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Management Attention Signals</h2>
+                <h2 className="text-sm font-bold text-tv-text-primary">Management Attention Signals</h2>
               </div>
-              <span className="text-[11px] font-mono text-slate-400">{attentionCompanies.length} Flagged</span>
+              <span className="text-[11px] font-mono text-tv-text-muted">{attentionCompanies.length} Flagged</span>
             </div>
 
             <div className="space-y-2 mt-3 max-h-40 overflow-y-auto pr-1">
@@ -907,7 +908,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                     key={idx}
                     className="p-2.5 rounded-lg bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 text-xs"
                   >
-                    <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
+                    <div className="flex items-center justify-between font-semibold text-tv-text-primary">
                       <span>{comp.company_name || comp.name}</span>
                       <span className="font-mono text-[10px] text-slate-500">{comp.code}</span>
                     </div>
@@ -917,7 +918,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                   </div>
                 ))
               ) : (
-                <div className="py-6 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                <div className="py-6 text-center text-xs text-tv-text-muted flex items-center justify-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   <span>All enterprise metrics within target ranges</span>
                 </div>
@@ -939,13 +940,13 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       {/* 4. PRIMARY PORTFOLIO REVENUE & MARGIN VISUALIZATION */}
       {/* ================================================== */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-tv-text-primary">
               Portfolio Performance Comparison ({periodMonths} Months)
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-tv-text-secondary mt-0.5">
               Side-by-side revenue (₹ Lakh) vs gross profit (₹ Lakh) across all enterprises
             </p>
           </div>
@@ -953,11 +954,11 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
           <div className="flex items-center gap-3 text-xs">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-blue-600" />
-              <span className="text-slate-600 dark:text-slate-400 font-medium">Revenue</span>
+              <span className="text-tv-text-secondary font-medium">Revenue</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
-              <span className="text-slate-600 dark:text-slate-400 font-medium">Gross Profit</span>
+              <span className="text-tv-text-secondary font-medium">Gross Profit</span>
             </div>
           </div>
         </div>
@@ -1073,15 +1074,15 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
           {/* Interactive Chart Tooltip */}
           {hoveredChartBar !== null && allCompanies[hoveredChartBar] && (
-            <div className="mt-2 bg-slate-50 dark:bg-slate-800/90 rounded-xl px-4 py-2.5 text-xs flex flex-wrap items-center justify-between border border-slate-200 dark:border-slate-700 shadow-sm gap-2">
+            <div className="mt-2 bg-tv-base/90 rounded-xl px-4 py-2.5 text-xs flex flex-wrap items-center justify-between border border-slate-200 dark:border-slate-700 shadow-sm gap-2">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-900 dark:text-white">
+                <span className="font-bold text-tv-text-primary">
                   {allCompanies[hoveredChartBar].company_name || allCompanies[hoveredChartBar].name}
                 </span>
-                <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300">
+                <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-tv-text-secondary">
                   {allCompanies[hoveredChartBar].code}
                 </span>
-                <span className="text-slate-500 dark:text-slate-400">
+                <span className="text-tv-text-secondary">
                   · {allCompanies[hoveredChartBar].specialization}
                 </span>
               </div>
@@ -1100,7 +1101,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                 </span>
                 <span>
                   Margin:{' '}
-                  <strong className="text-slate-900 dark:text-white font-mono">
+                  <strong className="text-tv-text-primary font-mono">
                     {allCompanies[hoveredChartBar].avg_profit_margin_pct ||
                       allCompanies[hoveredChartBar].weighted_profit_margin_pct}
                     %
@@ -1115,11 +1116,11 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       {/* 5. INTERACTIVE CROSS-COMPANY COMPARISON TOOL */}
       {/* ================================================== */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-tv-border pb-3">
           <div className="flex items-center gap-2">
             <Scale className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-tv-text-primary">
               Cross-Company Comparison Module
             </h2>
             <span className="text-xs text-slate-500">
@@ -1162,7 +1163,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
         {/* Company Selector Chips */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mr-1">
+          <span className="text-xs font-semibold text-tv-text-secondary mr-1">
             Comparing ({selectedForComparison.length}):
           </span>
 
@@ -1191,7 +1192,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
               onChange={e => {
                 if (e.target.value) toggleComparisonCompany(e.target.value);
               }}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs rounded-lg px-2.5 py-1 text-slate-700 dark:text-slate-300 focus:outline-none"
+              className="bg-tv-base border border-slate-200 dark:border-slate-700 text-xs rounded-lg px-2.5 py-1 text-slate-700 dark:text-slate-300 focus:outline-none"
             >
               <option value="">+ Add Enterprise...</option>
               {allCompanies
@@ -1207,18 +1208,18 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
         {/* Side-by-Side Comparison Matrix */}
         {comparisonLoading ? (
-          <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+          <div className="py-8 text-center text-xs text-tv-text-muted flex items-center justify-center gap-2">
             <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
             <span>Computing deterministic cross-enterprise comparison...</span>
           </div>
         ) : comparisonResult?.companies ? (
           <div className="overflow-x-auto pt-2">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
+              <thead className="bg-tv-base/60 text-tv-text-secondary uppercase tracking-wider font-semibold border-b border-tv-border">
                 <tr>
                   <th className="px-4 py-3">Metric</th>
                   {comparisonResult.companies.map((c: any) => (
-                    <th key={c.company_id} className="px-4 py-3 text-right font-bold text-slate-900 dark:text-white">
+                    <th key={c.company_id} className="px-4 py-3 text-right font-bold text-tv-text-primary">
                       {c.company_name} ({c.code || ''})
                     </th>
                   ))}
@@ -1228,7 +1229,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                 <tr>
                   <td className="px-4 py-3 font-sans font-medium text-slate-500">Specialization</td>
                   {comparisonResult.companies.map((c: any) => (
-                    <td key={c.company_id} className="px-4 py-3 text-right font-sans text-slate-800 dark:text-slate-200">
+                    <td key={c.company_id} className="px-4 py-3 text-right font-sans text-tv-text-primary">
                       {c.specialization}
                     </td>
                   ))}
@@ -1242,7 +1243,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                   ))}
                 </tr>
                 <tr className="bg-blue-50/30 dark:bg-blue-950/20">
-                  <td className="px-4 py-3 font-sans font-bold text-slate-900 dark:text-white">
+                  <td className="px-4 py-3 font-sans font-bold text-tv-text-primary">
                     {periodMonths}M Total Revenue
                   </td>
                   {comparisonResult.companies.map((c: any) => (
@@ -1302,7 +1303,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             </table>
           </div>
         ) : (
-          <div className="py-6 text-center text-xs text-slate-400">
+          <div className="py-6 text-center text-xs text-tv-text-muted">
             Select at least 2 enterprises to activate side-by-side comparison.
           </div>
         )}
@@ -1311,14 +1312,14 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       {/* 6. COMPANY PERFORMANCE MATRIX (EXECUTIVE TABLE) */}
       {/* ================================================== */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl shadow-sm overflow-hidden">
         {/* Table Controls Header */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="p-4 border-b border-tv-border flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-tv-text-primary">
               Enterprise Performance Matrix
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-tv-text-secondary mt-0.5">
               Verified operating metrics, margins, and volume ledgers across {filteredCompanies.length} companies
             </p>
           </div>
@@ -1326,23 +1327,23 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             {/* Search Input */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-tv-text-muted" />
               <input
                 type="text"
                 placeholder="Search enterprise..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs rounded-xl pl-8 pr-3 py-1.5 text-slate-900 dark:text-white focus:outline-none w-40 sm:w-48"
+                className="bg-tv-base border border-slate-200 dark:border-slate-700 text-xs rounded-xl pl-8 pr-3 py-1.5 text-tv-text-primary focus:outline-none w-40 sm:w-48"
               />
             </div>
 
             {/* Specialization Filter */}
             <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <Filter className="w-3.5 h-3.5 text-tv-text-muted" />
               <select
                 value={filterSpecialization}
                 onChange={e => setFilterSpecialization(e.target.value)}
-                className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white focus:outline-none"
+                className="bg-tv-base border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-tv-text-primary focus:outline-none"
               >
                 <option value="all">All Specializations</option>
                 <option value="cotton">Cotton & Yarn</option>
@@ -1358,7 +1359,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             <select
               value={sortBy}
               onChange={e => setSortBy(e.target.value as any)}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white focus:outline-none"
+              className="bg-tv-base border border-slate-200 dark:border-slate-700 text-xs rounded-xl px-2.5 py-1.5 text-tv-text-primary focus:outline-none"
             >
               <option value="revenue">Sort by Revenue</option>
               <option value="margin">Sort by Margin %</option>
@@ -1370,7 +1371,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         {/* Matrix Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+            <thead className="bg-tv-base/60 text-tv-text-secondary uppercase font-semibold text-[10px] tracking-wider border-b border-tv-border">
               <tr>
                 <th className="py-3 px-4">Enterprise</th>
                 <th className="py-3 px-4">Cluster / Location</th>
@@ -1397,9 +1398,9 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                     }`}
                   >
                     <td className="py-3 px-4 font-sans">
-                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <div className="font-bold text-tv-text-primary flex items-center gap-1.5">
                         <span>{c.company_name || c.name}</span>
-                        <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded font-mono font-bold">
+                        <span className="text-[10px] bg-tv-base text-slate-500 px-1.5 py-0.5 rounded font-mono font-bold">
                           {c.code}
                         </span>
                       </div>
@@ -1407,10 +1408,10 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                     <td className="py-3 px-4 text-slate-500">
                       {c.city}, {c.state}
                     </td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-300 truncate max-w-xs">
+                    <td className="py-3 px-4 text-tv-text-secondary truncate max-w-xs">
                       {c.specialization}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-slate-900 dark:text-white">
+                    <td className="py-3 px-4 text-right font-mono font-bold text-tv-text-primary">
                       {c.total_revenue_lakh != null ? `₹${Number(c.total_revenue_lakh).toFixed(2)}L` : '—'}
                     </td>
                     <td className="py-3 px-4 text-right font-mono font-medium">
@@ -1446,7 +1447,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleSelectCompany(c)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-semibold transition-colors"
+                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-tv-border dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-semibold transition-colors"
                           title="Inspect Details"
                         >
                           Analyze
@@ -1455,8 +1456,8 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                           onClick={() => toggleComparisonCompany(compId)}
                           className={`px-2 py-1 rounded-lg text-[11px] font-medium transition-colors ${
                             isSelectedForComp
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                              ? 'bg-tv-accent text-slate-900'
+                              : 'bg-slate-100 hover:bg-tv-border text-tv-text-secondary'
                           }`}
                           title="Toggle in Comparison"
                         >
@@ -1487,8 +1488,8 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* 7. SELECTED COMPANY DETAIL CONTEXT DRAWER */}
       {/* ================================================== */}
       {selectedCompany && (
-        <div className="bg-white dark:bg-slate-900 border-2 border-blue-500/40 rounded-2xl p-6 shadow-md space-y-4 animate-in fade-in duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div className="bg-tv-surface border-2 border-blue-500/40 rounded-2xl p-6 shadow-md space-y-4 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-tv-border pb-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                 <Building2 className="w-5 h-5" />
@@ -1498,11 +1499,11 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                   <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
                     Selected Company Context
                   </span>
-                  <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-bold">
+                  <span className="font-mono text-xs bg-tv-base px-2 py-0.5 rounded text-tv-text-secondary font-bold">
                     {selectedCompany.code}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                <h3 className="text-lg font-bold text-tv-text-primary">
                   Analyzing {selectedCompany.company_name || selectedCompany.name}
                 </h3>
               </div>
@@ -1517,7 +1518,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                     }`
                   )
                 }
-                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-xs transition-colors"
+                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-xs transition-colors"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>Ask Portfolio AI</span>
@@ -1525,7 +1526,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
               <button
                 onClick={() => toggleComparisonCompany(selectedCompany.company_id || selectedCompany.id)}
-                className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors"
+                className="inline-flex items-center gap-1.5 bg-tv-base hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors"
               >
                 <Scale className="w-3.5 h-3.5" />
                 <span>
@@ -1537,7 +1538,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
               <button
                 onClick={() => setSelectedCompany(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="p-1.5 rounded-lg text-tv-text-muted hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1545,26 +1546,26 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl">
-              <div className="text-slate-400 font-medium">Cluster Location</div>
-              <div className="font-bold text-slate-900 dark:text-white mt-1">
+            <div className="bg-tv-base/60 p-3 rounded-xl">
+              <div className="text-tv-text-muted font-medium">Cluster Location</div>
+              <div className="font-bold text-tv-text-primary mt-1">
                 {selectedCompany.city}, {selectedCompany.state}
               </div>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl">
-              <div className="text-slate-400 font-medium">Specialization</div>
-              <div className="font-bold text-slate-900 dark:text-white mt-1">
+            <div className="bg-tv-base/60 p-3 rounded-xl">
+              <div className="text-tv-text-muted font-medium">Specialization</div>
+              <div className="font-bold text-tv-text-primary mt-1">
                 {selectedCompany.specialization}
               </div>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl">
-              <div className="text-slate-400 font-medium">{periodMonths}M Total Revenue</div>
+            <div className="bg-tv-base/60 p-3 rounded-xl">
+              <div className="text-tv-text-muted font-medium">{periodMonths}M Total Revenue</div>
               <div className="font-bold text-blue-600 dark:text-blue-400 font-mono mt-1">
                 ₹{selectedCompany.total_revenue_lakh}L
               </div>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl">
-              <div className="text-slate-400 font-medium">Gross Margin</div>
+            <div className="bg-tv-base/60 p-3 rounded-xl">
+              <div className="text-tv-text-muted font-medium">Gross Margin</div>
               <div className="font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-1">
                 {selectedCompany.avg_profit_margin_pct || selectedCompany.weighted_profit_margin_pct}%
               </div>
@@ -1580,7 +1581,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         {/* Portfolio AI Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+            <div className="w-10 h-10 rounded-xl bg-tv-accent text-slate-900 flex items-center justify-center shadow-md shadow-blue-500/20">
               <Bot className="w-5 h-5" />
             </div>
             <div>
@@ -1591,20 +1592,20 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                   Multi-Enterprise Reasoning Active
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-tv-text-muted">
                 Ask analytical questions across your entire portfolio of {companiesCount} textile enterprises.
               </p>
             </div>
           </div>
 
-          <div className="text-xs text-slate-400 font-mono flex items-center gap-2">
+          <div className="text-xs text-tv-text-muted font-mono flex items-center gap-2">
             <span>✓ Grounded in {companiesCount} verified company ledgers</span>
           </div>
         </div>
 
         {/* Quick Question Prompts */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1 shrink-0">
+          <span className="text-[11px] font-bold text-tv-text-muted flex items-center gap-1 shrink-0">
             <Zap className="w-3 h-3 text-amber-400" />
             Suggested:
           </span>
@@ -1629,7 +1630,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
         {/* AI Chat History Container */}
         {aiMessages.length > 0 && (
-          <div className="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+          <div className="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar bg-tv-base/60 p-4 rounded-xl border border-slate-800">
             {aiMessages.map(msg => {
               const isUser = msg.senderRole === 'user';
               const isExpanded = !!aiExpandedSteps[msg.id];
@@ -1642,7 +1643,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                   className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in duration-150`}
                 >
                   {!isUser && (
-                    <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 mt-1">
+                    <div className="w-7 h-7 rounded-lg bg-tv-accent text-slate-900 flex items-center justify-center shrink-0 mt-1">
                       <Bot className="w-4 h-4" />
                     </div>
                   )}
@@ -1650,18 +1651,18 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                   <div
                     className={`max-w-2xl rounded-xl p-3.5 text-xs shadow-sm space-y-2 ${
                       isUser
-                        ? 'bg-blue-600 text-white rounded-br-none'
+                        ? 'bg-tv-accent text-slate-900 rounded-br-none'
                         : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'
                     }`}
                   >
                     {/* Tool Execution Step Trace */}
                     {!isUser && hasSteps && (
-                      <div className="border border-slate-800 rounded-lg overflow-hidden bg-slate-950/80 mb-2">
+                      <div className="border border-slate-800 rounded-lg overflow-hidden bg-tv-base/80 mb-2">
                         <button
                           onClick={() =>
                             setAiExpandedSteps(prev => ({ ...prev, [msg.id]: !prev[msg.id] }))
                           }
-                          className="w-full px-2.5 py-1.5 flex items-center justify-between text-[11px] font-mono text-slate-400 hover:text-slate-200"
+                          className="w-full px-2.5 py-1.5 flex items-center justify-between text-[11px] font-mono text-tv-text-muted hover:text-slate-200"
                         >
                           <div className="flex items-center gap-1.5">
                             <Terminal className="w-3 h-3 text-blue-400" />
@@ -1675,7 +1676,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                               <div key={sIdx} className="text-slate-300">
                                 <span className="text-emerald-400">✓ {step.tool}()</span>
                                 {step.resultSummary && (
-                                  <p className="text-slate-400 pl-3">{step.resultSummary}</p>
+                                  <p className="text-tv-text-muted pl-3">{step.resultSummary}</p>
                                 )}
                               </div>
                             ))}
@@ -1692,21 +1693,34 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                     {/* Rich Artifacts */}
                     {!isUser && hasArtifacts && (
                       <div className="pt-2 space-y-3">
-                        {msg.artifacts?.map(art => {
-                          if (art.type === 'kpi') {
-                            return <KPICard key={art.id} {...(art.data as any)} />;
-                          }
-                          if (art.type === 'chart') {
-                            return <InteractiveChart key={art.id} title={art.title} {...(art.data as any)} />;
-                          }
-                          if (art.type === 'table') {
-                            return <TableArtifactView key={art.id} title={art.title} {...(art.data as any)} />;
-                          }
-                          if (art.type === 'file') {
-                            return <FileArtifactDownload key={art.id} {...(art.data as any)} />;
-                          }
-                          return null;
-                        })}
+                        {(() => {
+                          const arts = msg.artifacts || [];
+                          const kpis = arts.filter(a => a.type === 'kpi');
+                          const rest = arts.filter(a => a.type !== 'kpi');
+                          return (
+                            <>
+                              {kpis.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {kpis.map(art => (
+                                    <KPICard key={art.id} title={art.title} data={art.data as any} />
+                                  ))}
+                                </div>
+                              )}
+                              {rest.map(art => {
+                                if (art.type === 'chart') {
+                                  return <InteractiveChart key={art.id} title={art.title} data={art.data as any} />;
+                                }
+                                if (art.type === 'table') {
+                                  return <TableArtifactView key={art.id} title={art.title} data={art.data as any} />;
+                                }
+                                if (art.type === 'file') {
+                                  return <FileArtifactDownload key={art.id} data={art.data as any} />;
+                                }
+                                return null;
+                              })}
+                            </>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
@@ -1732,7 +1746,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             e.preventDefault();
             handleSendPortfolioAI();
           }}
-          className="relative flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl p-2 focus-within:border-blue-500 transition-colors"
+          className="relative flex items-center gap-2 bg-tv-base/80 border border-slate-800 rounded-xl p-2 focus-within:border-blue-500 transition-colors"
         >
           <input
             type="text"
@@ -1745,7 +1759,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
           <button
             type="submit"
             disabled={!aiInputPrompt.trim() || aiLoading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 text-white p-2 rounded-lg transition-colors shrink-0"
+            className="bg-blue-600 hover:bg-tv-accent-hover disabled:bg-slate-800 text-white p-2 rounded-lg transition-colors shrink-0"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -1755,13 +1769,13 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       {/* 9. PORTFOLIO DATASETS OVERVIEW */}
       {/* ================================================== */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between border-b border-tv-border pb-3 mb-4">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-tv-text-primary">
               Portfolio Ingestion & Source Data Registry
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-tv-text-secondary mt-0.5">
               Audited dataset provenance and company ledger status across all {companiesCount} enterprises
             </p>
           </div>
@@ -1777,18 +1791,18 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
-            <div className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">
+          <div className="bg-tv-base/60 p-3.5 rounded-xl border border-tv-border">
+            <div className="text-tv-text-muted font-medium uppercase tracking-wider text-[10px]">
               Active Ingestions
             </div>
-            <div className="text-lg font-bold text-slate-900 dark:text-white mt-1">
+            <div className="text-lg font-bold text-tv-text-primary mt-1">
               {datasetsList.length > 0 ? datasetsList.length : '10'} Datasets
             </div>
             <div className="text-[11px] text-slate-500 mt-1">Structured CSV & Excel files</div>
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
-            <div className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">
+          <div className="bg-tv-base/60 p-3.5 rounded-xl border border-tv-border">
+            <div className="text-tv-text-muted font-medium uppercase tracking-wider text-[10px]">
               Enterprise Coverage
             </div>
             <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">
@@ -1797,8 +1811,8 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             <div className="text-[11px] text-slate-500 mt-1">100% active ledger sync</div>
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
-            <div className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">
+          <div className="bg-tv-base/60 p-3.5 rounded-xl border border-tv-border">
+            <div className="text-tv-text-muted font-medium uppercase tracking-wider text-[10px]">
               FastAPI Security
             </div>
             <div className="text-lg font-bold text-blue-600 dark:text-blue-400 mt-1">

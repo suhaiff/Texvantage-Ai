@@ -1,7 +1,8 @@
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime, timezone
-from sqlalchemy import create_engine, select, func, desc, delete
+from sqlalchemy import create_engine, select, func, desc, delete, text
 from sqlalchemy.orm import sessionmaker, Session, joinedload, selectinload
+from sqlalchemy.pool import NullPool, StaticPool
 import os
 import uuid
 import logging
@@ -31,13 +32,29 @@ class DevRepository(IDataRepository):
     def __init__(self, db_url: Optional[str] = None):
         database_url = db_url or settings.DATABASE_URL
         connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
-        self.engine = create_engine(database_url, connect_args=connect_args, echo=False)
+        engine_options = {
+            "connect_args": connect_args,
+            "echo": False,
+        }
+        if database_url.startswith("sqlite"):
+            # In-memory tests need one shared connection; file-backed SQLite tests
+            # need connections released so their files remain removable on Windows.
+            engine_options["poolclass"] = StaticPool if database_url == "sqlite:///:memory:" else NullPool
+        else:
+            engine_options.update({"pool_pre_ping": True, "pool_recycle": 1800})
+        self.engine = create_engine(database_url, **engine_options)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, expire_on_commit=False, bind=self.engine)
         self._init_db()
 
     def _init_db(self):
-        """Create tables if they don't exist and populate seed data if explicitly enabled."""
+        """Initialize only the SQLite fallback; never alter an external SQL Server schema."""
         try:
+            if self.engine.dialect.name != "sqlite":
+                # texvantage is provisioned independently.  Running create_all here
+                # would be surprising and risks schema drift in a production-like DB.
+                self.check_connection()
+                return
+
             Base.metadata.create_all(bind=self.engine)
             
             # Check environment rules for seed data population
@@ -69,6 +86,11 @@ class DevRepository(IDataRepository):
             logger.error(f"Database initialization failed: {e}")
             # NEVER delete the database file. Raise exception to halt startup safely.
             raise RuntimeError(f"Database initialization failed: {e}") from e
+
+    def check_connection(self) -> None:
+        """Verify that the configured database accepts a read-only health query."""
+        with self.engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
 
     def get_session(self) -> Session:
         return self.SessionLocal()

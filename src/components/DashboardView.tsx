@@ -213,33 +213,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-pulse">
         {/* Header Skeleton */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-          <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded mb-3" />
-          <div className="h-8 w-72 bg-slate-200 dark:bg-slate-800 rounded mb-2" />
-          <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded" />
+        <div className="bg-tv-surface border border-tv-border rounded-2xl p-6">
+          <div className="h-4 w-32 bg-tv-border rounded mb-3" />
+          <div className="h-8 w-72 bg-tv-border rounded mb-2" />
+          <div className="h-4 w-48 bg-tv-border rounded" />
         </div>
 
         {/* 4 KPI Skeletons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
-              <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded mb-3" />
-              <div className="h-7 w-28 bg-slate-200 dark:bg-slate-800 rounded mb-2" />
-              <div className="h-3 w-36 bg-slate-200 dark:bg-slate-800 rounded" />
+            <div key={i} className="bg-tv-surface border border-tv-border rounded-xl p-5">
+              <div className="h-3 w-20 bg-tv-border rounded mb-3" />
+              <div className="h-7 w-28 bg-tv-border rounded mb-2" />
+              <div className="h-3 w-36 bg-tv-border rounded" />
             </div>
           ))}
         </div>
 
         {/* Charts & Profitability Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 h-80" />
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 h-80" />
+          <div className="lg:col-span-2 bg-tv-surface border border-tv-border rounded-xl p-6 h-80" />
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-6 h-80" />
         </div>
 
         {/* Tables & Recent Datasets Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 h-64" />
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 h-64" />
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-6 h-64" />
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-6 h-64" />
         </div>
       </div>
     );
@@ -252,11 +252,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center border border-rose-200 dark:border-rose-900/60">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Unable to Load Business Summary</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{error}</p>
+        <h3 className="text-lg font-bold text-tv-text-primary">Unable to Load Business Summary</h3>
+        <p className="text-sm text-tv-text-secondary max-w-md mx-auto">{error}</p>
         <button
           onClick={loadDashboardData}
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition-colors"
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Retry</span>
@@ -276,21 +276,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     if (schema && schema.tables && schema.tables.length > 0) {
       return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 sm:p-8 shadow-sm">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
               Executive Overview
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
               {greeting}
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            <p className="text-sm text-tv-text-secondary mt-1">
               {summaryData?.company_name || currentUser.companyName || 'Enterprise'}
             </p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+          <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-lg font-bold text-tv-text-primary flex items-center gap-2">
                 <Database className="w-5 h-5 text-emerald-500" />
                 Connected to Production Database
               </h2>
@@ -299,15 +299,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </span>
             </div>
             
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6 max-w-3xl">
+            <p className="text-sm text-tv-text-secondary mb-6 max-w-3xl">
               We've automatically detected the following tables in your database. 
               Upload a <b>Business Knowledge</b> document (PDF or Text) in the Knowledge & Datasets tab to teach the AI how to interpret these tables, so you can start querying your metrics immediately.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {schema.tables.map((table: any, idx: number) => (
-                <div key={idx} className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 transition-all hover:shadow-md">
-                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2 mb-3">
+                <div key={idx} className="bg-tv-base/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 transition-all hover:shadow-md">
+                  <h3 className="font-semibold text-tv-text-primary text-sm flex items-center gap-2 mb-3">
                     <Layers className="w-4 h-4 text-blue-500" />
                     {table.name}
                   </h3>
@@ -344,33 +344,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
         {/* Header */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 sm:p-8 shadow-sm">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
             Executive Overview
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
             {greeting}
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+          <p className="text-sm text-tv-text-secondary mt-1">
             {summaryData?.company_name || currentUser.companyName || 'Enterprise'}
           </p>
         </div>
 
         {/* Empty State Banner */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center shadow-sm space-y-4">
+        <div className="bg-tv-surface border border-tv-border rounded-2xl p-12 text-center shadow-sm space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center border border-blue-200 dark:border-blue-900/60">
             <Database className="w-7 h-7" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">No business data uploaded yet.</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            <h2 className="text-lg font-bold text-tv-text-primary">No business data uploaded yet.</h2>
+            <p className="text-sm text-tv-text-secondary max-w-md mx-auto">
               Upload your first dataset to start analyzing your business performance, margins, and sales trends.
             </p>
           </div>
           <div className="pt-2">
             <button
               onClick={() => (onNavigateTab ? onNavigateTab('datasets') : null)}
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all"
             >
               <FileSpreadsheet className="w-4 h-4" />
               <span>Upload Data</span>
@@ -388,21 +388,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
               Global Portfolio Command Center
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
               {greeting}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs sm:text-sm text-tv-text-secondary mt-1">
               10-Enterprise Aggregated Portfolio Analytics across India
             </p>
           </div>
           <button
             onClick={() => onOpenAIQuery('Summarize full portfolio revenue and margin performance across all 10 mills')}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all self-start md:self-auto"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all self-start md:self-auto"
           >
             <Sparkles className="w-4 h-4 text-amber-300" />
             <span>Consult Portfolio Advisor</span>
@@ -411,66 +411,66 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Global KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Portfolio Revenue</div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
+            <div className="text-xs font-medium text-tv-text-secondary">Total Portfolio Revenue</div>
+            <div className="text-2xl font-bold text-tv-text-primary mt-1">
               {summaryData?.total_portfolio_revenue_lakh != null
                 ? `₹${summaryData.total_portfolio_revenue_lakh.toLocaleString('en-IN')}L`
                 : 'Not available'}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-2">6-Month Aggregate (10 Mills)</div>
+            <div className="text-xs text-tv-text-secondary mt-2">6-Month Aggregate (10 Mills)</div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Weighted Gross Margin</div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
+            <div className="text-xs font-medium text-tv-text-secondary">Weighted Gross Margin</div>
+            <div className="text-2xl font-bold text-tv-text-primary mt-1">
               {summaryData?.portfolio_average_margin_pct != null
                 ? `${summaryData.portfolio_average_margin_pct}%`
                 : 'Not available'}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+            <div className="text-xs text-tv-text-secondary mt-2">
               {summaryData?.total_portfolio_gross_profit_lakh != null
                 ? `₹${summaryData.total_portfolio_gross_profit_lakh}L Total Gross Profit`
                 : 'Gross Profit'}
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Top Revenue Contributor</div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
+            <div className="text-xs font-medium text-tv-text-secondary">Top Revenue Contributor</div>
+            <div className="text-2xl font-bold text-tv-text-primary mt-1">
               {summaryData?.top_performing_company?.code || 'Not available'}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 truncate">
+            <div className="text-xs text-tv-text-secondary mt-2 truncate">
               {summaryData?.top_performing_company?.name || 'Top contributor'}
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Highest Margin Mill</div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
+            <div className="text-xs font-medium text-tv-text-secondary">Highest Margin Mill</div>
+            <div className="text-2xl font-bold text-tv-text-primary mt-1">
               {summaryData?.highest_margin_company?.weighted_profit_margin_pct != null
                 ? `${summaryData.highest_margin_company.weighted_profit_margin_pct}%`
                 : 'Not available'}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 truncate">
+            <div className="text-xs text-tv-text-secondary mt-2 truncate">
               {summaryData?.highest_margin_company?.name || 'Artisanal Silk & Jacquard'}
             </div>
           </div>
         </div>
 
         {/* Global Ranking Table */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+        <div className="bg-tv-surface border border-tv-border rounded-xl overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-tv-border flex items-center justify-between">
+            <h2 className="text-sm font-bold text-tv-text-primary">
               Executive Enterprise Portfolio Ranking
             </h2>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-tv-text-secondary">
               {summaryData?.companies?.length || 0} Enterprises Active
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
+              <thead className="bg-tv-base/60 text-tv-text-secondary uppercase tracking-wider font-semibold border-b border-tv-border">
                 <tr>
                   <th className="px-4 py-3">Company</th>
                   <th className="px-4 py-3">Code</th>
@@ -483,7 +483,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                 {(summaryData?.companies || []).map((comp: any, idx: number) => (
                   <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{comp.name}</td>
+                    <td className="px-4 py-3 font-medium text-tv-text-primary">{comp.name}</td>
                     <td className="px-4 py-3 font-mono text-slate-500">{comp.code}</td>
                     <td className="px-4 py-3">{comp.specialization}</td>
                     <td className="px-4 py-3 text-slate-500">{comp.city}</td>
@@ -552,12 +552,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* 2. REFINED PAGE HEADER */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
             {greeting}
           </h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs sm:text-sm text-tv-text-secondary">
             <span className="font-semibold text-slate-900 dark:text-slate-200">
               {summaryData?.company_name || currentUser.companyName || currentUser.companyId}
             </span>
@@ -565,9 +565,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>{summaryData?.latest_month || summaryData?.specialization || 'Executive Overview'}</span>
             {lastUpdatedFormatted && (
               <>
-                <span className="text-slate-400 dark:text-slate-600">·</span>
-                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-slate-400 inline" />
+                <span className="text-tv-text-muted dark:text-slate-600">·</span>
+                <span className="text-tv-text-secondary flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-tv-text-muted inline" />
                   Last updated {lastUpdatedFormatted}
                 </span>
               </>
@@ -578,7 +578,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Operational Context Badges & Export Action */}
         <div className="flex flex-wrap items-center gap-3 text-xs">
           {summaryData?.city && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-medium">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-tv-base/80 text-slate-700 dark:text-slate-300 font-medium">
               <MapPin className="w-3.5 h-3.5 text-blue-500" />
               <span>
                 {summaryData.city}, {summaryData.state}
@@ -586,7 +586,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           )}
           {summaryData?.capacity_description && (
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-medium truncate max-w-xs">
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-tv-base/80 text-slate-700 dark:text-slate-300 font-medium truncate max-w-xs">
               <Factory className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
               <span className="truncate">{summaryData.capacity_description}</span>
             </div>
@@ -627,14 +627,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 3. FOUR PRIMARY KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Revenue */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
             <span>Revenue</span>
-            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-medium text-slate-600 dark:text-slate-300">
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
               {revenuePeriod}
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">
+          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
             {revenueValue}
           </div>
           <div className="flex items-center gap-1.5 mt-2.5 text-xs">
@@ -655,20 +655,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {revenueGrowthPct.toFixed(2)}% vs {prevMonthName || 'July'}
               </span>
             ) : (
-              <span className="text-slate-400 dark:text-slate-500">Period baseline</span>
+              <span className="text-tv-text-muted dark:text-slate-500">Period baseline</span>
             )}
           </div>
         </div>
 
         {/* KPI 2: Gross Margin */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
             <span>Gross Margin</span>
-            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-medium text-slate-600 dark:text-slate-300">
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
               {revenuePeriod}
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">
+          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
             {marginValue}
           </div>
           <div className="flex items-center gap-1.5 mt-2.5 text-xs">
@@ -689,23 +689,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {marginDiffVsAvg} pts vs avg
               </span>
             ) : (
-              <span className="text-slate-400 dark:text-slate-500">Gross profit realization</span>
+              <span className="text-tv-text-muted dark:text-slate-500">Gross profit realization</span>
             )}
           </div>
         </div>
 
         {/* KPI 3: Units Sold */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
             <span>Units Sold</span>
-            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-medium text-slate-600 dark:text-slate-300">
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
               {revenuePeriod}
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">
+          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
             {unitsValue}
           </div>
-          <div className="flex items-center gap-1.5 mt-2.5 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-1.5 mt-2.5 text-xs text-tv-text-secondary">
             {summaryData?.annual_aggregate?.total_units_sold != null ? (
               <span>
                 {summaryData.annual_aggregate.total_units_sold.toLocaleString('en-IN')} total volume
@@ -717,14 +717,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* KPI 4: MoM Growth */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
             <span>MoM Growth</span>
-            <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-medium text-slate-600 dark:text-slate-300">
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
               MoM
             </span>
           </div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">
+          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
             {momGrowthValue}
           </div>
           <div className="flex items-center gap-1.5 mt-2.5 text-xs">
@@ -740,7 +740,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {revenueGrowthPct.toFixed(2)}%
               </span>
             ) : (
-              <span className="text-slate-400 dark:text-slate-500">Revenue trajectory</span>
+              <span className="text-tv-text-muted dark:text-slate-500">Revenue trajectory</span>
             )}
           </div>
         </div>
@@ -749,21 +749,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 4. REVENUE TREND & 5. PROFITABILITY SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* REVENUE TREND (2 Cols) */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                <h2 className="text-sm font-bold text-tv-text-primary">
                   Revenue Performance Trend
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-xs text-tv-text-secondary mt-0.5">
                   Monthly sales trajectory from verified ledger records
                 </p>
               </div>
               <div className="flex items-center gap-3 text-xs">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-sm bg-blue-600" />
-                  <span className="text-slate-600 dark:text-slate-400 font-medium">Revenue (₹ Lakh)</span>
+                  <span className="text-tv-text-secondary font-medium">Revenue (₹ Lakh)</span>
                 </div>
               </div>
             </div>
@@ -886,21 +886,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 {/* Interactive Tooltip Card */}
                 {hoveredSalesIdx !== null && salesSeries[hoveredSalesIdx] && (
-                  <div className="mt-2 bg-slate-50 dark:bg-slate-800/80 rounded-lg px-3 py-2 text-xs flex items-center justify-between border border-slate-200 dark:border-slate-700/60">
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  <div className="mt-2 bg-tv-base rounded-lg px-3 py-2 text-xs flex items-center justify-between border border-slate-200 dark:border-slate-700/60">
+                    <span className="font-semibold text-tv-text-primary">
                       {salesSeries[hoveredSalesIdx].month}
                     </span>
                     <div className="flex items-center gap-4">
-                      <span className="text-slate-600 dark:text-slate-300">
+                      <span className="text-tv-text-secondary">
                         Revenue:{' '}
-                        <strong className="text-slate-900 dark:text-white">
+                        <strong className="text-tv-text-primary">
                           ₹{salesSeries[hoveredSalesIdx].revenue_lakh}L
                         </strong>
                       </span>
                       {salesSeries[hoveredSalesIdx].units_sold != null && (
-                        <span className="text-slate-600 dark:text-slate-300">
+                        <span className="text-tv-text-secondary">
                           Units:{' '}
-                          <strong className="text-slate-900 dark:text-white">
+                          <strong className="text-tv-text-primary">
                             {salesSeries[hoveredSalesIdx].units_sold.toLocaleString()}
                           </strong>
                         </span>
@@ -922,7 +922,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 )}
               </div>
             ) : (
-              <div className="py-12 text-center text-xs text-slate-400">
+              <div className="py-12 text-center text-xs text-tv-text-muted">
                 No revenue trend data available.
               </div>
             )}
@@ -930,37 +930,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* 5. PROFITABILITY SECTION (1 Col) */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col justify-between space-y-4">
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm flex flex-col justify-between space-y-4">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-tv-text-primary">
               Profitability Breakdown
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-tv-text-secondary mt-0.5">
               Margin economics for {revenuePeriod}
             </p>
           </div>
 
           <div className="space-y-3">
             {/* Gross Profit */}
-            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border">
+              <div className="text-[11px] font-medium text-tv-text-secondary uppercase tracking-wider">
                 Gross Profit
               </div>
-              <div className="text-lg font-bold text-slate-900 dark:text-white mt-1">
+              <div className="text-lg font-bold text-tv-text-primary mt-1">
                 {latestFinancialRecord?.gross_profit_lakh != null
                   ? `₹${Number(latestFinancialRecord.gross_profit_lakh).toFixed(2)}L`
                   : 'Not available from uploaded data'}
               </div>
               {latestFinancialRecord?.cogs_lakh != null && (
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                <div className="text-[11px] text-tv-text-secondary mt-0.5">
                   COGS: ₹{Number(latestFinancialRecord.cogs_lakh).toFixed(2)}L
                 </div>
               )}
             </div>
 
             {/* Gross Margin */}
-            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border">
+              <div className="text-[11px] font-medium text-tv-text-secondary uppercase tracking-wider">
                 Gross Margin
               </div>
               <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">
@@ -969,28 +969,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   : 'Not available from uploaded data'}
               </div>
               {avgMargin != null && (
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                <div className="text-[11px] text-tv-text-secondary mt-0.5">
                   Weighted Average: {avgMargin}%
                 </div>
               )}
             </div>
 
             {/* Net Profit */}
-            <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3.5 border border-slate-100 dark:border-slate-800">
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border">
+              <div className="text-[11px] font-medium text-tv-text-secondary uppercase tracking-wider">
                 Net Profit
               </div>
-              <div className="text-lg font-bold text-slate-900 dark:text-white mt-1">
+              <div className="text-lg font-bold text-tv-text-primary mt-1">
                 {latestFinancialRecord?.net_profit_lakh != null
                   ? `₹${Number(latestFinancialRecord.net_profit_lakh).toFixed(2)}L`
                   : 'Not available from uploaded data'}
               </div>
               {latestFinancialRecord?.operating_expenses_lakh != null ? (
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                <div className="text-[11px] text-tv-text-secondary mt-0.5">
                   OpEx: ₹{Number(latestFinancialRecord.operating_expenses_lakh).toFixed(2)}L
                 </div>
               ) : (
-                <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                <div className="text-[11px] text-tv-text-muted dark:text-slate-500 mt-0.5">
                   OpEx not specified in source data
                 </div>
               )}
@@ -1002,17 +1002,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 6. PRODUCT PERFORMANCE & 7. AI INSIGHT / DATA COVERAGE */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* PRODUCT PERFORMANCE (2 Cols) */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col">
-          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="lg:col-span-2 bg-tv-surface border border-tv-border rounded-xl overflow-hidden shadow-sm flex flex-col">
+          <div className="px-5 py-4 border-b border-tv-border flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              <h2 className="text-sm font-bold text-tv-text-primary">
                 Product Performance
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-tv-text-secondary mt-0.5">
                 Revenue contribution and margin ranking by product category
               </p>
             </div>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-tv-text-secondary">
               {topProducts.length} categories
             </span>
           </div>
@@ -1020,7 +1020,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {topProducts.length > 0 ? (
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-xs text-left">
-                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-tv-base/60 text-tv-text-secondary uppercase tracking-wider font-semibold border-b border-tv-border">
                   <tr>
                     <th className="px-4 py-3">Product / Category</th>
                     <th className="px-4 py-3 text-right">Revenue</th>
@@ -1034,19 +1034,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       key={idx}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                     >
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                      <td className="px-4 py-3 font-medium text-tv-text-primary">
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-blue-500" />
                           <span className="truncate">{prod.category_name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right font-mono font-medium text-slate-900 dark:text-white">
+                      <td className="px-4 py-3 text-right font-mono font-medium text-tv-text-primary">
                         {prod.total_revenue_lakh != null ? `₹${prod.total_revenue_lakh}L` : '—'}
                       </td>
                       <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">
                         {prod.avg_margin_pct != null ? `${prod.avg_margin_pct}%` : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-slate-500 dark:text-slate-400">
+                      <td className="px-4 py-3 text-right font-mono text-tv-text-secondary">
                         {prod.total_volume_units != null
                           ? `${prod.total_volume_units.toLocaleString()} ${prod.unit_of_measure || ''}`
                           : '—'}
@@ -1057,7 +1057,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </table>
             </div>
           ) : (
-            <div className="p-8 text-center text-xs text-slate-400 dark:text-slate-500">
+            <div className="p-8 text-center text-xs text-tv-text-muted dark:text-slate-500">
               No product-level data uploaded yet.
             </div>
           )}
@@ -1074,7 +1074,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <p className="text-sm font-medium text-slate-200 leading-relaxed">
               Ask your AI Advisor to analyze this performance.
             </p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-tv-text-muted">
               Get an instant strategic briefing on product profitability, volume trends, and margin optimization opportunities.
             </p>
             <div className="pt-1">
@@ -1095,27 +1095,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* 8. DATA COVERAGE CARD */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm space-y-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm space-y-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-tv-text-secondary">
               Data Coverage
             </div>
 
             <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <span className="text-slate-500 dark:text-slate-400">Period Covered</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
+              <div className="flex items-center justify-between pb-2 border-b border-tv-border">
+                <span className="text-tv-text-secondary">Period Covered</span>
+                <span className="font-semibold text-tv-text-primary">
                   {dataCoverage.dateRange}
                 </span>
               </div>
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                <span className="text-slate-500 dark:text-slate-400">Uploaded Datasets</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">
+              <div className="flex items-center justify-between pb-2 border-b border-tv-border">
+                <span className="text-tv-text-secondary">Uploaded Datasets</span>
+                <span className="font-semibold text-tv-text-primary font-mono">
                   {dataCoverage.datasetCount}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Audited Records</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono">
+                <span className="text-tv-text-secondary">Audited Records</span>
+                <span className="font-semibold text-tv-text-primary font-mono">
                   {dataCoverage.totalRecords.toLocaleString()}
                 </span>
               </div>
@@ -1125,13 +1125,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* 9. RECENT DATASETS SECTION */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <div className="bg-tv-surface border border-tv-border rounded-xl overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-tv-border flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            <h2 className="text-sm font-bold text-tv-text-primary">
               Recent Datasets
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-tv-text-secondary mt-0.5">
               Uploaded source data files for {summaryData?.company_name || currentUser.companyName}
             </p>
           </div>
@@ -1165,10 +1165,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <FileSpreadsheet className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-slate-900 dark:text-white">
+                      <div className="text-xs font-semibold text-tv-text-primary">
                         {d.original_filename || d.dataset_name}
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <div className="text-[11px] text-tv-text-secondary">
                         {d.record_count != null ? `${d.record_count.toLocaleString()} records` : ''} ·
                         Imported {uploadDateStr}
                       </div>
@@ -1193,23 +1193,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             })}
           </div>
         ) : (
-          <div className="p-8 text-center text-xs text-slate-400 dark:text-slate-500">
+          <div className="p-8 text-center text-xs text-tv-text-muted dark:text-slate-500">
             No datasets uploaded yet.
           </div>
         )}
       </div>
 
       {/* 10. PRIMARY AI CTA */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
             <Bot className="w-4 h-4" />
             <span>Ask your AI Advisor</span>
           </div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+          <h3 className="text-base font-bold text-tv-text-primary">
             Analyze sales, margins, products and business performance.
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-tv-text-secondary">
             Inquire in natural language with verified data grounding and automatic executive artifacts.
           </p>
         </div>
@@ -1222,7 +1222,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               }.`
             )
           }
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-sm transition-all self-start sm:self-auto hover:scale-[1.02]"
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-sm transition-all self-start sm:self-auto hover:scale-[1.02]"
         >
           <Sparkles className="w-4 h-4 text-amber-300" />
           <span>Open AI Advisor</span>

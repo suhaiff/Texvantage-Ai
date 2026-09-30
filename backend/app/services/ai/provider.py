@@ -13,6 +13,10 @@ class AIProviderResponse(BaseModel):
     tool_calls: List[AIToolCall] = Field(default_factory=list)
     finish_reason: Optional[str] = None
     usage_metadata: Optional[Dict[str, Any]] = None
+    # Providers that require opaque metadata in a model turn (for example,
+    # Gemini thought signatures) retain the original SDK content here.  The
+    # orchestrator must replay it verbatim before sending tool results back.
+    model_content: Optional[Any] = None
 
 class AIProvider(ABC):
     """

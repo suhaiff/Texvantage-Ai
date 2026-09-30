@@ -5,18 +5,19 @@ import { KPIArtifactData, ChartArtifactData, TableArtifactData, FileArtifactData
 import { apiClient } from '../services/apiClient';
 
 export const KPICard: React.FC<{ data: KPIArtifactData; title?: string }> = ({ data, title }) => {
-  const isPositive = data.changeType === 'positive';
-  const isNegative = data.changeType === 'negative';
+  const changeType = (data as any).changeType || (data as any).change_type || 'neutral';
+  const isPositive = changeType === 'positive';
+  const isNegative = changeType === 'negative';
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+    <div className="bg-tv-surface border border-tv-border rounded-[12px] p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-tv-text-muted mb-1">
         <span>{title || data.metric}</span>
-        <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[11px] font-medium text-slate-600 dark:text-slate-300">
+        <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
           {data.period}
         </span>
       </div>
-      <div className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+      <div className="text-2xl font-bold text-tv-text-primary mt-1 tabular-nums tracking-tight">
         {data.value}
       </div>
       <div className="flex items-center gap-1.5 mt-2 text-xs">
@@ -34,7 +35,7 @@ export const KPICard: React.FC<{ data: KPIArtifactData; title?: string }> = ({ d
           {!isPositive && !isNegative && <Minus className="w-3.5 h-3.5 mr-1 inline" />}
           {data.change}
         </span>
-        {data.subtext && <span className="text-slate-400 dark:text-slate-500 truncate">{data.subtext}</span>}
+        {data.subtext && <span className="text-tv-text-muted dark:text-slate-500 truncate">{data.subtext}</span>}
       </div>
     </div>
   );
@@ -43,11 +44,19 @@ export const KPICard: React.FC<{ data: KPIArtifactData; title?: string }> = ({ d
 export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: string }> = ({ data, title }) => {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  const points = data.dataPoints;
+  const chartType = data.chartType || (data as any).chart_type || 'bar';
+  const xKey = data.xKey || (data as any).x_key || 'month';
+  const points = data.dataPoints || (data as any).data_points || [];
+  const series = (data.series || []).map(s => ({
+    ...s,
+    type: s.type || chartType
+  }));
   if (!points || points.length === 0) return null;
 
+  const seriesType = (s: (typeof series)[number]) => s.type || chartType || 'bar';
+
   // Compute numeric max for scaling
-  const numericKeys = data.series.map(s => s.key);
+  const numericKeys = series.map(s => s.key);
   let maxVal = 0;
   points.forEach(pt => {
     numericKeys.forEach(k => {
@@ -64,19 +73,20 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
   const chartH = height - padding.top - padding.bottom;
 
   // Donut chart mode
-  if (data.chartType === 'donut') {
-    const total = points.reduce((acc, pt) => acc + (Number(pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0), 0);
+  if (chartType === 'donut') {
+    const valueKey = data.series?.[0]?.key || 'total_revenue_lakh';
+    const total = points.reduce((acc, pt) => acc + (Number(pt[valueKey] || pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0), 0);
     const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4'];
     let accumulated = 0;
 
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-        {title && <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3">{title}</h4>}
+      <div className="w-full">
+        {title && <h4 className="text-sm font-semibold text-tv-text-primary mb-3">{title}</h4>}
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="relative w-44 h-44 flex-shrink-0">
             <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
               {points.map((pt, i) => {
-                const val = Number(pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0;
+                const val = Number(pt[valueKey] || pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0;
                 const pct = total > 0 ? val / total : 0;
                 const strokeDasharray = `${pct * 283} 283`;
                 const strokeDashoffset = -accumulated * 283;
@@ -102,14 +112,14 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
               })}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-xs text-slate-500 dark:text-slate-400">Total Share</span>
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">100%</span>
+              <span className="text-xs text-tv-text-secondary">Total Share</span>
+              <span className="text-sm font-bold text-tv-text-primary">100%</span>
             </div>
           </div>
 
           <div className="flex-1 space-y-2 w-full">
             {points.map((pt, i) => {
-              const val = Number(pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0;
+              const val = Number(pt[valueKey] || pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0;
               const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0';
               const col = colors[i % colors.length];
               const isHovered = hoveredIdx === i;
@@ -118,7 +128,7 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
                 <div
                   key={i}
                   className={`flex items-center justify-between p-1.5 rounded text-xs transition-colors cursor-pointer ${
-                    isHovered ? 'bg-slate-100 dark:bg-slate-800 font-semibold' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    isHovered ? 'bg-tv-base font-semibold' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
                   }`}
                   onMouseEnter={() => setHoveredIdx(i)}
                   onMouseLeave={() => setHoveredIdx(null)}
@@ -126,11 +136,11 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
                   <div className="flex items-center gap-2 truncate pr-2">
                     <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: col }} />
                     <span className="truncate text-slate-700 dark:text-slate-300">
-                      {pt[data.xKey] || pt.category_name}
+                      {pt[xKey] || pt.category_name}
                     </span>
                   </div>
-                  <span className="text-slate-900 dark:text-white font-medium flex-shrink-0">
-                    {pt.total_revenue_lakh ? `₹${pt.total_revenue_lakh}L (${pct}%)` : `${pct}%`}
+                  <span className="text-tv-text-primary font-medium flex-shrink-0">
+                    {valueKey.includes('revenue') || pt.total_revenue_lakh ? `₹${val}L (${pct}%)` : `${pct}%`}
                   </span>
                 </div>
               );
@@ -145,14 +155,14 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
   const barWidth = Math.max(12, Math.min(32, chartW / points.length - 8));
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm overflow-hidden">
+    <div className="w-full overflow-hidden">
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        {title && <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{title}</h4>}
+        {title && <h4 className="text-sm font-semibold text-tv-text-primary">{title}</h4>}
         <div className="flex items-center gap-3 text-xs">
           {data.series.map((s, i) => (
             <div key={i} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: s.color }} />
-              <span className="text-slate-600 dark:text-slate-400">{s.name}</span>
+              <span className="text-tv-text-secondary">{s.name}</span>
             </div>
           ))}
         </div>
@@ -260,7 +270,7 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
           {/* X Axis Labels */}
           {points.map((pt, pIdx) => {
             const x = padding.left + (pIdx + 0.5) * (chartW / points.length);
-            const label = String(pt[data.xKey] || '').split(' ')[0];
+            const label = String(pt[xKey] || '').split(' ')[0];
             const isHovered = hoveredIdx === pIdx;
             return (
               <text
@@ -280,12 +290,12 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
       </div>
 
       {hoveredIdx !== null && points[hoveredIdx] && (
-        <div className="mt-2 bg-slate-50 dark:bg-slate-800/80 rounded-lg px-3 py-2 text-xs flex items-center justify-between border border-slate-200 dark:border-slate-700/60">
-          <span className="font-semibold text-slate-800 dark:text-slate-200">{points[hoveredIdx][data.xKey]}</span>
+        <div className="mt-2 bg-tv-base rounded-lg px-3 py-2 text-xs flex items-center justify-between border border-slate-200 dark:border-slate-700/60">
+          <span className="font-semibold text-tv-text-primary">{points[hoveredIdx][xKey]}</span>
           <div className="flex items-center gap-4">
             {data.series.map((s, i) => (
-              <span key={i} className="text-slate-600 dark:text-slate-300">
-                {s.name}: <strong className="text-slate-900 dark:text-white">{points[hoveredIdx][s.key]}</strong>
+              <span key={i} className="text-tv-text-secondary">
+                {s.name}: <strong className="text-tv-text-primary">{points[hoveredIdx][s.key]}</strong>
               </span>
             ))}
           </div>
@@ -317,12 +327,12 @@ export const TableArtifactView: React.FC<{ data: TableArtifactData; title?: stri
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
-      <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
-        <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{title || 'Data Matrix'}</h4>
+    <div className="bg-tv-surface border border-tv-border rounded-[12px] overflow-hidden shadow-sm">
+      <div className="px-4 py-3 border-b border-tv-border flex items-center justify-between flex-wrap gap-2">
+        <h4 className="text-sm font-semibold text-tv-text-primary">{title || 'Data Matrix'}</h4>
         <button
           onClick={handleExportCSV}
-          className="inline-flex items-center gap-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded-lg transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium bg-slate-100 hover:bg-tv-border dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded-lg transition-colors"
         >
           {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Download className="w-3.5 h-3.5" />}
           {copied ? 'Exported CSV' : 'Export CSV'}
@@ -330,10 +340,10 @@ export const TableArtifactView: React.FC<{ data: TableArtifactData; title?: stri
       </div>
       <div className="overflow-x-auto max-h-72">
         <table className="w-full text-xs text-left">
-          <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-semibold sticky top-0 uppercase tracking-wider text-[11px]">
+          <thead className="bg-tv-base/60 text-tv-text-secondary font-semibold sticky top-0 uppercase tracking-wider text-[11px]">
             <tr>
               {data.columns.map((col, idx) => (
-                <th key={idx} className="px-3.5 py-2.5 border-b border-slate-200 dark:border-slate-800">
+                <th key={idx} className="px-3.5 py-2.5 border-b border-tv-border">
                   {col.label}
                 </th>
               ))}
@@ -436,15 +446,15 @@ export const FileArtifactDownload: React.FC<{ data: FileArtifactData; title?: st
           {isExcel ? <FileSpreadsheet className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
         </div>
         <div className="min-w-0">
-          <h4 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+          <h4 className="text-sm font-semibold text-tv-text-primary truncate">
             {title || data.filename}
           </h4>
-          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">{data.description}</p>
+          <p className="text-xs text-tv-text-secondary line-clamp-1 mt-0.5">{data.description}</p>
           <div className="flex items-center gap-2 mt-1">
             <span className="inline-block uppercase text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
               {data.format.toUpperCase()}
             </span>
-            <span className="text-[11px] text-slate-400">{data.size}</span>
+            <span className="text-[11px] text-tv-text-muted">{data.size}</span>
             {statusText && (
               <span className="text-[11px] font-medium text-blue-600 dark:text-blue-400 animate-pulse">
                 · {statusText}
@@ -467,7 +477,7 @@ export const FileArtifactDownload: React.FC<{ data: FileArtifactData; title?: st
             ? 'bg-emerald-600 text-white'
             : downloading
             ? 'bg-blue-400 text-white cursor-wait'
-            : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-md'
+            : 'bg-blue-600 hover:bg-tv-accent-hover text-white hover:shadow-md'
         }`}
       >
         {downloading ? (

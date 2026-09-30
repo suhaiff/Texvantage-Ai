@@ -142,7 +142,7 @@ def test_7_production_gemini_unavailable_does_not_invoke_mock(monkeypatch):
     assert isinstance(orchestrator.provider, GeminiProvider)
     assert not isinstance(orchestrator.provider, MockAIProvider)
 
-    events = list(orchestrator.stream_conversation_turn("What were sales last month?"))
+    events = list(orchestrator.stream_conversation_turn("Hello"))
     error_events = [e for e in events if e.type == "error"]
     assert len(error_events) > 0
     assert "AI service is temporarily unavailable" in error_events[0].message
@@ -160,7 +160,7 @@ def test_8_production_gemini_runtime_failure_does_not_invoke_mock(monkeypatch):
             raise RuntimeError("Gemini API connection timeout")
 
     orchestrator = AIOrchestrator(test_repo, user, provider=FailingGeminiProvider())
-    events = list(orchestrator.stream_conversation_turn("Show revenue"))
+    events = list(orchestrator.stream_conversation_turn("Tell me a joke"))
     error_events = [e for e in events if e.type == "error"]
     assert len(error_events) > 0
     assert "AI service is temporarily unavailable" in error_events[0].message

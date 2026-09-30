@@ -108,7 +108,7 @@ def stream_message(
                 prompt=req.prompt,
                 conversation_id=req.conversation_id
             ):
-                payload = event.model_dump_json()
+                payload = event.model_dump_json(exclude_none=True)
                 yield f"data: {payload}\n\n"
             yield "data: [DONE]\n\n"
         except Exception as e:

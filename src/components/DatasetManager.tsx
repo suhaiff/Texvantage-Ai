@@ -299,7 +299,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', 'TexVantage_Sample_Q3_Q4_Financials.csv');
+    link.setAttribute('download', 'Jeevan_Infotech_AI_Sample_Q3_Q4_Financials.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -320,7 +320,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               Knowledge & Dataset Management
             </h1>
-            <p className="text-sm text-slate-400 max-w-2xl">
+            <p className="text-sm text-tv-text-muted max-w-2xl">
               Upload PDF/TXT documents for AI business knowledge, or multi-format manufacturing and sales ledgers (.xlsx, .csv).
               AI will automatically use this knowledge to directly query the connected database via SQL.
             </p>
@@ -393,11 +393,11 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <span>Active Datasets</span>
-                <span className="bg-slate-800 text-slate-400 text-xs px-2 py-0.5 rounded-full border border-slate-700 font-mono">
+                <span className="bg-slate-800 text-tv-text-muted text-xs px-2 py-0.5 rounded-full border border-slate-700 font-mono">
                   {datasets.length}
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-tv-text-muted">
                 {currentUser.role === 'ADMIN'
                   ? 'All uploaded business datasets across the 10 textile mills'
                   : `Datasets registered for ${currentUser.companyName || currentUser.companyId}`}
@@ -407,7 +407,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
             <button
               onClick={fetchDatasets}
               disabled={loading}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-slate-800"
+              className="flex items-center gap-1.5 text-xs text-tv-text-muted hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-slate-800"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
@@ -417,7 +417,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
           {loading ? (
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center space-y-3">
               <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
-              <p className="text-sm font-mono text-slate-400">Loading verified datasets...</p>
+              <p className="text-sm font-mono text-tv-text-muted">Loading verified datasets...</p>
             </div>
           ) : datasets.length === 0 ? (
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center space-y-4">
@@ -425,7 +425,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                 <FileSpreadsheet className="w-7 h-7" />
               </div>
               <h3 className="text-base font-bold text-white">No Datasets Uploaded Yet</h3>
-              <p className="text-xs text-slate-400 max-w-md mx-auto">
+              <p className="text-xs text-tv-text-muted max-w-md mx-auto">
                 Get started by uploading your mill's Excel or CSV financial ledger to populate historical
                 performance and unlock AI Advisor insights.
               </p>
@@ -474,13 +474,13 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                         <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition line-clamp-1">
                           {ds.dataset_name}
                         </h4>
-                        <p className="text-[11px] font-mono text-slate-400 truncate mt-0.5">
+                        <p className="text-[11px] font-mono text-tv-text-muted truncate mt-0.5">
                           {ds.original_filename}
                         </p>
                       </div>
 
                       {ds.description && (
-                        <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-tv-text-muted line-clamp-2 leading-relaxed">
                           {ds.description}
                         </p>
                       )}
@@ -515,7 +515,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                           <button
                             onClick={() => onOpenAIQuery(`Analyze the data trends from ${ds.dataset_name}`)}
                             title="Ask AI Advisor about this dataset"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-amber-300 hover:bg-slate-800 transition"
+                            className="p-1.5 rounded-lg text-tv-text-muted hover:text-amber-300 hover:bg-slate-800 transition"
                           >
                             <Sparkles className="w-4 h-4" />
                           </button>
@@ -550,7 +550,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                 type="button"
                 onClick={() => setUploadType('dataset')}
                 className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${
-                  uploadType === 'dataset' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  uploadType === 'dataset' ? 'bg-tv-accent text-slate-900' : 'bg-slate-800 text-tv-text-muted hover:bg-slate-700'
                 }`}
               >
                 Business Ledger (CSV/Excel)
@@ -559,13 +559,13 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                 type="button"
                 onClick={() => setUploadType('knowledge')}
                 className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${
-                  uploadType === 'knowledge' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  uploadType === 'knowledge' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-tv-text-muted hover:bg-slate-700'
                 }`}
               >
                 Business Knowledge (PDF/TXT)
               </button>
             </div>
-            <p className="text-xs text-slate-400 mt-4">
+            <p className="text-xs text-tv-text-muted mt-4">
               {uploadType === 'dataset' 
                 ? 'Supports Excel (.xlsx, .xls), CSV (.csv), and JSON (.json) files up to 25MB.'
                 : 'Supports PDF (.pdf) and Text (.txt) files. AI will use this knowledge to understand your business and query the database directly.'}
@@ -606,7 +606,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
                   <div className="font-semibold text-white text-sm">{selectedFile.name}</div>
-                  <div className="text-xs text-slate-400 font-mono">
+                  <div className="text-xs text-tv-text-muted font-mono">
                     {(selectedFile.size / 1024).toFixed(1)} KB • Click or drop to replace
                   </div>
                 </div>
@@ -618,7 +618,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   <div className="text-sm font-semibold text-white">
                     Drop your {uploadType === 'dataset' ? 'spreadsheet' : 'document'} or click to browse
                   </div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-tv-text-muted">
                     {uploadType === 'dataset' ? 'Excel (.xlsx, .xls), CSV (.csv), or JSON (.json)' : 'PDF (.pdf) or Text (.txt)'}
                   </div>
                 </div>
@@ -683,7 +683,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   setActiveView('list');
                   setSelectedFile(null);
                 }}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-tv-text-muted hover:text-white hover:bg-slate-800 transition"
               >
                 Cancel
               </button>
@@ -720,7 +720,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   Step 2 of 2: Schema Mapping & Validation
                 </span>
                 <h2 className="text-xl font-bold text-white mt-1">{previewData.dataset_name}</h2>
-                <p className="text-xs text-slate-400 font-mono mt-0.5">
+                <p className="text-xs text-tv-text-muted font-mono mt-0.5">
                   {previewData.original_filename} • {previewData.total_rows} rows detected • Format: {previewData.file_format}
                 </p>
               </div>
@@ -728,7 +728,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveView('list')}
-                  className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                  className="px-3 py-1.5 rounded-lg text-xs text-tv-text-muted hover:text-white hover:bg-slate-800 transition"
                 >
                   Cancel
                 </button>
@@ -743,14 +743,14 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                 <Eye className="w-4 h-4 text-blue-400" />
                 <span>Raw Data Preview (First 5 Rows)</span>
               </h3>
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-xs text-tv-text-muted font-mono">
                 {previewData.columns.length} columns detected
               </span>
             </div>
 
             <div className="overflow-x-auto border border-slate-800 rounded-xl max-h-60">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-800/80 text-slate-400 font-semibold border-b border-slate-700 sticky top-0">
+                <thead className="bg-slate-800/80 text-tv-text-muted font-semibold border-b border-slate-700 sticky top-0">
                   <tr>
                     {previewData.columns.map(col => (
                       <th key={col.column_name} className="px-3.5 py-2.5 whitespace-nowrap">
@@ -784,7 +784,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                 <Layers className="w-5 h-5 text-indigo-400" />
                 <span>Map Columns to Standard Financial Fields</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-tv-text-muted mt-1">
                 Confirm or adjust which column corresponds to each analytical business field.
                 Period Date and Revenue are mandatory for historical indexing.
               </p>
@@ -817,7 +817,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                             {col.data_type}
                           </span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-mono block truncate">
+                        <span className="text-[10px] text-tv-text-muted font-mono block truncate">
                           Sample: {col.sample_value || 'None'}
                         </span>
                       </div>
@@ -840,7 +840,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                         </span>
                       )}
                       {col.confidence === 'identifier' && (
-                        <span className="text-[10px] font-semibold bg-slate-700/60 text-slate-400 border border-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="text-[10px] font-semibold bg-slate-700/60 text-tv-text-muted border border-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">
                           Identifier (Ignored)
                         </span>
                       )}
@@ -853,7 +853,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                     )}
 
                     {col.confidence === 'identifier' && (
-                      <p className="text-[11px] text-slate-400 leading-tight">
+                      <p className="text-[11px] text-tv-text-muted leading-tight">
                         Safe default: Identifier is ignored to prevent incorrect metric interpretations.
                       </p>
                     )}
@@ -870,7 +870,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                         className={`w-full text-xs rounded-xl px-3 py-2 border font-medium focus:outline-none transition ${
                           currentMappedField !== 'ignore'
                             ? 'bg-blue-900/30 border-blue-500/50 text-blue-200'
-                            : 'bg-slate-800 border-slate-700 text-slate-400'
+                            : 'bg-slate-800 border-slate-700 text-tv-text-muted'
                         }`}
                       >
                         {TARGET_BUSINESS_FIELDS.map(f => (
@@ -887,7 +887,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
 
             {/* Ingestion Mode Configuration */}
             <div className="pt-6 border-t border-slate-800 space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-tv-text-muted">
                 Ingestion Strategy & Data Retention
               </h4>
 
@@ -897,7 +897,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   className={`p-4 rounded-2xl border cursor-pointer transition space-y-2 ${
                     ingestionMode === 'APPEND'
                       ? 'bg-blue-600/10 border-blue-500 text-white'
-                      : 'bg-slate-800/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                      : 'bg-slate-800/40 border-slate-800 text-tv-text-muted hover:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -907,7 +907,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                     </span>
                     {ingestionMode === 'APPEND' && <Check className="w-4 h-4 text-blue-400" />}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                  <p className="text-[11px] text-tv-text-muted leading-relaxed">
                     Maintains full existing historical ledger. Merges/upserts monthly periods from this upload
                     so AI can analyze historical timelines (e.g. July + August + September).
                   </p>
@@ -918,7 +918,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   className={`p-4 rounded-2xl border cursor-pointer transition space-y-2 ${
                     ingestionMode === 'REPLACE'
                       ? 'bg-amber-500/10 border-amber-500 text-white'
-                      : 'bg-slate-800/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                      : 'bg-slate-800/40 border-slate-800 text-tv-text-muted hover:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -928,7 +928,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                     </span>
                     {ingestionMode === 'REPLACE' && <Check className="w-4 h-4 text-amber-400" />}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                  <p className="text-[11px] text-tv-text-muted leading-relaxed">
                     Overwrites past monthly financials for this company with only this dataset's rows.
                     Use only when replacing corrupted legacy records.
                   </p>
@@ -956,7 +956,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveView('list')}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-tv-text-muted hover:text-white hover:bg-slate-800 transition"
               >
                 Cancel
               </button>

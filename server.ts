@@ -19,6 +19,11 @@ app.use(createProxyMiddleware({
   pathFilter: '/api',
   target: 'http://127.0.0.1:8081',
   changeOrigin: true,
+  // Chat responses use server-sent events.  Keep the proxy alive while the
+  // backend performs a verified database query or creates a report artifact.
+  // The previous implicit timeout surfaced to the UI as HTTP 504.
+  timeout: 120000,
+  proxyTimeout: 120000,
 }));
 
 // ----------------------------------------------------
