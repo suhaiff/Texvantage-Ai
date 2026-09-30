@@ -196,6 +196,39 @@ TOOL_DEFINITIONS = [
             },
             "required": ["query"]
         }
+    },
+    {
+        "name": "render_custom_chart",
+        "description": "Renders a custom visualization chart (bar, line, area, or donut) based on data. Use this after running a SQL query if the user asks for a chart or visual.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "title": { "type": "STRING", "description": "Title of the chart" },
+                "chart_type": { "type": "STRING", "description": "'bar', 'line', 'area', or 'donut'" },
+                "x_key": { "type": "STRING", "description": "The key in the data points representing the X-axis label" },
+                "series": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "key": { "type": "STRING", "description": "Data key for the Y-axis value" },
+                            "name": { "type": "STRING", "description": "Display name for the legend" },
+                            "color": { "type": "STRING", "description": "Hex color like #2563EB or #10B981" },
+                            "type": { "type": "STRING", "description": "Chart type for this series ('bar', 'line', 'area', 'donut')" }
+                        }
+                    }
+                },
+                "data_points": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "OBJECT",
+                        "additionalProperties": True
+                    },
+                    "description": "Array of JSON objects containing the row data, typically from execute_sql_query results"
+                }
+            },
+            "required": ["title", "chart_type", "x_key", "series", "data_points"]
+        }
     }
 ]
 
@@ -429,6 +462,14 @@ class ToolRegistry:
                         return {"status": "success", "results": results, "count": len(results)}
                 except Exception as e:
                     return {"status": "error", "message": f"SQL Execution failed: {str(e)}"}
+
+            # 12. render_custom_chart
+            elif tool_name == "render_custom_chart":
+                return {
+                    "status": "success",
+                    "action": "render_custom_chart",
+                    "chart_data": arguments
+                }
 
             else:
                 return {"status": "error", "message": f"Unknown tool: '{tool_name}'"}

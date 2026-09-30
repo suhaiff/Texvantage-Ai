@@ -272,6 +272,21 @@ def generate_artifacts_from_tool_result(
                 }
             })
 
+    # 8. render_custom_chart
+    elif tool_name == "render_custom_chart":
+        chart = tool_result.get("chart_data", {})
+        artifacts.append({
+            "id": f"art_chart_{uuid.uuid4().hex[:8]}",
+            "type": "chart",
+            "title": chart.get("title", "Custom Data Visualization"),
+            "data": {
+                "chart_type": chart.get("chart_type", "bar"),
+                "x_key": chart.get("x_key"),
+                "series": chart.get("series", []),
+                "data_points": chart.get("data_points", [])
+            }
+        })
+
     # Generate File Report Artifacts if user asked for report/export or on comparisons/summaries
     if any(k in prompt_lower for k in ["report", "export", "excel", "sheet", "download", "summary", "brief", "compare", "portfolio"]):
         is_comparison = tool_name in ["compare_companies", "get_global_summary"]

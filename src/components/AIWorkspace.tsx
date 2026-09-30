@@ -14,7 +14,11 @@ import {
   Zap,
   Lock,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { User, ChatMessage, ToolExecutionStep, AIArtifact } from '../types';
 import { AIService } from '../services/aiService';
@@ -33,9 +37,75 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
   const [liveSteps, setLiveSteps] = useState<ToolExecutionStep[]>([]);
   const [expandedSteps, setExpandedSteps] = useState<Record<string, boolean>>({});
 
+  // Voice features
+  const [isListening, setIsListening] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isOwner = currentUser.role === 'OWNER';
   const tenantLabel = getTenantDisplayName(currentUser);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event: any) => {
+          let currentTranscript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            currentTranscript += event.results[i][0].transcript;
+          }
+          setInputPrompt(currentTranscript);
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      setInputPrompt(''); // clear previous input before listening
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
+
+  const speakText = (text: string) => {
+    if (!voiceEnabled || !window.speechSynthesis) return;
+    
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Strip markdown for natural speech
+    const cleanText = text.replace(/[*#_`]/g, '').replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.05;
+    window.speechSynthesis.speak(utterance);
+  };
 
   // Initialize greeting on persona change
   useEffect(() => {
@@ -128,6 +198,7 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
           setMessages(prev =>
             prev.map(m => (m.id === assistantMsgId ? { ...m, isStreaming: false } : m))
           );
+          speakText(accumulatedText);
         },
         onError: errMsg => {
           accumulatedText += `\n\n⚠️ **Error**: ${errMsg}`;
@@ -212,8 +283,19 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
 
         <div className="flex items-center gap-2">
           <button
+            onClick={() => {
+              setVoiceEnabled(!voiceEnabled);
+              if (voiceEnabled) window.speechSynthesis?.cancel();
+            }}
+            className={`text-xs p-2 rounded-lg transition-colors flex items-center gap-1.5 ${voiceEnabled ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'text-slate-400 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-800'}`}
+            title="Toggle Voice Feedback"
+          >
+            {voiceEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">Voice</span>
+          </button>
+          <button
             onClick={() => setMessages([])}
-            className="text-xs text-slate-400 hover:text-slate-200 p-2 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+            className="text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:text-slate-200 p-2 rounded-lg dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
             title="Clear Chat History"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -432,6 +514,15 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser }) => {
             className="flex-1 bg-transparent border-0 resize-none text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none px-3 py-2 max-h-32"
           />
 
+          <button
+            type="button"
+            onClick={toggleListening}
+            className={`p-2.5 rounded-xl transition-colors shadow-sm shrink-0 ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+            title="Voice Input"
+          >
+            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
+          
           <button
             type="submit"
             disabled={!inputPrompt.trim() || loading}
