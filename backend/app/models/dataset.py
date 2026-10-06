@@ -11,11 +11,11 @@ if TYPE_CHECKING:
     from .product import ProductMetric
 
 class Dataset(Base, TimestampMixin):
-    __tablename__ = "datasets"
+    __tablename__ = "ai_datasets"
 
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
-    company_id: Mapped[str] = mapped_column(String(50), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True)
-    uploaded_by: Mapped[Optional[str]] = mapped_column(String(50), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    company_id: Mapped[str] = mapped_column(String(50), ForeignKey("ai_companies.id"), nullable=False, index=True)
+    uploaded_by: Mapped[Optional[str]] = mapped_column(String(50), ForeignKey("ai_users.id"), nullable=True)
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
     file_format: Mapped[str] = mapped_column(String(20), nullable=False) # "XLSX", "XLS", "CSV", "JSON"
@@ -46,10 +46,10 @@ class Dataset(Base, TimestampMixin):
     products: Mapped[List["ProductMetric"]] = relationship("ProductMetric", back_populates="dataset")
 
 class DatasetColumn(Base):
-    __tablename__ = "dataset_columns"
+    __tablename__ = "ai_dataset_columns"
 
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
-    dataset_id: Mapped[str] = mapped_column(String(50), ForeignKey("datasets.id", ondelete="CASCADE"), nullable=False, index=True)
+    dataset_id: Mapped[str] = mapped_column(String(50), ForeignKey("ai_datasets.id"), nullable=False, index=True)
     column_name: Mapped[str] = mapped_column(String(100), nullable=False)
     data_type: Mapped[str] = mapped_column(String(50), nullable=False) # "string", "number", "date", "currency"
     suggested_field: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # "revenue", "cogs", "date", etc.

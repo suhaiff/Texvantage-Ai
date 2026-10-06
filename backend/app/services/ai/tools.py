@@ -299,7 +299,9 @@ class ToolRegistry:
                 prev = financials[-2] if len(financials) >= 2 else None
 
                 if metric_type in ("revenue", "total_revenue"):
-                    if period == "all" or period == "ytd":
+                    if period == "all" or period == "ytd" or period == "last_6_months":
+                        if period == "last_6_months" and len(financials) > 6:
+                            financials = financials[-6:]
                         total = round(sum(f["revenue_lakh"] for f in financials if f["revenue_lakh"] is not None), 2)
                         return {"status": "success", "metric": "total_revenue_lakh", "value": total, "unit": "Lakh INR", "period": f"Total across {len(financials)} months"}
                     return {"status": "success", "metric": "revenue_lakh", "value": latest["revenue_lakh"], "unit": "Lakh INR", "month": latest["month_name"]}

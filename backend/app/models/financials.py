@@ -9,11 +9,11 @@ if TYPE_CHECKING:
     from .dataset import Dataset
 
 class MonthlyFinancials(Base, TimestampMixin):
-    __tablename__ = "monthly_financials"
+    __tablename__ = "ai_monthly_financials"
 
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
-    company_id: Mapped[str] = mapped_column(String(50), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True)
-    dataset_id: Mapped[Optional[str]] = mapped_column(String(50), ForeignKey("datasets.id", ondelete="SET NULL"), nullable=True, index=True)
+    company_id: Mapped[str] = mapped_column(String(50), ForeignKey("ai_companies.id"), nullable=False, index=True)
+    dataset_id: Mapped[Optional[str]] = mapped_column(String(50), ForeignKey("ai_datasets.id"), nullable=True, index=True)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     month: Mapped[int] = mapped_column(Integer, nullable=False) # 1 to 12
     period_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)

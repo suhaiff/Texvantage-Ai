@@ -8,11 +8,11 @@ if TYPE_CHECKING:
     from .dataset import Dataset
 
 class ProductMetric(Base, TimestampMixin):
-    __tablename__ = "product_metrics"
+    __tablename__ = "ai_product_metrics"
 
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
-    company_id: Mapped[str] = mapped_column(String(50), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False, index=True)
-    dataset_id: Mapped[Optional[str]] = mapped_column(String(50), ForeignKey("datasets.id", ondelete="SET NULL"), nullable=True, index=True)
+    company_id: Mapped[str] = mapped_column(String(50), ForeignKey("ai_companies.id"), nullable=False, index=True)
+    dataset_id: Mapped[Optional[str]] = mapped_column(String(50), ForeignKey("ai_datasets.id"), nullable=True, index=True)
     category_name: Mapped[str] = mapped_column(String(100), nullable=False) # e.g. "Combed Cotton 40s", "Poly-Cotton Yarn", "Denim Weft"
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     month: Mapped[int] = mapped_column(Integer, nullable=False)

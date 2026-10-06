@@ -14,3 +14,7 @@ __pycache__/
 *.db
 storage/uploads/
 
+.venv/
+*.rar
+*.bak
+error.txt

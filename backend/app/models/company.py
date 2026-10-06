@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .dataset import Dataset
 
 class Company(Base, TimestampMixin):
-    __tablename__ = "companies"
+    __tablename__ = "ai_companies"
 
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)

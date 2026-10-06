@@ -5,6 +5,15 @@ import logging
 import time
 import re
 from datetime import datetime, timezone
+from .nlp_utils import (
+    fuzzy_match_company,
+    fuzzy_match_company_with_score,
+    closest_company_name,
+    extract_intent,
+    extract_period,
+    normalize_prompt,
+    extract_requested_name,
+)
 
 from ...schemas.auth import AuthenticatedUser
 from ...schemas.ai_events import AIStreamEvent
@@ -114,170 +123,189 @@ class AIOrchestrator:
         )
 
     def _period_months_from_prompt(self, prompt_lower: str) -> int:
-        month_match = re.search(r"\b(\d{1,2})\s*[- ]?month", prompt_lower)
-        if month_match:
-            return max(1, min(int(month_match.group(1)), 60))
-        if any(term in prompt_lower for term in ("annual", "full year", "last year", "past year", "twelve month")):
-            return 12
-        if any(term in prompt_lower for term in ("quarter", "q1", "q2", "q3", "q4")):
-            return 3
-        return 6
+        """Delegates to nlp_utils for robust period extraction."""
+        return extract_period(prompt_lower)
 
     def _build_verified_tool_call(self, prompt: str) -> Optional[AIToolCall]:
-        """Route unambiguous BI requests to database tools without an LLM.
-
-        Named-company chart/KPI/report questions, multi-mill comparisons, and
-        portfolio summaries are resolved from verified records even if the
-        external model is rate-limited or skips visualization tools.
         """
-        prompt_lower = prompt.casefold()
+        Routes ANY natural-language BI request to the correct database tool.
+
+        Uses a multi-layer NLP pipeline:
+        1. Prompt normalization (typo correction)
+        2. Fuzzy company matching (handles partial names, typos, abbreviations)
+        3. Semantic intent extraction (30+ phrase patterns)
+        4. Period extraction (month count from free text)
+        """
+        normalized = normalize_prompt(prompt)
+        prompt_lower = normalized.casefold()
+        months = extract_period(prompt_lower)
+        intent = extract_intent(prompt_lower)
+
         companies = self.repository.get_companies(
             None if self.user.is_admin() else [self.user.company_id]
         )
-        def aliases(company) -> List[str]:
-            # Demo/ERP display names use the form "Textile J (Jupiter Garment
-            # Exports)".  Users naturally ask for "Jupiter Garment Exports",
-            # so treat the parenthetical trade name as an exact, safe alias.
-            parenthetical_names = re.findall(r"\(([^)]+)\)", company.name)
-            return [company.name, company.code, *parenthetical_names]
 
-        matches = [
-            company for company in companies
-            if any(alias.casefold() in prompt_lower for alias in aliases(company))
-        ]
-        
-        # Fallback for partial names (e.g., "Vardhman Spinning" for "Vardhman Spinning Mills")
-        if not matches:
-            extracted = re.search(r"\b(?:for|of)\s+(.+?)(?:\s+(?:over|during|in|with)\b|[?.!]|$)", prompt, flags=re.IGNORECASE)
-            if extracted:
-                req_name = extracted.group(1).strip(" ,.").casefold()
-                if len(req_name) >= 3 and not req_name.startswith(("the ", "all ")):
-                    matches = [
-                        company for company in companies
-                        if any(req_name in alias.casefold() for alias in aliases(company))
-                    ]
-        
-        # Second fallback: match by the first word of the company alias
-        if not matches:
-            prompt_words = set(re.findall(r"\w+", prompt_lower))
-            for company in companies:
-                for alias in aliases(company):
-                    first_word = alias.casefold().split()[0]
-                    if len(first_word) >= 4 and first_word in prompt_words:
-                        matches.append(company)
-                        break
-        months = self._period_months_from_prompt(prompt_lower)
-        wants_chart = any(
-            term in prompt_lower
-            for term in ("trend", "plot", "chart", "graph", "visual", "trajectory")
-        )
-        wants_report = any(
-            term in prompt_lower
-            for term in ("report", "excel", "export", "brief", "workbook", "download")
-        )
-        wants_compare = any(
-            term in prompt_lower
-            for term in ("compare", "benchmark", "rank", "ranking", "versus", " vs ")
-        )
-
-        if any(term in prompt_lower for term in ("dataset", "uploaded file", "what have i uploaded")):
-            company_id = matches[0].id if len(matches) == 1 else None
+        # --- Datasets query (always short-circuit before company matching) ---
+        if intent == "datasets" or any(term in prompt_lower for term in ("uploaded file", "what have i uploaded")):
+            matched = fuzzy_match_company(normalized, companies)
             args: Dict[str, Any] = {}
-            if company_id:
-                args["company_id"] = company_id
+            if matched:
+                args["company_id"] = matched.id
             return AIToolCall(name="get_uploaded_datasets_info", arguments=args)
 
-        # If user has only 1 company (e.g. Owner), assume it for all DB questions if not specified
-        if len(matches) == 0 and len(companies) == 1:
-            matches = [companies[0]]
+        # --- Fuzzy company matching ---
+        matched_company, match_score = fuzzy_match_company_with_score(normalized, companies)
 
-        if len(matches) >= 2 and self.user.is_admin() and wants_compare:
-            return AIToolCall(
-                name="compare_companies",
-                arguments={
-                    "company_ids": [company.id for company in matches],
-                    "period_months": months,
-                },
-            )
+        # Single-company users always use their own company
+        if not matched_company and len(companies) == 1:
+            matched_company = companies[0]
+            match_score = 100.0
 
-        if len(matches) == 0 and self.user.is_admin() and (
-            wants_compare
-            or wants_chart
-            or "portfolio" in prompt_lower
-            or "all 10" in prompt_lower
-            or "all ten" in prompt_lower
-            or "consolidated" in prompt_lower
-            or wants_report
-            or "revenue" in prompt_lower
-            or "profit" in prompt_lower
-            or "margin" in prompt_lower
-            or "sales" in prompt_lower
-        ):
-            if wants_compare:
-                return AIToolCall(
-                    name="compare_companies",
-                    arguments={
-                        "company_ids": [company.id for company in companies],
-                        "period_months": months,
-                    },
-                )
-            return AIToolCall(
-                name="get_global_summary",
-                arguments={"period_months": months},
-            )
+        # --- Admin-level: portfolio / cross-company requests ---
+        if self.user.is_admin():
+            # Explicit compare intent without a single company target
+            wants_compare = intent == "comparison"
+            is_portfolio = any(term in prompt_lower for term in (
+                "portfolio", "all 10", "all ten", "consolidated", "all companies",
+                "all mills", "every company", "every mill", "across all",
+            ))
 
-        if len(matches) != 1:
+            if is_portfolio or (wants_compare and (not matched_company or match_score < 70)):
+                if wants_compare:
+                    return AIToolCall(
+                        name="compare_companies",
+                        arguments={
+                            "company_ids": [c.id for c in companies],
+                            "period_months": months,
+                        },
+                    )
+                return AIToolCall(name="get_global_summary", arguments={"period_months": months})
+
+            # Multiple companies matched — compare them
+            if wants_compare and matched_company:
+                # Try to find all companies mentioned
+                multi_matches = [c for c in companies if fuzzy_match_company(normalized, [c], threshold=65)]
+                if len(multi_matches) >= 2:
+                    return AIToolCall(
+                        name="compare_companies",
+                        arguments={
+                            "company_ids": [c.id for c in multi_matches],
+                            "period_months": months,
+                        },
+                    )
+                # Still fall through to single-company logic with matched_company
+
+            # No specific company identified and it's a general BI question → global summary
+            if not matched_company and intent in ("revenue", "profit", "margin", "summary", "trend", "growth"):
+                return AIToolCall(name="get_global_summary", arguments={"period_months": months})
+
+        # --- Single-company routing ---
+        if not matched_company:
             return None
 
-        company_id = matches[0].id
+        company_id = matched_company.id
 
-        if any(term in prompt_lower for term in ("category", "fabric", "product", "mix", "share", "composition", "breakdown")):
+        # Products / category mix
+        if intent == "products":
             return AIToolCall(
                 name="get_top_products",
-                arguments={"company_id": company_id, "limit": 10}
+                arguments={"company_id": company_id, "limit": 10},
             )
 
-        if wants_chart:
+        # Trend / chart
+        if intent == "trend":
             tool_name = "get_profit_trend" if any(
-                term in prompt_lower for term in ("profit", "margin")
+                t in prompt_lower for t in ("profit", "margin")
             ) else "get_sales_trend"
             return AIToolCall(
                 name=tool_name,
-                arguments={"company_id": company_id, "months": months}
+                arguments={"company_id": company_id, "months": months},
             )
 
-        if wants_report or any(term in prompt_lower for term in ("executive summary", "summary", "kpi", "performance", "dashboard")):
-            return AIToolCall(
-                name="get_company_summary",
-                arguments={"company_id": company_id}
-            )
-
-        if "growth" in prompt_lower:
+        # Growth rate
+        if intent == "growth":
             return AIToolCall(
                 name="calculate_metric",
-                arguments={"company_id": company_id, "metric_type": "growth", "period": "latest"}
+                arguments={"company_id": company_id, "metric_type": "growth", "period": "latest"},
             )
 
-        return None
+        # Revenue / sales total
+        if intent == "revenue":
+            period = "last_6_months" if months == 6 and any(
+                t in prompt_lower for t in ("total", "last 6", "6 month", "six month", "past 6")
+            ) else "latest"
+            return AIToolCall(
+                name="calculate_metric",
+                arguments={"company_id": company_id, "metric_type": "revenue", "period": period},
+            )
+
+        # Gross profit amount
+        if intent == "profit":
+            return AIToolCall(
+                name="calculate_metric",
+                arguments={"company_id": company_id, "metric_type": "gross_profit", "period": "latest"},
+            )
+
+        # Profit margin %
+        if intent == "margin":
+            return AIToolCall(
+                name="calculate_metric",
+                arguments={"company_id": company_id, "metric_type": "margin", "period": "latest"},
+            )
+
+        # Units / volume
+        if intent == "units":
+            return AIToolCall(
+                name="calculate_metric",
+                arguments={"company_id": company_id, "metric_type": "units", "period": "latest"},
+            )
+
+        # Orders / AOV
+        if intent == "orders":
+            return AIToolCall(
+                name="calculate_metric",
+                arguments={"company_id": company_id, "metric_type": "aov", "period": "latest"},
+            )
+
+        # Summary / KPI / report / dashboard — default single-company action
+        return AIToolCall(
+            name="get_company_summary",
+            arguments={"company_id": company_id},
+        )
 
     def _unrecognized_company_message(self, prompt: str) -> Optional[str]:
-        """Return a factual response when a prompt names a company absent from DB."""
-        match = re.search(
-            r"\b(?:for|of)\s+(.+?)(?:\s+(?:over|during|in|with)\b|[?.!]|$)",
-            prompt,
-            flags=re.IGNORECASE,
-        )
-        if not match:
+        """
+        Returns a helpful error message only when the prompt CLEARLY names a company
+        that cannot be matched even with fuzzy logic.
+        Suggests the closest match when confidence is moderate.
+        """
+        normalized = normalize_prompt(prompt)
+        requested_name = extract_requested_name(normalized)
+        if not requested_name:
             return None
-
-        requested_name = match.group(1).strip(" ,.")
-        if len(requested_name) < 3 or requested_name.casefold().startswith(("the ", "all ")):
+        if len(requested_name) < 3 or requested_name.casefold().startswith(("the ", "all ", "my ")):
             return None
 
         companies = self.repository.get_companies(
             None if self.user.is_admin() else [self.user.company_id]
         )
-        known_names = ", ".join(company.name for company in companies)
+
+        matched, score = fuzzy_match_company_with_score(normalized, companies)
+
+        # High confidence — a company was matched; no error needed
+        if matched and score >= 65:
+            return None
+
+        # Moderate confidence — suggest the closest match
+        if matched and score >= 40:
+            return (
+                f"I couldn't find a company named '{requested_name}' in the database. "
+                f"Did you mean **{matched.name}**? "
+                f"You can also choose from: {', '.join(c.name for c in companies if c.id != matched.id)}."
+            )
+
+        # Low confidence — list all options
+        known_names = ", ".join(c.name for c in companies)
         return (
             f"No company named '{requested_name}' exists in the connected database. "
             f"Available companies: {known_names}. Please select one of these names."
@@ -426,6 +454,27 @@ class AIOrchestrator:
         captured_artifacts: List[Dict[str, Any]] = []
         completed_tool_results: List[tuple[str, Dict[str, Any]]] = []
         verified_tool_call = self._build_verified_tool_call(prompt)
+
+        # Context carry-forward: if nothing was matched but the previous assistant
+        # message mentioned a company, re-run the last tool for that company with
+        # the updated intent from the new prompt.
+        if verified_tool_call is None:
+            try:
+                last_user_msgs = [m for m in raw_messages if m.sender_role == "user"]
+                prev_user_prompt = last_user_msgs[-2].content if len(last_user_msgs) >= 2 else ""
+                if prev_user_prompt:
+                    prev_normalized = normalize_prompt(prev_user_prompt)
+                    companies_scope = self.repository.get_companies(
+                        None if self.user.is_admin() else [self.user.company_id]
+                    )
+                    prev_company, prev_score = fuzzy_match_company_with_score(prev_normalized, companies_scope)
+                    if prev_company and prev_score >= 60:
+                        # Build a synthetic combined prompt and re-attempt routing
+                        combined = prev_normalized + " " + prompt
+                        verified_tool_call = self._build_verified_tool_call(combined)
+            except Exception:
+                pass  # Never let context carry-forward break the request
+
         unrecognized_company_message = (
             self._unrecognized_company_message(prompt)
             if verified_tool_call is None else None
