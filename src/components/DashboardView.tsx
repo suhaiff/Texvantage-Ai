@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -20,7 +20,8 @@ import {
   MapPin,
   Factory,
   Download,
-  Check
+  Check,
+  Zap
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { User } from '../types';
@@ -31,6 +32,8 @@ interface DashboardViewProps {
   onOpenAIQuery: (query: string) => void;
   onNavigateTab?: (tab: 'ai' | 'dashboard' | 'ledger' | 'datasets' | 'benchmark' | 'governance') => void;
 }
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   currentUser,
@@ -57,6 +60,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [exportingReport, setExportingReport] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  // Cache + mounted guard
+  const cacheRef = useRef<{ data: any; ts: number } | null>(null);
+  const mountedRef = useRef(false);
 
   const isGlobal = currentUser.role === 'ADMIN';
 
@@ -97,21 +104,55 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
   };
 
-  const loadDashboardData = async () => {
-    setLoading(true);
-    setError(null);
+  const loadDashboardData = async (force = false) => {
+    // Return from cache if fresh
+    if (!force && cacheRef.current && Date.now() - cacheRef.current.ts < CACHE_TTL) {
+      const c = cacheRef.current.data;
+      if (mountedRef.current) {
+        setSummaryData(c.summaryData);
+        setSalesTrend(c.salesTrend);
+        setProfitTrend(c.profitTrend);
+        setTopProducts(c.topProducts);
+        setFinancials(c.financials);
+        setDatasets(c.datasets);
+        setSchema(c.schema);
+        setLoading(false);
+      }
+      return;
+    }
+
+    const controller = new AbortController();
+
+    if (mountedRef.current) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
-      const schemaRes = await apiClient.analytics.getSchema().catch(() => null);
-      setSchema(schemaRes);
+      let result: {
+        summaryData: any;
+        salesTrend: any;
+        profitTrend: any;
+        topProducts: any[];
+        financials: any[];
+        datasets: any[];
+        schema: any;
+      };
 
       if (isGlobal) {
         const [globalRes, dsRes] = await Promise.all([
           apiClient.analytics.getGlobalSummary(6),
           apiClient.datasets.list()
         ]);
-        setSummaryData(globalRes);
-        setDatasets(dsRes || []);
+        result = {
+          summaryData: globalRes,
+          salesTrend: null,
+          profitTrend: null,
+          topProducts: [],
+          financials: [],
+          datasets: dsRes || [],
+          schema: null
+        };
       } else {
         const [sumRes, trRes, prTrendRes, prRes, finRes, dsRes] = await Promise.all([
           apiClient.analytics.getSummary(currentUser.companyId || undefined),
@@ -122,22 +163,63 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           apiClient.datasets.list(currentUser.companyId || undefined)
         ]);
 
-        setSummaryData(sumRes);
-        setSalesTrend(trRes);
-        setProfitTrend(prTrendRes);
-        setTopProducts(prRes || []);
-        setFinancials(finRes || []);
-        setDatasets(dsRes || []);
+        result = {
+          summaryData: sumRes,
+          salesTrend: trRes,
+          profitTrend: prTrendRes,
+          topProducts: prRes || [],
+          financials: finRes || [],
+          datasets: dsRes || [],
+          schema: null
+        };
+
+        // Lazy schema fetch: only needed if there's no data
+        const hasNoData =
+          (!finRes || finRes.length === 0) &&
+          (!dsRes || dsRes.length === 0) &&
+          (!sumRes || sumRes.period_months === 0);
+
+        if (hasNoData) {
+          const schemaRes = await apiClient.analytics.getSchema().catch(() => null);
+          result.schema = schemaRes;
+        }
       }
+
+      if (controller.signal.aborted) return;
+      if (!mountedRef.current) return;
+
+      setSummaryData(result.summaryData);
+      setSalesTrend(result.salesTrend);
+      setProfitTrend(result.profitTrend);
+      setTopProducts(result.topProducts);
+      setFinancials(result.financials);
+      setDatasets(result.datasets);
+      setSchema(result.schema);
+
+      // Save to cache
+      cacheRef.current = { data: result, ts: Date.now() };
     } catch (err: any) {
-      setError('Unable to load your business summary. Please try again.');
+      if (controller.signal.aborted) return;
+      if (mountedRef.current) {
+        setError('Unable to load your business summary. Please try again.');
+      }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted && mountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
+    mountedRef.current = true;
+    const controller = new AbortController();
+
     loadDashboardData();
+
+    return () => {
+      mountedRef.current = false;
+      controller.abort();
+    };
   }, [currentUser.id, currentUser.role, currentUser.companyId]);
 
   // Dynamic greeting based on current time
@@ -255,7 +337,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <h3 className="text-lg font-bold text-tv-text-primary">Unable to Load Business Summary</h3>
         <p className="text-sm text-tv-text-secondary max-w-md mx-auto">{error}</p>
         <button
-          onClick={loadDashboardData}
+          onClick={() => loadDashboardData(true)}
           className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
@@ -301,7 +383,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             
             <p className="text-sm text-tv-text-secondary mb-6 max-w-3xl">
               We've automatically detected the following tables in your database. 
-              Upload a <b>Business Knowledge</b> document (PDF or Text) in the Knowledge & Datasets tab to teach the AI how to interpret these tables, so you can start querying your metrics immediately.
+              Upload a <b>Business Knowledge</b> document (PDF or Text) in the Knowledge &amp; Datasets tab to teach the AI how to interpret these tables, so you can start querying your metrics immediately.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -385,6 +467,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   // GLOBAL PORTFOLIO VIEW (ADMIN ONLY)
   // ==========================================
   if (isGlobal) {
+    // Sorted companies by margin descending for distribution chart
+    const sortedByMargin = [...(summaryData?.companies || [])].sort(
+      (a: any, b: any) => (b.weighted_profit_margin_pct ?? 0) - (a.weighted_profit_margin_pct ?? 0)
+    );
+    const maxMargin = Math.max(1, ...sortedByMargin.map((c: any) => c.weighted_profit_margin_pct ?? 0));
+
+    const getMarginBarColor = (pct: number) => {
+      if (pct > 25) return '#10b981'; // emerald
+      if (pct > 18) return '#3b82f6'; // blue
+      if (pct > 12) return '#f59e0b'; // amber
+      return '#f43f5e'; // rose
+    };
+
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Header */}
@@ -409,9 +504,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
 
-        {/* Global KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
+        {/* Global KPI Cards — 6 cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
             <div className="text-xs font-medium text-tv-text-secondary">Total Portfolio Revenue</div>
             <div className="text-2xl font-bold text-tv-text-primary mt-1">
               {summaryData?.total_portfolio_revenue_lakh != null
@@ -421,7 +516,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="text-xs text-tv-text-secondary mt-2">6-Month Aggregate (10 Mills)</div>
           </div>
 
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
             <div className="text-xs font-medium text-tv-text-secondary">Weighted Gross Margin</div>
             <div className="text-2xl font-bold text-tv-text-primary mt-1">
               {summaryData?.portfolio_average_margin_pct != null
@@ -435,7 +530,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
             <div className="text-xs font-medium text-tv-text-secondary">Top Revenue Contributor</div>
             <div className="text-2xl font-bold text-tv-text-primary mt-1">
               {summaryData?.top_performing_company?.code || 'Not available'}
@@ -445,7 +540,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
             <div className="text-xs font-medium text-tv-text-secondary">Highest Margin Mill</div>
             <div className="text-2xl font-bold text-tv-text-primary mt-1">
               {summaryData?.highest_margin_company?.weighted_profit_margin_pct != null
@@ -455,6 +550,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="text-xs text-tv-text-secondary mt-2 truncate">
               {summaryData?.highest_margin_company?.name || 'Artisanal Silk & Jacquard'}
             </div>
+          </div>
+
+          {/* KPI 5: Total Units Sold */}
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+            <div className="text-xs font-medium text-tv-text-secondary">Total Units Sold</div>
+            <div className="text-2xl font-bold text-tv-text-primary mt-1">
+              {summaryData?.total_units_sold != null
+                ? summaryData.total_units_sold.toLocaleString('en-IN')
+                : 'Not available'}
+            </div>
+            <div className="text-xs text-tv-text-secondary mt-2">6-Month Portfolio Volume</div>
+          </div>
+
+          {/* KPI 6: Active Companies */}
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+            <div className="text-xs font-medium text-tv-text-secondary">Active Companies</div>
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">10</div>
+            <div className="text-xs text-tv-text-secondary mt-2">All mills operational</div>
           </div>
         </div>
 
@@ -497,6 +610,80 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Margin Distribution Chart */}
+        {sortedByMargin.length > 0 && (
+          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-sm font-bold text-tv-text-primary">Margin Distribution</h2>
+                <p className="text-xs text-tv-text-secondary mt-0.5">
+                  Gross margin % by mill — sorted descending
+                </p>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] text-tv-text-secondary">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block bg-emerald-500" /> &gt;25%</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block bg-blue-500" /> &gt;18%</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block bg-amber-500" /> &gt;12%</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block bg-rose-500" /> ≤12%</span>
+              </div>
+            </div>
+            <div className="space-y-2.5">
+              {sortedByMargin.map((comp: any, idx: number) => {
+                const pct = comp.weighted_profit_margin_pct ?? 0;
+                const barWidth = maxMargin > 0 ? (pct / maxMargin) * 100 : 0;
+                const color = getMarginBarColor(pct);
+                return (
+                  <div key={idx} className="flex items-center gap-3">
+                    <span className="w-16 text-[11px] font-mono text-tv-text-secondary shrink-0 text-right">
+                      {comp.code || `M${idx + 1}`}
+                    </span>
+                    <div className="flex-1 h-5 bg-tv-base rounded overflow-hidden">
+                      <div
+                        className="h-full rounded transition-all"
+                        style={{ width: `${barWidth}%`, backgroundColor: color }}
+                      />
+                    </div>
+                    <span className="w-14 text-[11px] font-mono font-semibold shrink-0" style={{ color }}>
+                      {pct.toFixed(2)}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Quick AI Actions Panel */}
+        <div className="bg-gradient-to-br from-slate-900 to-blue-950 rounded-xl p-5 border border-slate-800 shadow-sm">
+          <div className="flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3">
+            <Zap className="w-4 h-4 text-amber-400" />
+            <span>Quick AI Analysis Shortcuts</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              onClick={() => onOpenAIQuery('Show top 3 highest margin mills and their performance analysis')}
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/40 text-white text-xs font-semibold px-4 py-3 rounded-xl transition-all text-left"
+            >
+              <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Top 3 Highest Margin Mills</span>
+            </button>
+            <button
+              onClick={() => onOpenAIQuery('Compare top revenue mills vs lowest revenue mills')}
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/40 text-white text-xs font-semibold px-4 py-3 rounded-xl transition-all text-left"
+            >
+              <BarChart3 className="w-4 h-4 text-blue-400 shrink-0" />
+              <span>Revenue Leaders vs Laggards</span>
+            </button>
+            <button
+              onClick={() => onOpenAIQuery('Give full portfolio executive summary with risks and opportunities')}
+              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/40 text-white text-xs font-semibold px-4 py-3 rounded-xl transition-all text-left"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>Portfolio Health Check</span>
+            </button>
           </div>
         </div>
       </div>
@@ -542,12 +729,56 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     ? `${revenueGrowthPct >= 0 ? '+' : ''}${revenueGrowthPct.toFixed(2)}%`
     : 'Not available';
 
+  // --- Additional owner KPI metrics ---
+
+  // Gross Profit (annual aggregate)
+  const grossProfitValue =
+    summaryData?.annual_aggregate?.total_gross_profit_lakh != null
+      ? `₹${Number(summaryData.annual_aggregate.total_gross_profit_lakh).toFixed(2)}L`
+      : 'Not available';
+
+  // COGS % = 100 - latest margin
+  const cogsPct =
+    summaryData?.latest_profit_margin_pct != null
+      ? (100 - Number(summaryData.latest_profit_margin_pct)).toFixed(2)
+      : null;
+
+  // Peak Revenue Month
+  const peakRevMonth = useMemo(() => {
+    const series: any[] = salesTrend?.series || [];
+    if (series.length === 0) return null;
+    let maxIdx = 0;
+    let maxVal = -Infinity;
+    series.forEach((s, i) => {
+      const v = Number(s.revenue_lakh) || 0;
+      if (v > maxVal) { maxVal = v; maxIdx = i; }
+    });
+    return { month: series[maxIdx].month, value: maxVal };
+  }, [salesTrend]);
+
+  // Avg Order Value
+  const avgOrderValue =
+    summaryData?.annual_aggregate?.avg_order_value_inr != null
+      ? `₹${Number(summaryData.annual_aggregate.avg_order_value_inr).toLocaleString('en-IN')}`
+      : 'Not available';
+
   // Sales Trend points for SVG Area Chart
   const salesSeries: any[] = salesTrend?.series || [];
   const maxSalesRev = Math.max(10, ...salesSeries.map(s => Number(s.revenue_lakh) || 0));
 
   // Profit Trend points
   const profitSeries: any[] = profitTrend?.series || [];
+
+  // Last 6 months for ledger table
+  const last6Financials = useMemo(() => {
+    if (!financials || financials.length === 0) return [];
+    return financials.slice(-6);
+  }, [financials]);
+
+  // Total product revenue for share calculation
+  const totalProductRevenue = useMemo(() => {
+    return topProducts.reduce((acc, p) => acc + (Number(p.total_revenue_lakh) || 0), 0);
+  }, [topProducts]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -743,6 +974,67 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="text-tv-text-muted dark:text-slate-500">Revenue trajectory</span>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* SECOND ROW OF 4 KPI CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI 5: Gross Profit */}
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+            <span>Gross Profit</span>
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+              12 Months
+            </span>
+          </div>
+          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1.5">
+            {grossProfitValue}
+          </div>
+          <div className="text-xs text-tv-text-secondary mt-2.5">Annual aggregate earnings</div>
+        </div>
+
+        {/* KPI 6: COGS % */}
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+            <span>COGS %</span>
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+              {revenuePeriod}
+            </span>
+          </div>
+          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+            {cogsPct != null ? `${cogsPct}%` : 'Not available'}
+          </div>
+          <div className="text-xs text-tv-text-secondary mt-2.5">Cost of goods sold ratio</div>
+        </div>
+
+        {/* KPI 7: Peak Revenue Month */}
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+            <span>Peak Revenue Month</span>
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+              6M High
+            </span>
+          </div>
+          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+            {peakRevMonth ? peakRevMonth.month?.split(' ')[0] : 'N/A'}
+          </div>
+          <div className="text-xs text-tv-text-secondary mt-2.5">
+            {peakRevMonth ? `₹${peakRevMonth.value.toFixed(2)}L peak revenue` : 'No trend data'}
+          </div>
+        </div>
+
+        {/* KPI 8: Avg Order Value */}
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+            <span>Avg Order Value</span>
+            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+              Latest
+            </span>
+          </div>
+          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+            {avgOrderValue}
+          </div>
+          <div className="text-xs text-tv-text-secondary mt-2.5">Per transaction avg value</div>
         </div>
       </div>
 
@@ -1123,6 +1415,180 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* TOP PRODUCT CATEGORIES CARD (Product Mix) */}
+      {topProducts.length > 0 && (
+        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-bold text-tv-text-primary">Top Product Categories</h2>
+              <p className="text-xs text-tv-text-secondary mt-0.5">
+                Revenue share, margin health and customer mix
+              </p>
+            </div>
+            <PieIcon className="w-4 h-4 text-tv-text-secondary" />
+          </div>
+          <div className="space-y-3">
+            {topProducts.map((prod, idx) => {
+              const rev = Number(prod.total_revenue_lakh) || 0;
+              const margin = Number(prod.avg_margin_pct) ?? null;
+              const share = totalProductRevenue > 0 ? (rev / totalProductRevenue) * 100 : 0;
+              const marginBadgeClass =
+                margin === null
+                  ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                  : margin > 20
+                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                  : margin >= 10
+                  ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
+                  : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400';
+
+              return (
+                <div key={idx} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                      <span className="font-medium text-tv-text-primary truncate">
+                        {prod.category_name}
+                      </span>
+                      {prod.top_customer_segment && (
+                        <span className="hidden sm:inline text-tv-text-secondary truncate">
+                          · {prod.top_customer_segment}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <span className="font-mono text-tv-text-primary font-medium">
+                        {rev > 0 ? `₹${rev.toFixed(2)}L` : '—'}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${marginBadgeClass}`}>
+                        {margin != null ? `${margin}%` : '—'}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Revenue share progress bar */}
+                  <div className="h-1.5 bg-tv-base rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full transition-all"
+                      style={{ width: `${Math.min(100, share)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* FINANCIAL LEDGER SUMMARY TABLE */}
+      {last6Financials.length > 0 && (
+        <div className="bg-tv-surface border border-tv-border rounded-xl overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-tv-border flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-tv-text-primary">
+                Monthly Financial Ledger (Last 6 Months)
+              </h2>
+              <p className="text-xs text-tv-text-secondary mt-0.5">
+                Verified ledger records with margin color-coding
+              </p>
+            </div>
+            <Calendar className="w-4 h-4 text-tv-text-secondary" />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-tv-base/60 text-tv-text-secondary uppercase tracking-wider font-semibold border-b border-tv-border">
+                <tr>
+                  <th className="px-4 py-3">Month</th>
+                  <th className="px-4 py-3 text-right">Revenue (₹L)</th>
+                  <th className="px-4 py-3 text-right">Gross Profit</th>
+                  <th className="px-4 py-3 text-right">Margin %</th>
+                  <th className="px-4 py-3 text-right">Units Sold</th>
+                  <th className="px-4 py-3 text-right">MoM Growth</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {last6Financials.map((row: any, idx: number) => {
+                  const isLatest = idx === last6Financials.length - 1;
+                  const prevRow = idx > 0 ? last6Financials[idx - 1] : null;
+                  const momGrowth =
+                    prevRow &&
+                    prevRow.revenue_lakh != null &&
+                    row.revenue_lakh != null &&
+                    Number(prevRow.revenue_lakh) !== 0
+                      ? (
+                          ((Number(row.revenue_lakh) - Number(prevRow.revenue_lakh)) /
+                            Math.abs(Number(prevRow.revenue_lakh))) *
+                          100
+                        ).toFixed(2)
+                      : null;
+
+                  const margin = row.profit_margin_pct != null ? Number(row.profit_margin_pct) : null;
+                  const marginBadgeClass =
+                    margin === null
+                      ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                      : margin > 20
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                      : margin >= 12
+                      ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
+                      : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400';
+
+                  const rowBg = isLatest
+                    ? 'bg-blue-50/60 dark:bg-blue-950/20 border-l-2 border-l-blue-500'
+                    : idx % 2 === 0
+                    ? 'bg-tv-base/30'
+                    : '';
+
+                  return (
+                    <tr key={idx} className={`${rowBg} hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors`}>
+                      <td className="px-4 py-3 font-medium text-tv-text-primary">
+                        {row.month_name || '—'}
+                        {isLatest && (
+                          <span className="ml-1.5 text-[10px] font-semibold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                            Latest
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono font-medium text-tv-text-primary">
+                        {row.revenue_lakh != null ? `₹${Number(row.revenue_lakh).toFixed(2)}` : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-emerald-600 dark:text-emerald-400">
+                        {row.gross_profit_lakh != null ? `₹${Number(row.gross_profit_lakh).toFixed(2)}` : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {margin != null ? (
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${marginBadgeClass}`}>
+                            {margin.toFixed(2)}%
+                          </span>
+                        ) : (
+                          <span className="text-tv-text-muted">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-tv-text-secondary">
+                        {row.units_sold != null ? row.units_sold.toLocaleString('en-IN') : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono">
+                        {momGrowth != null ? (
+                          <span
+                            className={`font-semibold ${
+                              Number(momGrowth) >= 0
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-rose-600 dark:text-rose-400'
+                            }`}
+                          >
+                            {Number(momGrowth) >= 0 ? '+' : ''}
+                            {momGrowth}%
+                          </span>
+                        ) : (
+                          <span className="text-tv-text-muted">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* 9. RECENT DATASETS SECTION */}
       <div className="bg-tv-surface border border-tv-border rounded-xl overflow-hidden shadow-sm">

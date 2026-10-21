@@ -52,19 +52,26 @@ app.dependency_overrides[get_repository] = lambda: test_repo
 # ``from app.repositories.dev_repo import repo``
 repo = test_repo
 
+from app.models.base import Base
+Base.metadata.create_all(bind=test_repo.engine)
+
 @pytest.fixture(scope="function", autouse=True)
 def clean_db():
     """Wipe the database clean before each test to ensure complete isolation."""
+    Base.metadata.create_all(bind=repo.engine)
     with repo.SessionLocal() as session:
-        session.execute(text("DELETE FROM audit_logs"))
-        session.execute(text("DELETE FROM product_metrics"))
-        session.execute(text("DELETE FROM monthly_financials"))
-        session.execute(text("DELETE FROM dataset_columns"))
-        session.execute(text("DELETE FROM datasets"))
-        session.execute(text("DELETE FROM messages"))
-        session.execute(text("DELETE FROM conversations"))
-        session.execute(text("DELETE FROM users"))
-        session.execute(text("DELETE FROM companies"))
+        session.execute(text("DELETE FROM ai_message_artifacts"))
+        session.execute(text("DELETE FROM ai_artifacts"))
+        session.execute(text("DELETE FROM ai_company_knowledge"))
+        session.execute(text("DELETE FROM ai_audit_logs"))
+        session.execute(text("DELETE FROM ai_product_metrics"))
+        session.execute(text("DELETE FROM ai_monthly_financials"))
+        session.execute(text("DELETE FROM ai_dataset_columns"))
+        session.execute(text("DELETE FROM ai_datasets"))
+        session.execute(text("DELETE FROM ai_messages"))
+        session.execute(text("DELETE FROM ai_conversations"))
+        session.execute(text("DELETE FROM ai_users"))
+        session.execute(text("DELETE FROM ai_companies"))
         session.commit()
     yield
 

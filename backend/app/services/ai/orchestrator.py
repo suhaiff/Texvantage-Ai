@@ -26,10 +26,11 @@ from .gemini import GeminiProvider
 from .mock_provider import MockAIProvider
 from .tools import ToolRegistry
 from .artifacts import generate_artifacts_from_tool_result
+from .narrative_generator import generate_narrative_from_tool_result, generate_conceptual_narrative
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT_TEMPLATE = """You are TexVantage Business Intelligence AI, an enterprise manufacturing analyst for Indian textile mills and garment exporters.
+SYSTEM_PROMPT_TEMPLATE = """You are TexVantage Business Intelligence AI — an expert senior enterprise analyst for Indian textile mills and garment manufacturers, comparable to a top-tier McKinsey/BCG consultant.
 
 TENANT & IDENTITY CONTEXT:
 - Authenticated User: {user_name} ({user_role})
@@ -38,12 +39,20 @@ TENANT & IDENTITY CONTEXT:
 BUSINESS KNOWLEDGE & RULES:
 {knowledge_text}
 
-STRICT OPERATIONAL & GROUNDING RULES:
-1. When asked about metrics, data, charts, KPIs, or financials, ALWAYS call the matching analytics tool (`get_sales_trend`, `get_profit_trend`, `get_company_summary`, `get_top_products`, `compare_companies`, `get_global_summary`, `calculate_metric`, or `query_business_data`). The UI renders KPI cards and charts from those tool results automatically.
-2. NEVER calculate arithmetic in your head or invent numbers. The numbers must come from a tool result.
-3. If a tool reports that data or metric is unavailable, explicitly state that to the user. NEVER fabricate missing numbers.
-4. If the tool returns an access violation, state the fact politely without hallucination.
-5. Provide clear, professional, executive summaries suitable for C-suite textile mill owners. Do not claim a chart was shown unless a visualization tool actually ran.
+CRITICAL ANALYTICAL RESPONSE RULES (Follow these STRICTLY):
+1. ALWAYS call the appropriate analytics tool before answering any numerical question. NEVER guess or invent numbers.
+2. After receiving tool data, produce a COMPREHENSIVE, MULTI-PARAGRAPH analytical response — not just a data dump or bullet list.
+3. Structure every response like a professional analyst report:
+   - Start with a bold headline insight (the single most important takeaway).
+   - Expand with 2–4 paragraphs covering: what the numbers mean, why they matter, trends, comparisons to expectations, and what factors are likely driving the result.
+   - Close with 2–3 strategic recommendations or follow-up observations.
+4. For RANKINGS (top N, highest, lowest, best, worst): Always list ALL items in the ranking with their exact numbers, then analyze the gap between leaders and laggards.
+5. For SINGLE COMPANIES: Cover revenue, margin, growth rate, capacity utilization, trends, peaks/troughs, and product mix. Make the company feel fully understood.
+6. For COMPARISONS: Highlight which company leads and which lags on each dimension, explain the gap, and identify structural advantages.
+7. Use Markdown formatting: **bold** for key numbers and company names, bullet points for lists, ### headers for section titles.
+8. Always show exact numbers from the database with appropriate units (₹ Lakh, %, units). Round to 2 decimal places.
+9. The response should feel like talking to an insightful senior analyst, not reading a database printout.
+10. Every response MUST have at least 150 words of meaningful analysis.
 """
 
 class AIOrchestrator:
@@ -145,6 +154,10 @@ class AIOrchestrator:
             None if self.user.is_admin() else [self.user.company_id]
         )
 
+        # --- Conceptual / Advisory queries (pure consultancy / business knowledge) ---
+        if intent == "conceptual":
+            return None
+
         # --- Datasets query (always short-circuit before company matching) ---
         if intent == "datasets" or any(term in prompt_lower for term in ("uploaded file", "what have i uploaded")):
             matched = fuzzy_match_company(normalized, companies)
@@ -161,29 +174,40 @@ class AIOrchestrator:
             matched_company = companies[0]
             match_score = 100.0
 
+        # Products request without single company specified
+        if intent == "products" and not matched_company:
+            return AIToolCall(name="get_top_products", arguments={"limit": 10})
+
         # --- Admin-level: portfolio / cross-company requests ---
         if self.user.is_admin():
-            # Explicit compare intent without a single company target
-            wants_compare = intent == "comparison"
+            is_ranking_or_comparison = (
+                intent == "comparison" or
+                any(term in prompt_lower for term in (
+                    "top 3", "top 5", "top 10", "top ", "top-3", "top-5",
+                    "highest", "lowest", "best", "worst", "leader", "leaders",
+                    "rank", "which mill", "which company", "which mills", "which companies",
+                    "across mills", "across companies", "by company", "by mill",
+                    "all mills", "all companies", "all 10", "all ten", "portfolio"
+                ))
+            )
             is_portfolio = any(term in prompt_lower for term in (
                 "portfolio", "all 10", "all ten", "consolidated", "all companies",
                 "all mills", "every company", "every mill", "across all",
             ))
 
-            if is_portfolio or (wants_compare and (not matched_company or match_score < 70)):
-                if wants_compare:
-                    return AIToolCall(
-                        name="compare_companies",
-                        arguments={
-                            "company_ids": [c.id for c in companies],
-                            "period_months": months,
-                        },
-                    )
-                return AIToolCall(name="get_global_summary", arguments={"period_months": months})
+            if is_ranking_or_comparison and (not matched_company or match_score < 75):
+                if intent == "summary" and is_portfolio and not any(term in prompt_lower for term in ("compare", "top", "rank", "highest", "lowest", "which")):
+                    return AIToolCall(name="get_global_summary", arguments={"period_months": months})
+                return AIToolCall(
+                    name="compare_companies",
+                    arguments={
+                        "company_ids": [c.id for c in companies],
+                        "period_months": months,
+                    },
+                )
 
             # Multiple companies matched — compare them
-            if wants_compare and matched_company:
-                # Try to find all companies mentioned
+            if is_ranking_or_comparison and matched_company:
                 multi_matches = [c for c in companies if fuzzy_match_company(normalized, [c], threshold=65)]
                 if len(multi_matches) >= 2:
                     return AIToolCall(
@@ -193,10 +217,18 @@ class AIOrchestrator:
                             "period_months": months,
                         },
                     )
-                # Still fall through to single-company logic with matched_company
 
             # No specific company identified and it's a general BI question → global summary
-            if not matched_company and intent in ("revenue", "profit", "margin", "summary", "trend", "growth"):
+            # Guard: require at least one explicit business keyword in the prompt to avoid
+            # routing generic greetings ("Hello", "Tell me a joke") as BI queries.
+            _BI_KEYWORDS = {
+                "revenue", "sales", "profit", "margin", "cost", "cogs", "performance",
+                "summary", "overview", "kpi", "dashboard", "report", "trend", "growth",
+                "units", "production", "capacity", "turnover", "income", "earning",
+                "mill", "company", "companies", "portfolio", "textile", "financial",
+            }
+            _has_bi_keyword = any(kw in prompt_lower for kw in _BI_KEYWORDS)
+            if not matched_company and _has_bi_keyword and intent in ("revenue", "profit", "margin", "summary", "trend", "growth"):
                 return AIToolCall(name="get_global_summary", arguments={"period_months": months})
 
         # --- Single-company routing ---
@@ -311,47 +343,12 @@ class AIOrchestrator:
             f"Available companies: {known_names}. Please select one of these names."
         )
 
-    def _render_verified_answer(self, tool_name: str, tool_result: Dict[str, Any]) -> str:
-        """Create a concise factual response from an already verified tool result."""
-        if tool_result.get("status") != "success":
-            return tool_result.get("message") or tool_result.get("error") or "Verified data is unavailable for this request."
-
-        if tool_name == "get_sales_trend":
-            trend = tool_result.get("sales_trend", {})
-            company = self.repository.get_company_by_id(trend.get("company_id", ""))
-            name = company.name if company else "the requested company"
-            return (
-                f"Verified {trend.get('period_months', 0)}-month sales and volume trend for {name}: "
-                f"total revenue is ₹{trend.get('total_period_revenue_lakh', 0):,.2f} lakh and "
-                f"average monthly revenue is ₹{trend.get('avg_monthly_revenue_lakh', 0):,.2f} lakh. "
-                "The chart uses the underlying monthly ledger records."
-            )
-
-        if tool_name == "get_profit_trend":
-            trend = tool_result.get("profit_trend", {})
-            company = self.repository.get_company_by_id(trend.get("company_id", ""))
-            name = company.name if company else "the requested company"
-            return (
-                f"Verified {trend.get('period_months', 0)}-month profitability trend for {name}. "
-                "The chart uses the underlying monthly ledger records for gross profit and margin."
-            )
-
-        if tool_name == "get_company_summary":
-            summary = tool_result.get("company_summary", {})
-            return (
-                f"Verified executive summary for {summary.get('company_name', 'the requested company')}: "
-                f"latest monthly revenue is ₹{summary.get('latest_monthly_revenue_lakh', 0):,.2f} lakh "
-                f"for {summary.get('latest_month', 'the latest recorded month')}, with a profit margin of "
-                f"{summary.get('latest_profit_margin_pct', 0):.2f}%."
-            )
-
-        if tool_name == "calculate_metric" and tool_result.get("metric") == "revenue_growth":
-            return (
-                f"Verified month-over-month revenue growth is {tool_result.get('growth_pct', 0):+.2f}% "
-                f"({tool_result.get('previous_month')} to {tool_result.get('current_month')})."
-            )
-
-        return "The displayed result was retrieved from the verified database records."
+    def _render_verified_answer(self, tool_name: str, tool_result: Dict[str, Any], prompt: str = "") -> str:
+        """
+        Generate a deep, ChatGPT-style analytical narrative tailored dynamically to
+        verified tool results and the user's specific prompt.
+        """
+        return generate_narrative_from_tool_result(tool_name, tool_result, prompt)
 
     def _get_or_create_conversation(self, conversation_id: Optional[str] = None) -> Conversation:
         if conversation_id:
@@ -453,6 +450,10 @@ class AIOrchestrator:
         final_content = ""
         captured_artifacts: List[Dict[str, Any]] = []
         completed_tool_results: List[tuple[str, Dict[str, Any]]] = []
+        # Track which tool names have already generated artifacts this turn.
+        # Prevents duplicate charts/KPIs when the same tool is called >1 time
+        # in a multi-step loop (e.g. compare_companies on iter 1 AND iter 2).
+        tools_that_generated_artifacts: set = set()
         verified_tool_call = self._build_verified_tool_call(prompt)
 
         # Context carry-forward: if nothing was matched but the previous assistant
@@ -484,13 +485,9 @@ class AIOrchestrator:
             iteration += 1
 
             # A named-company request with a known BI intent does not require
-            # an external model to select its database tool.
+            # an external model to select its database tool (forces tool call).
             if verified_tool_call is not None and iteration == 1:
                 response = AIProviderResponse(tool_calls=[verified_tool_call])
-            elif verified_tool_call is not None:
-                tool_name, tool_result = completed_tool_results[-1]
-                final_content = self._render_verified_answer(tool_name, tool_result)
-                break
             elif unrecognized_company_message is not None:
                 final_content = unrecognized_company_message
                 break
@@ -508,7 +505,7 @@ class AIOrchestrator:
                     # rate-limited or otherwise unavailable.
                     if completed_tool_results:
                         tool_name, tool_result = completed_tool_results[-1]
-                        final_content = self._render_verified_answer(tool_name, tool_result)
+                        final_content = self._render_verified_answer(tool_name, tool_result, prompt=prompt)
                         break
                     
                     if settings.APP_ENV.lower() == "production":
@@ -565,19 +562,25 @@ class AIOrchestrator:
                 )
 
                 # Synthesize structured artifacts (KPIs, Charts, Tables, Files)
-                new_artifacts = generate_artifacts_from_tool_result(
-                    tool_name=tool_call.name,
-                    tool_args=tool_call.arguments,
-                    tool_result=tool_result,
-                    user_prompt=prompt
-                )
-                for art in new_artifacts:
-                    captured_artifacts.append(art)
-                    yield AIStreamEvent(
-                        type="artifact",
-                        artifact=art,
-                        message=f"Generated {art.get('title')}"
+                # Only generate artifacts once per unique tool name per turn to
+                # prevent duplicate charts when the AI calls the same tool again
+                # in a subsequent iteration (e.g. compare_companies loops).
+                if tool_call.name not in tools_that_generated_artifacts:
+                    new_artifacts = generate_artifacts_from_tool_result(
+                        tool_name=tool_call.name,
+                        tool_args=tool_call.arguments,
+                        tool_result=tool_result,
+                        user_prompt=prompt
                     )
+                    for art in new_artifacts:
+                        captured_artifacts.append(art)
+                        yield AIStreamEvent(
+                            type="artifact",
+                            artifact=art,
+                            message=f"Generated {art.get('title')}"
+                        )
+                    if new_artifacts:
+                        tools_that_generated_artifacts.add(tool_call.name)
 
                 function_responses.append({
                     "name": tool_call.name,
@@ -609,6 +612,16 @@ class AIOrchestrator:
                 "responses": function_responses
             })
 
+        # Ensure assistant response is never empty
+        if not final_content:
+            if completed_tool_results:
+                last_tool_name, last_tool_res = completed_tool_results[-1]
+                final_content = self._render_verified_answer(last_tool_name, last_tool_res, prompt=prompt)
+            elif extract_intent(normalize_prompt(prompt).casefold()) == "conceptual":
+                final_content = generate_conceptual_narrative(prompt)
+            else:
+                final_content = "Analysis complete based on verified records."
+
         # Save Assistant message
         assistant_msg_id = f"msg_{uuid.uuid4().hex[:12]}"
         assistant_msg = Message(
@@ -619,11 +632,13 @@ class AIOrchestrator:
         )
         self.repository.add_message(assistant_msg)
 
-        # Stream words/tokens for a smooth typing animation experience
-        words = final_content.split(" ")
-        for i, word in enumerate(words):
-            token_text = word if i == len(words) - 1 else word + " "
-            yield AIStreamEvent(type="token", content=token_text, text=token_text)
+        # Stream words/tokens smoothly with ChatGPT/Claude-like typing cadence
+        tokens = re.split(r'(\s+)', final_content)
+        for token in tokens:
+            if not token:
+                continue
+            yield AIStreamEvent(type="token", content=token, text=token)
+            time.sleep(0.008)
 
         yield AIStreamEvent(
             type="answer",

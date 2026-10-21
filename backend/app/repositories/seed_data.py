@@ -10,6 +10,9 @@ from ..models.dataset import Dataset, DatasetColumn
 # Hash once for seed demo accounts
 DEMO_ADMIN_PASSWORD_HASH = get_password_hash("admin123")
 DEMO_OWNER_PASSWORD_HASH = get_password_hash("owner123")
+# Dedicated production credentials for Textile A (Apex Spinners)
+APEX_SPINNERS_PASSWORD_HASH = get_password_hash("Apex@123")
+
 
 COMPANIES_DATA = [
     {
@@ -276,6 +279,20 @@ def generate_seed_entities():
             job_title="Managing Director & Owner"
         )
         users.append(owner_user)
+
+        # Seed dedicated Apex Spinners user (Textile A only)
+        if cdata["id"] == "comp_textile_a":
+            apex_user = User(
+                id="user_apex_spinners",
+                email="apexspinners@gmail.com",
+                password_hash=APEX_SPINNERS_PASSWORD_HASH,
+                name="Rajesh V. Singhania",
+                role="OWNER",
+                company_id="comp_textile_a",
+                job_title="Managing Director & Owner"
+            )
+            users.append(apex_user)
+
 
         # Generate 12 Months of realistic financials
         base_rev = cdata["revenue_base"]

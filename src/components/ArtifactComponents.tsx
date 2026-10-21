@@ -1,5 +1,22 @@
-import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, Minus, Download, FileSpreadsheet, FileText, Check, ChevronRight, RefreshCw, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Check,
+  ChevronRight,
+  RefreshCw,
+  AlertCircle,
+  Search,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Layers,
+  Sparkles
+} from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { KPIArtifactData, ChartArtifactData, TableArtifactData, FileArtifactData } from '../types';
 import { apiClient } from '../services/apiClient';
@@ -10,24 +27,24 @@ export const KPICard: React.FC<{ data: KPIArtifactData; title?: string }> = ({ d
   const isNegative = changeType === 'negative';
 
   return (
-    <div className="bg-tv-surface border border-tv-border rounded-[12px] p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-tv-surface border border-tv-border rounded-[14px] p-4 shadow-sm hover:border-tv-accent/40 hover:shadow-lg transition-all duration-300 group">
       <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-tv-text-muted mb-1">
-        <span>{title || data.metric}</span>
-        <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+        <span className="group-hover:text-tv-text-primary transition-colors">{title || data.metric}</span>
+        <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary border border-tv-border/50">
           {data.period}
         </span>
       </div>
       <div className="text-2xl font-bold text-tv-text-primary mt-1 tabular-nums tracking-tight">
         {data.value}
       </div>
-      <div className="flex items-center gap-1.5 mt-2 text-xs">
+      <div className="flex items-center gap-1.5 mt-2.5 text-xs">
         <span
-          className={`inline-flex items-center px-1.5 py-0.5 rounded font-medium ${
+          className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium text-[11px] transition-transform duration-200 group-hover:scale-105 ${
             isPositive
-              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+              ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50'
               : isNegative
-              ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
-              : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+              ? 'bg-rose-950/60 text-rose-400 border border-rose-800/50'
+              : 'bg-tv-base text-tv-text-secondary border border-tv-border'
           }`}
         >
           {isPositive && <TrendingUp className="w-3.5 h-3.5 mr-1 inline" />}
@@ -35,7 +52,7 @@ export const KPICard: React.FC<{ data: KPIArtifactData; title?: string }> = ({ d
           {!isPositive && !isNegative && <Minus className="w-3.5 h-3.5 mr-1 inline" />}
           {data.change}
         </span>
-        {data.subtext && <span className="text-tv-text-muted dark:text-slate-500 truncate">{data.subtext}</span>}
+        {data.subtext && <span className="text-tv-text-muted truncate text-[11px]">{data.subtext}</span>}
       </div>
     </div>
   );
@@ -43,6 +60,12 @@ export const KPICard: React.FC<{ data: KPIArtifactData; title?: string }> = ({ d
 
 export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: string }> = ({ data, title }) => {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(timer);
+  }, []);
 
   const chartType = data.chartType || (data as any).chart_type || 'bar';
   const xKey = data.xKey || (data as any).x_key || 'month';
@@ -52,8 +75,6 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
     type: s.type || chartType
   }));
   if (!points || points.length === 0) return null;
-
-  const seriesType = (s: (typeof series)[number]) => s.type || chartType || 'bar';
 
   // Compute numeric max for scaling
   const numericKeys = series.map(s => s.key);
@@ -66,32 +87,44 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
   });
   if (maxVal === 0) maxVal = 100;
 
-  const width = 580;
-  const height = 220;
-  const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+  const width = 640;
+  const height = 230;
+  const padding = { top: 25, right: 25, bottom: 42, left: 55 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
   // Donut chart mode
   if (chartType === 'donut') {
     const valueKey = data.series?.[0]?.key || 'total_revenue_lakh';
-    const total = points.reduce((acc, pt) => acc + (Number(pt[valueKey] || pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0), 0);
-    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4'];
+    const total = points.reduce(
+      (acc, pt) => acc + (Number(pt[valueKey] || pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0),
+      0
+    );
+    const colors = ['#D6FF4B', '#38BDF8', '#34D399', '#FBBF24', '#C084FC', '#FB7185'];
     let accumulated = 0;
 
     return (
       <div className="w-full">
-        {title && <h4 className="text-sm font-semibold text-tv-text-primary mb-3">{title}</h4>}
+        {title && (
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-tv-border/60">
+            <h4 className="text-sm font-semibold text-tv-text-primary flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-tv-accent" />
+              {title}
+            </h4>
+            <span className="text-[11px] text-tv-text-muted font-mono">Market Distribution</span>
+          </div>
+        )}
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="relative w-44 h-44 flex-shrink-0">
+          <div className="relative w-48 h-48 shrink-0">
             <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
               {points.map((pt, i) => {
                 const val = Number(pt[valueKey] || pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0;
                 const pct = total > 0 ? val / total : 0;
-                const strokeDasharray = `${pct * 283} 283`;
+                const strokeDasharray = mounted ? `${pct * 283} 283` : '0 283';
                 const strokeDashoffset = -accumulated * 283;
                 accumulated += pct;
                 const col = colors[i % colors.length];
+                const isHovered = hoveredIdx === i;
 
                 return (
                   <circle
@@ -101,10 +134,10 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
                     r="45"
                     fill="transparent"
                     stroke={col}
-                    strokeWidth="10"
+                    strokeWidth={isHovered ? '13' : '10'}
                     strokeDasharray={strokeDasharray}
                     strokeDashoffset={strokeDashoffset}
-                    className="transition-all duration-300 hover:opacity-80 cursor-pointer"
+                    className="transition-all duration-500 ease-out cursor-pointer"
                     onMouseEnter={() => setHoveredIdx(i)}
                     onMouseLeave={() => setHoveredIdx(null)}
                   />
@@ -112,12 +145,18 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
               })}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-xs text-tv-text-secondary">Total Share</span>
-              <span className="text-sm font-bold text-tv-text-primary">100%</span>
+              <span className="text-[11px] text-tv-text-muted">
+                {hoveredIdx !== null ? (points[hoveredIdx][xKey] || 'Enterprise') : 'Total Share'}
+              </span>
+              <span className="text-base font-bold text-tv-text-primary">
+                {hoveredIdx !== null
+                  ? `${(((Number(points[hoveredIdx][valueKey]) || 1) / (total || 1)) * 100).toFixed(1)}%`
+                  : '100%'}
+              </span>
             </div>
           </div>
 
-          <div className="flex-1 space-y-2 w-full">
+          <div className="flex-1 space-y-1.5 w-full">
             {points.map((pt, i) => {
               const val = Number(pt[valueKey] || pt.total_revenue_lakh || pt.revenueSharePct || 1) || 0;
               const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0';
@@ -127,20 +166,20 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
               return (
                 <div
                   key={i}
-                  className={`flex items-center justify-between p-1.5 rounded text-xs transition-colors cursor-pointer ${
-                    isHovered ? 'bg-tv-base font-semibold' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  className={`flex items-center justify-between p-2 rounded-lg text-xs transition-all duration-200 cursor-pointer ${
+                    isHovered
+                      ? 'bg-tv-base border border-tv-border shadow-sm font-semibold translate-x-1'
+                      : 'hover:bg-tv-base/50'
                   }`}
                   onMouseEnter={() => setHoveredIdx(i)}
                   onMouseLeave={() => setHoveredIdx(null)}
                 >
                   <div className="flex items-center gap-2 truncate pr-2">
-                    <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: col }} />
-                    <span className="truncate text-slate-700 dark:text-slate-300">
-                      {pt[xKey] || pt.category_name}
-                    </span>
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" style={{ backgroundColor: col }} />
+                    <span className="truncate text-tv-text-secondary">{pt[xKey] || pt.category_name}</span>
                   </div>
-                  <span className="text-tv-text-primary font-medium flex-shrink-0">
-                    {valueKey.includes('revenue') || pt.total_revenue_lakh ? `₹${val}L (${pct}%)` : `${pct}%`}
+                  <span className="text-tv-text-primary font-mono shrink-0">
+                    {valueKey.includes('revenue') || pt.total_revenue_lakh ? `₹${val.toLocaleString('en-IN')}L (${pct}%)` : `${pct}%`}
                   </span>
                 </div>
               );
@@ -152,24 +191,51 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
   }
 
   // Bar / Area / Line chart
-  const barWidth = Math.max(12, Math.min(32, chartW / points.length - 8));
+  const barWidth = Math.max(14, Math.min(36, chartW / points.length - 8));
 
   return (
     <div className="w-full overflow-hidden">
-      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        {title && <h4 className="text-sm font-semibold text-tv-text-primary">{title}</h4>}
+      {/* Chart Header */}
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2 pb-2 border-b border-tv-border/60">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-tv-accent animate-pulse" />
+          {title && <h4 className="text-sm font-semibold text-tv-text-primary">{title}</h4>}
+        </div>
         <div className="flex items-center gap-3 text-xs">
           {data.series.map((s, i) => (
             <div key={i} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: s.color }} />
-              <span className="text-tv-text-secondary">{s.name}</span>
+              <span className="w-2.5 h-2.5 rounded-sm shadow-xs" style={{ backgroundColor: s.color || '#D6FF4B' }} />
+              <span className="text-tv-text-secondary font-medium">{s.name}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-48 select-none">
+      <div className="w-full overflow-x-auto custom-scrollbar">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-52 select-none">
+          {/* Gradient & Filter Definitions */}
+          <defs>
+            <linearGradient id="grad-accent" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#D6FF4B" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#84CC16" stopOpacity="0.75" />
+            </linearGradient>
+            <linearGradient id="grad-blue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#2563EB" stopOpacity="0.75" />
+            </linearGradient>
+            <linearGradient id="grad-emerald" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#34D399" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.75" />
+            </linearGradient>
+            <linearGradient id="grad-amber" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#FBBF24" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#D97706" stopOpacity="0.75" />
+            </linearGradient>
+            <filter id="glow-bar" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#D6FF4B" floodOpacity="0.4" />
+            </filter>
+          </defs>
+
           {/* Grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => {
             const y = padding.top + chartH * (1 - pct);
@@ -181,15 +247,15 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke="currentColor"
-                  className="text-slate-100 dark:text-slate-800/80"
+                  stroke="#272B30"
+                  strokeWidth="1"
                   strokeDasharray={i > 0 && i < 4 ? '3 3' : undefined}
                 />
                 <text
-                  x={padding.left - 8}
+                  x={padding.left - 10}
                   y={y + 3}
                   textAnchor="end"
-                  className="text-[10px] fill-slate-400 dark:fill-slate-500 font-mono"
+                  className="text-[10px] fill-tv-text-muted font-mono"
                 >
                   {labelVal > 1000 ? `${(labelVal / 1000).toFixed(1)}k` : labelVal}
                 </text>
@@ -197,80 +263,138 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
             );
           })}
 
-          {/* Render Bars */}
-          {data.series.filter(s => s.type === 'bar' || !s.type).map((s, sIdx) => {
-            return points.map((pt, pIdx) => {
-              const val = Number(pt[s.key]) || 0;
-              const barHeight = (val / maxVal) * chartH;
-              const groupX = padding.left + (pIdx + 0.5) * (chartW / points.length);
-              const x = groupX - barWidth / 2;
-              const y = padding.top + chartH - barHeight;
-              const isHovered = hoveredIdx === pIdx;
+          {/* Render Bars with Staggered Rise Transition */}
+          {data.series
+            .filter(s => s.type === 'bar' || !s.type)
+            .map((s, sIdx) => {
+              const gradId =
+                sIdx === 0
+                  ? 'url(#grad-accent)'
+                  : sIdx === 1
+                  ? 'url(#grad-blue)'
+                  : sIdx === 2
+                  ? 'url(#grad-emerald)'
+                  : 'url(#grad-amber)';
 
-              return (
-                <g key={`${sIdx}-${pIdx}`} onMouseEnter={() => setHoveredIdx(pIdx)} onMouseLeave={() => setHoveredIdx(null)}>
-                  <rect
-                    x={x}
-                    y={y}
-                    width={barWidth}
-                    height={Math.max(2, barHeight)}
-                    rx="3"
-                    fill={s.color}
-                    className={`transition-all duration-200 cursor-pointer ${isHovered ? 'opacity-100 brightness-110' : 'opacity-85'}`}
-                  />
-                </g>
-              );
-            });
-          })}
+              return points.map((pt, pIdx) => {
+                const val = Number(pt[s.key]) || 0;
+                const barHeight = (val / maxVal) * chartH;
+                const groupX = padding.left + (pIdx + 0.5) * (chartW / points.length);
+                const x = groupX - barWidth / 2;
+                const y = padding.top + chartH - barHeight;
+                const isHovered = hoveredIdx === pIdx;
+
+                // Animate height & y from zero on mount
+                const animatedHeight = mounted ? Math.max(3, barHeight) : 0;
+                const animatedY = mounted ? y : padding.top + chartH;
+
+                return (
+                  <g
+                    key={`${sIdx}-${pIdx}`}
+                    onMouseEnter={() => setHoveredIdx(pIdx)}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                    className="cursor-pointer"
+                  >
+                    <rect
+                      x={x}
+                      y={animatedY}
+                      width={barWidth}
+                      height={animatedHeight}
+                      rx="4"
+                      fill={gradId}
+                      filter={isHovered ? 'url(#glow-bar)' : undefined}
+                      className="transition-all duration-300"
+                      style={{
+                        transition: 'height 0.75s cubic-bezier(0.16, 1, 0.3, 1), y 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease',
+                        transitionDelay: `${pIdx * 35}ms`,
+                        opacity: isHovered ? 1 : 0.88
+                      }}
+                    />
+                    {/* Top glow cap when hovered */}
+                    {isHovered && mounted && (
+                      <rect
+                        x={x}
+                        y={y}
+                        width={barWidth}
+                        height="3"
+                        rx="1"
+                        fill="#FFFFFF"
+                        className="animate-pulse"
+                      />
+                    )}
+                  </g>
+                );
+              });
+            })}
 
           {/* Render Line/Area Series */}
-          {data.series.filter(s => s.type === 'line' || s.type === 'area').map((s, sIdx) => {
-            const pathCoords = points.map((pt, pIdx) => {
-              const val = Number(pt[s.key]) || 0;
-              const x = padding.left + (pIdx + 0.5) * (chartW / points.length);
-              const y = padding.top + chartH - (val / maxVal) * chartH;
-              return `${x},${y}`;
-            });
+          {data.series
+            .filter(s => s.type === 'line' || s.type === 'area')
+            .map((s, sIdx) => {
+              const pathCoords = points.map((pt, pIdx) => {
+                const val = Number(pt[s.key]) || 0;
+                const x = padding.left + (pIdx + 0.5) * (chartW / points.length);
+                const y = padding.top + chartH - (val / maxVal) * chartH;
+                return `${x},${y}`;
+              });
 
-            const linePath = `M ${pathCoords.join(' L ')}`;
-            const areaPath = `M ${padding.left + 0.5 * (chartW / points.length)},${padding.top + chartH} L ${pathCoords.join(' L ')} L ${
-              padding.left + (points.length - 0.5) * (chartW / points.length)
-            },${padding.top + chartH} Z`;
+              const linePath = `M ${pathCoords.join(' L ')}`;
+              const areaPath = `M ${padding.left + 0.5 * (chartW / points.length)},${padding.top + chartH} L ${pathCoords.join(' L ')} L ${
+                padding.left + (points.length - 0.5) * (chartW / points.length)
+              },${padding.top + chartH} Z`;
 
-            return (
-              <g key={`line-${sIdx}`}>
-                {s.type === 'area' && (
-                  <path d={areaPath} fill={s.color} fillOpacity="0.15" className="pointer-events-none" />
-                )}
-                <path d={linePath} fill="none" stroke={s.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                {points.map((pt, pIdx) => {
-                  const val = Number(pt[s.key]) || 0;
-                  const x = padding.left + (pIdx + 0.5) * (chartW / points.length);
-                  const y = padding.top + chartH - (val / maxVal) * chartH;
-                  const isHovered = hoveredIdx === pIdx;
-                  return (
-                    <circle
-                      key={pIdx}
-                      cx={x}
-                      cy={y}
-                      r={isHovered ? 5 : 3.5}
-                      fill={s.color}
-                      stroke="#fff"
-                      strokeWidth="1.5"
-                      className="cursor-pointer transition-all"
-                      onMouseEnter={() => setHoveredIdx(pIdx)}
-                      onMouseLeave={() => setHoveredIdx(null)}
+              return (
+                <g key={`line-${sIdx}`}>
+                  {s.type === 'area' && (
+                    <path
+                      d={areaPath}
+                      fill={s.color || '#D6FF4B'}
+                      fillOpacity={mounted ? '0.18' : '0'}
+                      className="pointer-events-none transition-all duration-700 ease-out"
                     />
-                  );
-                })}
-              </g>
-            );
-          })}
+                  )}
+                  <path
+                    d={linePath}
+                    fill="none"
+                    stroke={s.color || '#D6FF4B'}
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="transition-all duration-700 ease-out"
+                    style={{
+                      strokeDasharray: mounted ? 'none' : '1000',
+                      strokeDashoffset: mounted ? '0' : '1000'
+                    }}
+                  />
+                  {points.map((pt, pIdx) => {
+                    const val = Number(pt[s.key]) || 0;
+                    const x = padding.left + (pIdx + 0.5) * (chartW / points.length);
+                    const y = padding.top + chartH - (val / maxVal) * chartH;
+                    const isHovered = hoveredIdx === pIdx;
+                    return (
+                      <circle
+                        key={pIdx}
+                        cx={x}
+                        cy={y}
+                        r={isHovered ? 6 : 4}
+                        fill={s.color || '#D6FF4B'}
+                        stroke="#0B0D0F"
+                        strokeWidth="2"
+                        className="cursor-pointer transition-all duration-200"
+                        onMouseEnter={() => setHoveredIdx(pIdx)}
+                        onMouseLeave={() => setHoveredIdx(null)}
+                      />
+                    );
+                  })}
+                </g>
+              );
+            })}
 
           {/* X Axis Labels */}
           {points.map((pt, pIdx) => {
             const x = padding.left + (pIdx + 0.5) * (chartW / points.length);
-            const label = String(pt[xKey] || '').split(' ')[0];
+            const rawLabel = String(pt[xKey] || '');
+            const label = rawLabel.length > 10 ? rawLabel.split(' ')[0] : rawLabel;
             const isHovered = hoveredIdx === pIdx;
             return (
               <text
@@ -278,8 +402,8 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
                 x={x}
                 y={height - 12}
                 textAnchor="middle"
-                className={`text-[10px] transition-colors ${
-                  isHovered ? 'fill-blue-600 dark:fill-blue-400 font-bold' : 'fill-slate-500 dark:fill-slate-400 font-medium'
+                className={`text-[10px] transition-colors duration-150 ${
+                  isHovered ? 'fill-tv-accent font-bold' : 'fill-tv-text-muted font-medium'
                 }`}
               >
                 {label}
@@ -289,13 +413,17 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
         </svg>
       </div>
 
+      {/* Interactive Floating Hover Details Card */}
       {hoveredIdx !== null && points[hoveredIdx] && (
-        <div className="mt-2 bg-tv-base rounded-lg px-3 py-2 text-xs flex items-center justify-between border border-slate-200 dark:border-slate-700/60">
-          <span className="font-semibold text-tv-text-primary">{points[hoveredIdx][xKey]}</span>
+        <div className="mt-3 bg-tv-base/90 backdrop-blur-md rounded-xl px-4 py-2.5 text-xs flex items-center justify-between border border-tv-border shadow-md animate-in fade-in duration-200">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-tv-accent shadow-xs" />
+            <span className="font-semibold text-tv-text-primary text-[13px]">{points[hoveredIdx][xKey]}</span>
+          </div>
           <div className="flex items-center gap-4">
             {data.series.map((s, i) => (
-              <span key={i} className="text-tv-text-secondary">
-                {s.name}: <strong className="text-tv-text-primary">{points[hoveredIdx][s.key]}</strong>
+              <span key={i} className="text-tv-text-secondary font-mono">
+                {s.name}: <strong className="text-tv-accent font-bold">{points[hoveredIdx][s.key]}</strong>
               </span>
             ))}
           </div>
@@ -307,6 +435,9 @@ export const InteractiveChart: React.FC<{ data: ChartArtifactData; title?: strin
 
 export const TableArtifactView: React.FC<{ data: TableArtifactData; title?: string }> = ({ data, title }) => {
   const [copied, setCopied] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortCol, setSortCol] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const handleExportCSV = () => {
     const header = data.columns.map(c => `"${c.label}"`).join(',');
@@ -321,59 +452,141 @@ export const TableArtifactView: React.FC<{ data: TableArtifactData; title?: stri
     link.click();
     document.body.removeChild(link);
 
-    confetti({ particleCount: 30, spread: 60, origin: { y: 0.85 } });
+    confetti({ particleCount: 35, spread: 65, origin: { y: 0.85 } });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleSort = (colKey: string) => {
+    if (sortCol === colKey) {
+      setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortCol(colKey);
+      setSortDir('desc');
+    }
+  };
+
+  // Filter & sort rows
+  const processedRows = useMemo(() => {
+    let rows = [...data.rows];
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      rows = rows.filter(r =>
+        Object.values(r).some(val => String(val).toLowerCase().includes(q))
+      );
+    }
+    if (sortCol) {
+      rows.sort((a, b) => {
+        const valA = a[sortCol];
+        const valB = b[sortCol];
+        const cleanA = typeof valA === 'string' ? parseFloat(valA.replace(/[₹,%+]/g, '')) : Number(valA);
+        const cleanB = typeof valB === 'string' ? parseFloat(valB.replace(/[₹,%+]/g, '')) : Number(valB);
+
+        if (!isNaN(cleanA) && !isNaN(cleanB)) {
+          return sortDir === 'asc' ? cleanA - cleanB : cleanB - cleanA;
+        }
+        return sortDir === 'asc'
+          ? String(valA || '').localeCompare(String(valB || ''))
+          : String(valB || '').localeCompare(String(valA || ''));
+      });
+    }
+    return rows;
+  }, [data.rows, searchTerm, sortCol, sortDir]);
+
   return (
-    <div className="bg-tv-surface border border-tv-border rounded-[12px] overflow-hidden shadow-sm">
-      <div className="px-4 py-3 border-b border-tv-border flex items-center justify-between flex-wrap gap-2">
-        <h4 className="text-sm font-semibold text-tv-text-primary">{title || 'Data Matrix'}</h4>
-        <button
-          onClick={handleExportCSV}
-          className="inline-flex items-center gap-1.5 text-xs font-medium bg-slate-100 hover:bg-tv-border dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 rounded-lg transition-colors"
-        >
-          {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Download className="w-3.5 h-3.5" />}
-          {copied ? 'Exported CSV' : 'Export CSV'}
-        </button>
+    <div className="bg-tv-surface border border-tv-border rounded-[14px] overflow-hidden shadow-sm transition-all duration-300">
+      {/* Table Action Bar */}
+      <div className="px-4 py-3 border-b border-tv-border flex items-center justify-between flex-wrap gap-3 bg-tv-base/40">
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4 text-tv-accent" />
+          <h4 className="text-sm font-semibold text-tv-text-primary">{title || 'Data Matrix'}</h4>
+          <span className="text-[11px] text-tv-text-muted font-mono bg-tv-surface px-2 py-0.5 rounded border border-tv-border/60">
+            {processedRows.length} {processedRows.length === 1 ? 'row' : 'rows'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Quick Search Input */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-tv-text-muted absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="Search data..."
+              className="bg-tv-surface border border-tv-border text-[12px] text-tv-text-primary placeholder-tv-text-muted rounded-lg pl-8 pr-3 py-1.5 focus:outline-none focus:border-tv-accent w-36 sm:w-44 transition-all"
+            />
+          </div>
+
+          <button
+            onClick={handleExportCSV}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold bg-tv-surface hover:bg-tv-base border border-tv-border hover:border-tv-accent text-tv-text-secondary hover:text-tv-text-primary px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-2xs"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Download className="w-3.5 h-3.5" />}
+            <span>{copied ? 'Exported CSV' : 'Export CSV'}</span>
+          </button>
+        </div>
       </div>
-      <div className="overflow-x-auto max-h-72">
+
+      {/* Table Content */}
+      <div className="overflow-x-auto max-h-80 custom-scrollbar">
         <table className="w-full text-xs text-left">
-          <thead className="bg-tv-base/60 text-tv-text-secondary font-semibold sticky top-0 uppercase tracking-wider text-[11px]">
+          <thead className="bg-tv-base/80 backdrop-blur-sm text-tv-text-secondary font-semibold sticky top-0 uppercase tracking-wider text-[11px] border-b border-tv-border z-10">
             <tr>
               {data.columns.map((col, idx) => (
-                <th key={idx} className="px-3.5 py-2.5 border-b border-tv-border">
-                  {col.label}
+                <th
+                  key={idx}
+                  onClick={() => handleSort(col.key)}
+                  className="px-4 py-3 border-b border-tv-border cursor-pointer select-none hover:text-tv-text-primary transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>{col.label}</span>
+                    {sortCol === col.key ? (
+                      sortDir === 'asc' ? (
+                        <ArrowUp className="w-3.5 h-3.5 text-tv-accent" />
+                      ) : (
+                        <ArrowDown className="w-3.5 h-3.5 text-tv-accent" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-tv-text-muted opacity-40 hover:opacity-100" />
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-            {data.rows.map((row, rIdx) => (
-              <tr key={rIdx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+          <tbody className="divide-y divide-tv-border/50 text-tv-text-secondary">
+            {processedRows.map((row, rIdx) => (
+              <tr
+                key={rIdx}
+                className="hover:bg-tv-base/80 hover:text-tv-text-primary transition-colors duration-150 group"
+              >
                 {data.columns.map((col, cIdx) => {
                   const val = row[col.key];
-                  const isGrowth = col.format === 'growth';
+                  const isGrowth = col.format === 'growth' || col.key.includes('growth');
                   const isPos = String(val).startsWith('+');
                   const isNeg = String(val).startsWith('-');
 
                   return (
-                    <td key={cIdx} className="px-3.5 py-2 font-mono">
+                    <td key={cIdx} className="px-4 py-2.5 font-mono">
                       {isGrowth ? (
                         <span
-                          className={`font-semibold ${
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                             isPos
-                              ? 'text-emerald-600 dark:text-emerald-400'
+                              ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
                               : isNeg
-                              ? 'text-rose-600 dark:text-rose-400'
-                              : 'text-slate-600'
+                              ? 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
+                              : 'text-tv-text-secondary'
                           }`}
                         >
                           {val}
                         </span>
+                      ) : cIdx === 0 ? (
+                        <span className="font-sans font-medium text-tv-text-primary group-hover:text-tv-accent transition-colors">
+                          {val}
+                        </span>
                       ) : (
-                        val
+                        <span>{val}</span>
                       )}
                     </td>
                   );
@@ -434,13 +647,13 @@ export const FileArtifactDownload: React.FC<{ data: FileArtifactData; title?: st
   const isExcel = data.format === 'xlsx' || data.filename.endsWith('.xlsx');
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 dark:from-slate-900 dark:to-slate-800/80 border border-blue-200/80 dark:border-blue-900/40 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="bg-tv-surface border border-tv-border rounded-[14px] p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-tv-accent/30 transition-all duration-300">
       <div className="flex items-center gap-3.5 min-w-0">
         <div
-          className={`w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 ${
+          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${
             isExcel
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
-              : 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400'
+              ? 'bg-emerald-950/50 text-emerald-400 border-emerald-800/40'
+              : 'bg-blue-950/50 text-blue-400 border-blue-800/40'
           }`}
         >
           {isExcel ? <FileSpreadsheet className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
@@ -451,17 +664,17 @@ export const FileArtifactDownload: React.FC<{ data: FileArtifactData; title?: st
           </h4>
           <p className="text-xs text-tv-text-secondary line-clamp-1 mt-0.5">{data.description}</p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="inline-block uppercase text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">
+            <span className="inline-block uppercase text-[10px] font-bold px-1.5 py-0.5 rounded bg-tv-base border border-tv-border text-tv-accent">
               {data.format.toUpperCase()}
             </span>
             <span className="text-[11px] text-tv-text-muted">{data.size}</span>
             {statusText && (
-              <span className="text-[11px] font-medium text-blue-600 dark:text-blue-400 animate-pulse">
+              <span className="text-[11px] font-medium text-tv-accent animate-pulse">
                 · {statusText}
               </span>
             )}
             {error && (
-              <span className="text-[11px] font-medium text-rose-600 dark:text-rose-400 flex items-center gap-1">
+              <span className="text-[11px] font-medium text-rose-400 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3 inline" /> {error}
               </span>
             )}
@@ -472,12 +685,12 @@ export const FileArtifactDownload: React.FC<{ data: FileArtifactData; title?: st
       <button
         onClick={handleDownload}
         disabled={downloading}
-        className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold shadow transition-all flex-shrink-0 ${
+        className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow transition-all shrink-0 cursor-pointer ${
           downloaded
-            ? 'bg-emerald-600 text-white'
+            ? 'bg-emerald-500 text-slate-950 font-bold'
             : downloading
-            ? 'bg-blue-400 text-white cursor-wait'
-            : 'bg-blue-600 hover:bg-tv-accent-hover text-white hover:shadow-md'
+            ? 'bg-tv-border text-tv-text-muted cursor-wait'
+            : 'bg-tv-accent hover:bg-tv-accent-hover text-slate-950 font-bold shadow-md hover:scale-[1.02]'
         }`}
       >
         {downloading ? (
@@ -486,11 +699,11 @@ export const FileArtifactDownload: React.FC<{ data: FileArtifactData; title?: st
           </>
         ) : downloaded ? (
           <>
-            <Check className="w-4 h-4 text-white" /> Report Ready
+            <Check className="w-4 h-4 text-slate-950" /> Report Ready
           </>
         ) : (
           <>
-            <Download className="w-4 h-4" /> Generate Excel Report
+            <Download className="w-4 h-4" /> Download Excel Report
           </>
         )}
       </button>

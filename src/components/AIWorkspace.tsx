@@ -19,11 +19,186 @@ import { User, ChatMessage, ToolExecutionStep, AIArtifact } from '../types';
 import { AIService } from '../services/aiService';
 import { getTenantDisplayName } from './Sidebar';
 import { KPICard, InteractiveChart, TableArtifactView, FileArtifactDownload } from './ArtifactComponents';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface AIWorkspaceProps {
   currentUser: User;
   initialQuery?: string | null;
 }
+
+const getPoliteClosing = (prompt?: string): string => {
+  const p = (prompt || '').toLowerCase();
+  
+  if (p.includes('top 3') || p.includes('highest margin') || p.includes('most profitable')) {
+    return 'Thank you for reviewing our highest margin textile mills. Wishing your enterprise sustained profitability and operational excellence! Would you like to explore turnaround strategies for lagging mills or compare production volumes?';
+  }
+  if (p.includes('highest revenue') || p.includes('revenue leader') || p.includes('top revenue')) {
+    return 'Thank you for exploring our top revenue generators. Wishing your business expanding market share and commercial success! Would you like to analyze profit margin conversion or review monthly shipment velocity?';
+  }
+  if (p.includes('lowest margin') || p.includes('weakest') || p.includes('laggard') || p.includes('decline') || p.includes('why did')) {
+    return 'Thank you for examining operational turnaround areas. Wishing your team swift recovery and efficiency gains! Would you like to drill into plant capacity utilization or analyze raw material COGS structures?';
+  }
+  if (p.includes('total revenue') || p.includes('across all') || p.includes('portfolio revenue')) {
+    return 'Thank you for consulting portfolio financial aggregates. Wishing your leadership team strategic clarity and strong fiscal stewardship! Would you like an enterprise-by-enterprise breakdown or a downloadable audit workbook?';
+  }
+  if (p.includes(' vs ') || p.includes('versus') || p.includes('compare apex and boutique')) {
+    return 'Thank you for reviewing this enterprise comparative analysis. Wishing both facilities peak manufacturing throughput! Would you like to compare their 12-month margin trajectories or fabric category economics?';
+  }
+  if (p.includes('product') || p.includes('category') || p.includes('fabric mix')) {
+    return 'Thank you for reviewing product category economics. Wishing your sales lines high-margin order wins! Would you like a breakdown of customer segments or recommendations for production capacity shifts?';
+  }
+  if (p.includes('trend') || p.includes('monthly') || p.includes('sales trend')) {
+    return 'Thank you for evaluating monthly financial trajectories. Wishing your business consistent growth and healthy cash flows! Would you like to forecast the upcoming quarter or analyze seasonal peak drivers?';
+  }
+  if (p.includes('capacity utilization') || p.includes('cogs') || p.includes('explain')) {
+    return 'Thank you for consulting TexVantage business principles. Wishing your management team operational rigor and benchmark performance! Would you like to inspect real portfolio figures or identify optimization levers?';
+  }
+  if (p.includes('apex') || p.includes('vardhman') || p.includes('spin')) {
+    return 'Thank you for reviewing Textile A (Apex Spinners) performance! Wishing your operations maximum throughput. Would you like to compare this against other mills or review monthly volume trends?';
+  }
+  if (p.includes('boutique') || p.includes('silk')) {
+    return 'Thank you for reviewing Textile B (Boutique Silks & Jacquard) performance! Wishing your luxury weaving lines high market prestige. Would you like to analyze high-end product categories or export orders?';
+  }
+  if (p.includes('crest') || p.includes('organic')) {
+    return 'Thank you for reviewing Textile C (Crest Organic Cottons) performance! Wishing your sustainable fabric lines continued expansion. Would you like to inspect monthly growth velocity?';
+  }
+  if (p.includes('delta') || p.includes('synthetic')) {
+    return 'Thank you for reviewing Textile D (Delta Synthetic Mills) performance! Wishing your facility a structured turnaround. Would you like to review capacity utilization or cost reduction options?';
+  }
+  if (p.includes('frontier') || p.includes('technical')) {
+    return 'Thank you for reviewing Textile F (Frontier Technical Textiles) performance! Wishing your engineered textile operations sustained high margins. Would you like to evaluate expansion options?';
+  }
+  if (p.includes('jupiter') || p.includes('garment')) {
+    return 'Thank you for reviewing Textile J (Jupiter Garment Exports) performance! Wishing your export lines maximum order book depth. Would you like to evaluate volume versus margin dynamics?';
+  }
+  if (p.includes('portfolio') || p.includes('compare') || p.includes('all compan')) {
+    return 'Thank you for consulting TexVantage AI. Wishing your enterprise sustained growth and strategic clarity! Would you like me to examine specific mill margins or prepare an audit-ready financial report?';
+  }
+  return 'Thank you for consulting TexVantage AI! Wishing your enterprise sustained growth and operational clarity. Please let me know if you need any other assistance or follow-up insights.';
+};
+
+const getFollowUpQuestions = (prompt?: string): string[] => {
+  const p = (prompt || '').toLowerCase();
+  
+  if (p.includes('top 3') || p.includes('highest margin') || p.includes('most profitable')) {
+    return [
+      'Why does Boutique Silks lead with 33.16% margin?',
+      'Show lowest margin mills in the portfolio',
+      'Compare Apex Spinners and Boutique Silks',
+      'Download full portfolio financial report'
+    ];
+  }
+  if (p.includes('highest revenue') || p.includes('revenue leader') || p.includes('top revenue')) {
+    return [
+      'Break down Jupiter Garments volume and margins',
+      'Compare top 3 revenue mills vs top 3 margin mills',
+      'Show 6-month revenue trajectory across all mills',
+      'Download executive financial workbook'
+    ];
+  }
+  if (p.includes('lowest margin') || p.includes('weakest') || p.includes('laggard') || p.includes('decline') || p.includes('why did')) {
+    return [
+      'What is capacity utilization at Delta Synthetic Mills?',
+      'How can Empire Denim expand gross margins?',
+      'Compare Delta Synthetic vs portfolio average',
+      'Show 6-month margin trajectory by company'
+    ];
+  }
+  if (p.includes('total revenue') || p.includes('across all') || p.includes('portfolio revenue')) {
+    return [
+      'Show top 3 highest margin mills',
+      'Which company had the highest revenue?',
+      'Break down top product categories and margins',
+      'Download Portfolio Executive Report'
+    ];
+  }
+  if (p.includes(' vs ') || p.includes('versus') || p.includes('compare apex and boutique')) {
+    return [
+      'Show 6-month sales trend for Apex Spinners',
+      'Show 6-month profit trend for Boutique Silks',
+      'Compare product categories across both mills',
+      'Download executive financial comparison'
+    ];
+  }
+  if (p.includes('product') || p.includes('category') || p.includes('fabric mix')) {
+    return [
+      'Which product category delivers the highest margin?',
+      'Recommend capacity reallocation to boost margins',
+      'Compare category revenue across mills',
+      'Download category economics workbook'
+    ];
+  }
+  if (p.includes('trend') || p.includes('monthly') || p.includes('sales trend')) {
+    return [
+      'What caused the peak and trough revenue swings?',
+      'Show profit and margin trend for the same period',
+      'Compare monthly growth rates across mills',
+      'Download monthly ledger report'
+    ];
+  }
+  if (p.includes('capacity utilization') || p.includes('cogs') || p.includes('explain')) {
+    return [
+      'What is capacity utilization across our 10 mills?',
+      'Show mills operating below 75% capacity',
+      'How does capacity utilization affect margin?',
+      'Compare portfolio revenue across all companies'
+    ];
+  }
+  if (p.includes('apex') || p.includes('vardhman') || p.includes('spin')) {
+    return [
+      'Compare Apex Spinners and Boutique Silks',
+      'Show 6-month sales trend for Apex Spinners',
+      'Break down top product categories for Apex Spinners',
+      'What is the gross margin of Apex Spinners?'
+    ];
+  }
+  if (p.includes('boutique') || p.includes('silk')) {
+    return [
+      'Compare Boutique Silks vs portfolio average',
+      'What are the top luxury silk categories?',
+      'Show 6-month profit trend for Boutique Silks',
+      'Download executive report for Boutique Silks'
+    ];
+  }
+  if (p.includes('delta') || p.includes('synthetic')) {
+    return [
+      'Why did Delta Synthetic Mills decline?',
+      'What is capacity utilization at Delta Synthetic?',
+      'Compare Delta Synthetic vs portfolio average',
+      'Show 6-month sales trend for Delta Synthetic'
+    ];
+  }
+  if (p.includes('frontier') || p.includes('technical')) {
+    return [
+      'Show 6-month sales trend for Frontier Technical Textiles',
+      'Compare Frontier Technical vs Boutique Silks',
+      'Break down product categories for Frontier Technical',
+      'Download financial report'
+    ];
+  }
+  if (p.includes('jupiter') || p.includes('garment')) {
+    return [
+      'Why does Jupiter Garment have 14.15% margin?',
+      'Compare Jupiter Garment vs Apex Spinners',
+      'Show 6-month sales trend for Jupiter Garments',
+      'Download executive financial workbook'
+    ];
+  }
+  if (p.includes('portfolio') || p.includes('compare') || p.includes('all compan')) {
+    return [
+      'Show top 3 highest margin mills',
+      'Which company had the highest revenue?',
+      'Why did Delta Synthetic Mills decline?',
+      'Generate full executive financial report'
+    ];
+  }
+  return [
+    'Compare portfolio revenue across all companies',
+    'Show top 3 highest margin mills',
+    'Which company had the highest revenue?',
+    'Generate full executive financial report'
+  ];
+};
 
 export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQuery }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -218,8 +393,8 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
     if (currentUser.role === 'ADMIN') {
       return [
         'Compare portfolio revenue',
-        'Find the highest Q4 margin',
-        'Analyze Vardhman Spinning',
+        'Show top 3 highest margin mills',
+        'Analyze Apex Spinners',
         'Generate executive report'
       ];
     }
@@ -352,11 +527,16 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
 
           <div className="flex-1 overflow-y-auto pt-16 pb-32 px-4 sm:px-6 md:px-8 custom-scrollbar">
             <div className="max-w-4xl mx-auto space-y-8">
-              {messages.map(msg => {
+              {messages.map((msg, msgIdx) => {
                 const isUser = msg.senderRole === 'user';
                 const isExpanded = !!expandedSteps[msg.id];
                 const hasSteps = msg.toolSteps && msg.toolSteps.length > 0;
                 const hasArtifacts = msg.artifacts && msg.artifacts.length > 0;
+                const prevUserMsg = messages
+                  .slice(0, msgIdx)
+                  .reverse()
+                  .find(m => m.senderRole === 'user');
+                const userPromptForMsg = prevUserMsg?.content || '';
 
                 return (
                   <div key={msg.id} className="animate-in fade-in duration-300">
@@ -416,22 +596,37 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
                               </div>
                             )}
 
-                            {/* Message Text */}
-                            {msg.content && (
-                              <div className="prose prose-invert max-w-none text-[15px] leading-relaxed">
-                                {msg.content}
+                            {/* Message Text (ChatGPT / Claude / AI Studio Styled Markdown) */}
+                            {msg.content ? (
+                              <MarkdownRenderer
+                                content={msg.content}
+                                isStreaming={msg.isStreaming}
+                              />
+                            ) : msg.isStreaming ? (
+                              <div className="flex items-center gap-3 p-3.5 bg-tv-surface/70 border border-tv-border/80 rounded-[12px] text-tv-text-secondary">
+                                <RefreshCw className="w-4 h-4 animate-spin text-tv-accent shrink-0" />
+                                <div className="text-[14px]">
+                                  <span className="font-medium text-tv-text-primary">Analyzing verified ledger records...</span>
+                                  <span className="block text-[12px] text-tv-text-muted mt-0.5">Synthesizing executive portfolio intelligence & metrics</span>
+                                </div>
                               </div>
-                            )}
-                            {!msg.content && msg.isStreaming && (
-                              <div className="flex items-center gap-2 text-tv-text-secondary text-[15px]">
-                                <RefreshCw className="w-4 h-4 animate-spin" />
-                                Analyzing...
-                              </div>
-                            )}
+                            ) : null}
 
-                            {/* Artifacts (Inline) */}
-                            {hasArtifacts && (
-                              <div className="pt-2 space-y-6">
+
+
+                            {/* Artifacts (Visual Analytics & Ledger Records) - Displayed ONLY AFTER Summary Completes */}
+                            {hasArtifacts && !msg.isStreaming && (
+                              <div className="mt-8 pt-6 border-t border-tv-border/80 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                <div className="flex items-center justify-between pb-2 border-b border-tv-border/50">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-tv-accent" />
+                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-tv-text-secondary">
+                                      Visual Analytics & Ledger Records ({msg.artifacts?.length} Artifact{msg.artifacts?.length !== 1 ? 's' : ''})
+                                    </h4>
+                                  </div>
+                                  <span className="text-[11px] text-tv-text-muted font-mono">Interactive View</span>
+                                </div>
+
                                 {(() => {
                                   const arts = msg.artifacts || [];
                                   const kpis = arts.filter(a => a.type === 'kpi');
@@ -447,7 +642,11 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
                                       )}
                                       {rest.map(art => {
                                         if (art.type === 'chart') {
-                                          return <div key={art.id} className="border border-tv-border rounded-[12px] bg-tv-surface p-4"><InteractiveChart title={art.title} data={art.data as any} /></div>;
+                                          return (
+                                            <div key={art.id} className="border border-tv-border rounded-[12px] bg-tv-surface p-4 shadow-sm">
+                                              <InteractiveChart title={art.title} data={art.data as any} />
+                                            </div>
+                                          );
                                         }
                                         if (art.type === 'table') {
                                           return <TableArtifactView key={art.id} title={art.title} data={art.data as any} />;
@@ -460,6 +659,31 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({ currentUser, initialQu
                                     </>
                                   );
                                 })()}
+                              </div>
+                            )}
+
+                            {/* Polite Single-Line Closing & Contextual Follow-Up Prompts — shown AFTER artifacts */}
+                            {!msg.isStreaming && msg.content && (
+                              <div className="pt-5 pb-1 space-y-2.5 animate-in fade-in duration-700 border-t border-tv-border/40 mt-6">
+                                <div className="flex items-start sm:items-center gap-2 text-[13px] text-tv-text-secondary">
+                                  <Sparkles className="w-3.5 h-3.5 text-tv-accent shrink-0 mt-0.5 sm:mt-0" />
+                                  <span className="leading-relaxed">{getPoliteClosing(userPromptForMsg)}</span>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                  {getFollowUpQuestions(userPromptForMsg).map((chip, cIdx) => (
+                                    <button
+                                      key={cIdx}
+                                      type="button"
+                                      onClick={() => handleSend(chip)}
+                                      disabled={loading}
+                                      className="text-[12px] bg-tv-surface hover:bg-tv-base border border-tv-border hover:border-tv-accent/50 text-tv-text-secondary hover:text-tv-text-primary px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs group hover:scale-[1.02]"
+                                    >
+                                      <span className="text-tv-accent group-hover:translate-x-0.5 transition-transform font-bold">→</span>
+                                      <span>{chip}</span>
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>

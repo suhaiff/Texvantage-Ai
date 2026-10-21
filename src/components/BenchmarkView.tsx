@@ -42,6 +42,7 @@ import { User, ChatMessage, ToolExecutionStep, AIArtifact } from '../types';
 import { apiClient } from '../services/apiClient';
 import { AIService } from '../services/aiService';
 import { KPICard, InteractiveChart, TableArtifactView, FileArtifactDownload } from './ArtifactComponents';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface BenchmarkViewProps {
   currentUser: User;
@@ -1686,9 +1687,14 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                     )}
 
                     {/* AI Output Content */}
-                    <div className="prose dark:prose-invert max-w-none text-xs leading-relaxed whitespace-pre-wrap">
-                      {msg.content || (msg.isStreaming ? 'Analyzing portfolio data...' : '')}
-                    </div>
+                    {msg.content ? (
+                      <MarkdownRenderer content={msg.content} isStreaming={msg.isStreaming} />
+                    ) : msg.isStreaming ? (
+                      <div className="flex items-center gap-2 text-tv-text-secondary text-xs">
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin text-tv-accent" />
+                        <span>Analyzing portfolio data...</span>
+                      </div>
+                    ) : null}
 
                     {/* Rich Artifacts */}
                     {!isUser && hasArtifacts && (

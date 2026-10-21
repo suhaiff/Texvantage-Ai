@@ -23,6 +23,20 @@ from typing import List, Optional, Tuple, Any
 # 1. FUZZY COMPANY MATCHER
 # ---------------------------------------------------------------------------
 
+COMPANY_KNOWN_ALIASES: dict[str, list[str]] = {
+    "comp_textile_a": ["vardhman", "vardhman spinning", "vardhman spinning mills", "mill a", "apex spinners", "apex"],
+    "comp_textile_b": ["mill b", "boutique silks", "boutique silks & jacquard", "boutique", "boutique silk"],
+    "comp_textile_c": ["mill c", "crest organic", "crest organic cottons", "crest"],
+    "comp_textile_d": ["mill d", "delta synthetic", "delta synthetic mills", "delta"],
+    "comp_textile_e": ["mill e", "empire denim", "empire denim fabrics", "empire"],
+    "comp_textile_f": ["mill f", "frontier technical", "frontier technical textiles", "frontier"],
+    "comp_textile_g": ["mill g", "grace home", "grace home furnishings", "grace"],
+    "comp_textile_h": ["mill h", "heritage handloom", "heritage handloom weavers", "heritage"],
+    "comp_textile_i": ["mill i", "imperial woolen", "imperial woolen mills", "imperial"],
+    "comp_textile_j": ["mill j", "jupiter garment", "jupiter garment exports", "jupiter", "jupiter garments"],
+}
+
+
 def _company_candidates(company: Any) -> List[str]:
     """
     Builds all reasonable surface-form strings for one Company ORM row.
@@ -31,19 +45,16 @@ def _company_candidates(company: Any) -> List[str]:
     Single common words like "Mills", "Exports", "Textile" are deliberately
     excluded because they appear in multiple company names and cause false
     positive substring matches when companies are iterated alphabetically.
-
-    Included candidates:
-      - Full name:           "Textile I (Imperial Woolen Mills)"
-      - Trade name:          "Imperial Woolen Mills"
-      - Short code:          "IMPE"
-      - First two words:     "Imperial Woolen"
-      - City (if unique enough): "Ludhiana"
     """
     full_name: str = getattr(company, "name", "") or ""
     code: str = getattr(company, "code", "") or ""
     city: str = getattr(company, "city", "") or ""
+    cid: str = getattr(company, "id", "") or ""
 
     candidates = [full_name, code]
+
+    if cid in COMPANY_KNOWN_ALIASES:
+        candidates.extend(COMPANY_KNOWN_ALIASES[cid])
 
     # Extract prefix label before parenthetical: "Textile I (Imperial ...)" → "Textile I"
     prefix_match = re.match(r"^(.+?)\s*\(", full_name)
@@ -59,10 +70,8 @@ def _company_candidates(company: Any) -> List[str]:
     # Add multi-word prefix combinations (2+ words only) — never individual words
     for trade in parenthetical:
         words = [w for w in trade.split() if len(w) >= 3]
-        # First two words joined: "Imperial Woolen"
         if len(words) >= 2:
             candidates.append(" ".join(words[:2]))
-        # First three words joined: "Imperial Woolen Mills"
         if len(words) >= 3:
             candidates.append(" ".join(words[:3]))
 
@@ -71,6 +80,55 @@ def _company_candidates(company: Any) -> List[str]:
         candidates.append(city)
 
     return [c.strip() for c in candidates if c and c.strip()]
+
+
+GENERIC_COMPANY_WORDS = {
+    "mills", "mill", "textile", "textiles", "exports", "export", 
+    "limited", "ltd", "pvt", "company", "companies", "industries", 
+    "fabrics", "fabric", "garments", "garment", "synthetics", "synthetic"
+}
+
+
+def _has_candidate_token_overlap(query_lower: str, cand_lower: str) -> bool:
+    """
+    Ensures that a candidate string has true word-level relevance to the query.
+    Prevents false-positive partial_ratio matches where common letters in long
+    queries overlap with short company names.
+    """
+    if cand_lower in GENERIC_COMPANY_WORDS:
+        return False
+
+    # Phrases like "mill a", "mill b", "textile a", "textile b"
+    if re.match(r"^(mill|textile)\s+[a-j]$", cand_lower):
+        return bool(re.search(r"\b" + re.escape(cand_lower) + r"\b", query_lower))
+
+    c_words = [
+        w for w in re.findall(r"\b[a-zA-Z0-9]+\b", cand_lower)
+        if len(w) >= 2 and w not in GENERIC_COMPANY_WORDS
+    ]
+
+    # If candidate has no distinctive words, require exact phrase match
+    if not c_words:
+        return bool(re.search(r"\b" + re.escape(cand_lower) + r"\b", query_lower))
+
+    q_words = [w for w in re.findall(r"\b[a-zA-Z0-9]+\b", query_lower) if len(w) >= 2]
+    if not q_words:
+        return False
+
+    try:
+        from rapidfuzz import fuzz
+    except ImportError:
+        fuzz = None
+
+    for cw in c_words:
+        if re.search(r"\b" + re.escape(cw) + r"\b", query_lower):
+            return True
+        if fuzz is not None:
+            for qw in q_words:
+                if fuzz.ratio(cw, qw) >= 75:
+                    return True
+
+    return False
 
 
 def fuzzy_match_company(
@@ -82,9 +140,9 @@ def fuzzy_match_company(
     Returns the best-matching Company for *query*, or None if confidence < threshold.
 
     Strategy (in priority order):
-    1. Exact substring match (fastest, handles "imperial woolen mills" verbatim)
-    2. Rapidfuzz partial_ratio on all candidate strings (handles typos)
-    3. Token-set ratio for word-order insensitivity (handles "mills imperial woolen")
+    1. Token overlap validation (prevents false-positive partial ratio matches on general queries)
+    2. Exact word-boundary match (fastest, handles "imperial woolen mills" verbatim)
+    3. Rapidfuzz partial_ratio, token_set_ratio, WRatio on validated candidate strings
     """
     if not query or not companies:
         return None
@@ -94,10 +152,12 @@ def fuzzy_match_company(
     try:
         from rapidfuzz import fuzz
     except ImportError:
-        # Graceful degradation: fall back to simple substring check
         for company in companies:
             for cand in _company_candidates(company):
-                if cand.casefold() in query_lower or query_lower in cand.casefold():
+                cand_lower = cand.casefold()
+                if not _has_candidate_token_overlap(query_lower, cand_lower):
+                    continue
+                if re.search(r"\b" + re.escape(cand_lower) + r"\b", query_lower) or query_lower == cand_lower:
                     return company
         return None
 
@@ -109,8 +169,11 @@ def fuzzy_match_company(
         for cand in candidates:
             cand_lower = cand.casefold()
 
-            # Exact substring — always wins
-            if cand_lower in query_lower or query_lower in cand_lower:
+            if not _has_candidate_token_overlap(query_lower, cand_lower):
+                continue
+
+            # Exact word-bounded match
+            if re.search(r"\b" + re.escape(cand_lower) + r"\b", query_lower) or query_lower == cand_lower:
                 return company
 
             # Rapidfuzz scores
@@ -141,7 +204,10 @@ def fuzzy_match_company_with_score(
     except ImportError:
         for company in companies:
             for cand in _company_candidates(company):
-                if cand.casefold() in query_lower or query_lower in cand.casefold():
+                cand_lower = cand.casefold()
+                if not _has_candidate_token_overlap(query_lower, cand_lower):
+                    continue
+                if re.search(r"\b" + re.escape(cand_lower) + r"\b", query_lower) or query_lower == cand_lower:
                     return company, 100.0
         return None, 0.0
 
@@ -152,8 +218,13 @@ def fuzzy_match_company_with_score(
         candidates = _company_candidates(company)
         for cand in candidates:
             cand_lower = cand.casefold()
-            if cand_lower in query_lower or query_lower in cand_lower:
+
+            if not _has_candidate_token_overlap(query_lower, cand_lower):
+                continue
+
+            if re.search(r"\b" + re.escape(cand_lower) + r"\b", query_lower) or query_lower == cand_lower:
                 return company, 100.0
+
             score = max(
                 fuzz.partial_ratio(query_lower, cand_lower),
                 fuzz.token_set_ratio(query_lower, cand_lower),
@@ -163,7 +234,7 @@ def fuzzy_match_company_with_score(
                 best_score = score
                 best_company = company
 
-    return best_company, best_score
+    return (best_company, best_score) if best_score >= 60.0 else (None, 0.0)
 
 
 def closest_company_name(query: str, companies: List[Any]) -> Optional[str]:
@@ -181,25 +252,52 @@ def closest_company_name(query: str, companies: List[Any]) -> Optional[str]:
 # Ordered list of (pattern-list, intent-name) tuples.
 # First match wins — most specific patterns must come before broader ones.
 _INTENT_PATTERNS: List[Tuple[List[str], str]] = [
-    # --- Comparison / Ranking ---
+    # --- Conceptual / Educational queries (highest priority so they don't get routed to DB metrics) ---
     (
-        ["compare", "vs ", " vs", "versus", "benchmark", "rank ", "ranking",
-         "who earned more", "who made more", "better than", "worse than",
-         "against each other", "side by side", "side-by-side", "all companies",
-         "all mills", "all 10", "all ten", "portfolio"],
-        "comparison",
+        [
+            "what is capacity utilization", "how does capacity utilization",
+            "what is gross margin", "explain gross margin", "what is cogs",
+            "how to improve margin", "how can we improve", "how do we improve",
+            "difference between gross and net", "what is ebitda", "explain cogs",
+            "meaning of gross margin", "meaning of capacity utilization",
+        ],
+        "conceptual",
     ),
-    # --- Product / Category mix ---
+    # --- Product / Category mix (must precede ranking so 'top product categories' matches products) ---
     (
-        ["product", "category", "categor", "fabric", "mix", "composition",
-         "breakdown", "what sells", "best selling", "top item", "top product",
-         "product line", "range"],
+        [
+            "product categories", "product category", "categories", "fabric mix",
+            "top product", "top products", "product line", "product lines",
+            "product mix", "breakdown of product", "category breakdown",
+            "what sells", "best selling product", "best selling category"
+        ],
         "products",
+    ),
+    # --- Comparison / Ranking / Cross-Company ---
+    (
+        [
+            "top 3", "top 5", "top 10", "top-3", "top-5", "top-10",
+            "top mills", "top companies", "top performers", "top producers",
+            "highest margin", "highest revenue", "highest profit", "highest growth", "highest sales",
+            "lowest margin", "lowest revenue", "lowest cost", "lowest profit",
+            "most profitable", "least profitable", "profit leader", "revenue leader",
+            "which mill", "which company", "which mills", "which companies", "who achieved",
+            "who earned more", "who made more", "better than", "worse than",
+            "leaders", "leader", "best performing", "worst performing",
+            "rank mills", "rank companies", "ranking by", "ranked by",
+            "margin trajectory", "trajectory by company", "trajectory across",
+            "across mills", "across companies", "across all companies", "across all mills",
+            "by company", "by mill",
+            "compare", "versus", "benchmark against",
+            "against each other", "side by side", "side-by-side", "all companies",
+            "all mills", "all 10", "all ten", "portfolio review", "compare portfolio"
+        ],
+        "comparison",
     ),
     # --- Trend / Chart ---
     (
         ["trend", "over time", "month by month", "monthly", "trajectory",
-         "chart", "graph", "plot", "visual", "show me", "draw"],
+         "chart", "graph", "plot", "visualize", "show me trend"],
         "trend",
     ),
     # --- Growth ---

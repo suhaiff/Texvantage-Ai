@@ -39,3 +39,131 @@
     background: rgba(148, 163, 184, 0.4);
   }
 }
+
+/* ======================================================== */
+/* ChatGPT / Claude / AI Studio Markdown Typography Styling */
+/* ======================================================== */
+.ai-markdown-content {
+  color: var(--color-tv-text-primary, #F2F3F5);
+  font-size: 15px;
+  line-height: 1.72;
+  word-break: break-word;
+}
+
+.ai-markdown-content h1,
+.ai-markdown-content h2,
+.ai-markdown-content h3,
+.ai-markdown-content h4 {
+  color: #FFFFFF;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.ai-markdown-content h1 {
+  font-size: 1.45rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.ai-markdown-content h2 {
+  font-size: 1.25rem;
+  margin-top: 1.35rem;
+  margin-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.4rem;
+}
+
+.ai-markdown-content h3 {
+  font-size: 1.08rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-tv-accent, #D6FF4B);
+}
+
+.ai-markdown-content h4 {
+  font-size: 0.98rem;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+  color: #E2E8F0;
+}
+
+.ai-markdown-content p {
+  margin-bottom: 0.9rem;
+}
+
+.ai-markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-markdown-content ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ai-markdown-content ul > li {
+  position: relative;
+  padding-left: 1.4rem;
+  margin-bottom: 0.55rem;
+  line-height: 1.68;
+}
+
+.ai-markdown-content ul > li::before {
+  content: "•";
+  position: absolute;
+  left: 0.35rem;
+  top: -0.1rem;
+  color: var(--color-tv-accent, #D6FF4B);
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.ai-markdown-content ol {
+  list-style-type: decimal;
+  padding-left: 1.4rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ai-markdown-content ol > li {
+  margin-bottom: 0.55rem;
+  line-height: 1.68;
+  padding-left: 0.25rem;
+}
+
+.ai-markdown-content strong {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.ai-markdown-content em {
+  font-style: italic;
+  color: var(--color-tv-text-secondary, #949AA3);
+}
+
+.ai-markdown-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.88em;
+  color: var(--color-tv-accent, #D6FF4B);
+}
+
+.ai-markdown-content blockquote {
+  border-left: 3px solid var(--color-tv-accent, #D6FF4B);
+  background: rgba(214, 255, 75, 0.04);
+  padding: 0.75rem 1.2rem;
+  border-radius: 0 8px 8px 0;
+  margin: 1.1rem 0;
+  color: var(--color-tv-text-secondary, #949AA3);
+}
+
+.ai-markdown-content hr {
+  border: 0;
+  border-top: 1px solid var(--color-tv-border, #272B30);
+  margin: 1.5rem 0;
+}
+

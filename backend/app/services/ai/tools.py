@@ -393,6 +393,10 @@ class ToolRegistry:
                 target_comp = arguments.get("company_id")
                 months = int(arguments.get("months", 6))
                 trend = query_service.get_sales_trend(target_comp, months=months)
+                # Enrich with company_name for narrative generation
+                comp_obj = repository.get_company_by_id(trend.get("company_id", ""))
+                company_name = comp_obj.name if comp_obj else trend.get("company_id", "the company")
+                trend["company_name"] = company_name
                 return {"status": "success", "sales_trend": trend}
 
             # 7. get_profit_trend
@@ -400,6 +404,10 @@ class ToolRegistry:
                 target_comp = arguments.get("company_id")
                 months = int(arguments.get("months", 6))
                 trend = query_service.get_profit_trend(target_comp, months=months)
+                # Enrich with company_name for narrative generation
+                comp_obj = repository.get_company_by_id(trend.get("company_id", ""))
+                company_name = comp_obj.name if comp_obj else trend.get("company_id", "the company")
+                trend["company_name"] = company_name
                 return {"status": "success", "profit_trend": trend}
 
             # 8. get_top_products
