@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 import os
+from pathlib import Path
+
+_BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+_ROOT_DIR = _BACKEND_DIR.parent
 
 class Settings(BaseSettings):
     APP_NAME: str = "TexVantage AI"
@@ -25,14 +29,19 @@ class Settings(BaseSettings):
     AI_PROVIDER: Optional[str] = os.getenv("AI_PROVIDER", None)
     
     # Gemini AI (Backend only)
-    GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY") or None
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
     
     # Demo accounts allowed for client presentation
     ENABLE_DEMO_SWITCHER: bool = os.getenv("ENABLE_DEMO_SWITCHER", "true" if os.getenv("APP_ENV", "development") == "development" else "false").lower() in ("true", "1", "yes")
     
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(
+            str(_BACKEND_DIR / ".env"),
+            str(_ROOT_DIR / ".env"),
+            ".env",
+            "backend/.env",
+        ),
         env_file_encoding="utf-8",
         extra="ignore"
     )

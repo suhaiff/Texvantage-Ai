@@ -50,7 +50,11 @@ async def upload_dataset(
             raise ForbiddenError("User is not assigned to a company.")
         target_company_id = current_user.company_id
     else: # ADMIN
-        target_company_id = company_id or (current_user.company_id or "comp_textile_a")
+        if not company_id:
+            first_comps = repo.get_companies()
+            target_company_id = current_user.company_id or (first_comps[0].id if first_comps else "comp_fbs_1")
+        else:
+            target_company_id = company_id
         # Validate target company exists
         target_company = repo.get_company_by_id(target_company_id)
         if not target_company:

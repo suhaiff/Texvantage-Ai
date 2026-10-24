@@ -11,6 +11,7 @@ export interface AIServiceStreamCallbacks {
   onToolStep?: (step: ToolExecutionStep) => void;
   onToken?: (token: string) => void;
   onArtifact?: (artifact: AIArtifact) => void;
+  onConversationId?: (id: string) => void;
   onDone?: () => void;
   onError?: (error: string) => void;
 }
@@ -51,6 +52,9 @@ export class AIService {
       onArtifact: artifact => {
         const normalized = normalizeArtifact(artifact);
         if (normalized) callbacks.onArtifact?.(normalized);
+      },
+      onConversationId: id => {
+        callbacks.onConversationId?.(id);
       },
       onDone: () => {
         callbacks.onDone?.();

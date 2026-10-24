@@ -179,3 +179,118 @@ def test_conversation_persistence(owner_a_user):
     # Verify messages are saved
     full_conv = repo.get_conversation_by_id(conv.id, owner_a_user.id)
     assert len(full_conv.messages) >= 2 # user msg + assistant msg
+
+
+def test_company_location_query_answers_with_location_not_generic_summary(admin_user):
+    """
+    Querying 'where is Jeevan Clothing Company located?' must specifically answer
+    with the location/city/state rather than duplicating an executive performance summary.
+    """
+    company = SimpleNamespace(
+        id="comp_fbs_1",
+        name="Jeevan Clothing Company",
+        code="JCC",
+        city="Tirupur",
+        state="Tamil Nadu",
+        specialization="Export Quality T-Shirts, Polos & Knitted Garments",
+        founded_year=2004,
+        annual_capacity_description="250,000 Pcs/Month"
+    )
+    repository = SimpleNamespace(
+        get_companies=lambda _scope=None: [company],
+        get_company_by_id=lambda _id: company,
+        get_monthly_financials=lambda _ids: [],
+        add_message=lambda _m: None,
+        get_conversation_by_id=lambda _cid, _uid: None,
+        create_conversation=lambda c: c,
+        update_conversation_title=lambda *a: None
+    )
+    orchestrator = AIOrchestrator(repository=repository, user=admin_user, provider=MockAIProvider())
+
+    # 1. Ask analysis
+    ans_analysis = orchestrator.run_conversation_turn("Analyze Jeevan Clothing Company")
+    assert "Executive Performance Summary" in ans_analysis["response"]
+
+    # 2. Ask location
+    ans_location = orchestrator.run_conversation_turn("where is Jeevan Clothing Company located?")
+    assert "Executive Performance Summary" not in ans_location["response"]
+    assert "Tirupur" in ans_location["response"]
+    assert "Tamil Nadu" in ans_location["response"]
+
+
+def test_company_multi_turn_followup_location_query(admin_user):
+    """
+    Multi-turn test: User asks 'Analyze Jeevan Clothing Company' and then follows up
+    with 'where is it located?'. The system must retain context and answer the location.
+    """
+    company = SimpleNamespace(
+        id="comp_fbs_1",
+        name="Jeevan Clothing Company",
+        code="JCC",
+        city="Tirupur",
+        state="Tamil Nadu",
+        specialization="Export Quality T-Shirts, Polos & Knitted Garments",
+        founded_year=2004,
+        annual_capacity_description="250,000 Pcs/Month"
+    )
+    conv_store = {}
+    def mock_get_conv(cid, uid):
+        return conv_store.get(cid)
+    def mock_add_msg(m):
+        conv = conv_store.get(m.conversation_id)
+        if conv:
+            conv.messages.append(m)
+    def mock_create_conv(c):
+        c.messages = []
+        conv_store[c.id] = c
+        return c
+
+    repository = SimpleNamespace(
+        get_companies=lambda _scope=None: [company],
+        get_company_by_id=lambda _id: company,
+        get_monthly_financials=lambda _ids: [],
+        add_message=mock_add_msg,
+        get_conversation_by_id=mock_get_conv,
+        create_conversation=mock_create_conv,
+        update_conversation_title=lambda *a: None
+    )
+    orchestrator = AIOrchestrator(repository=repository, user=admin_user, provider=MockAIProvider())
+
+    # Turn 1: Analyze
+    t1 = orchestrator.run_conversation_turn("Analyze Jeevan Clothing Company")
+    cid = t1["conversation_id"]
+
+    # Turn 2: Follow-up location query
+    t2 = orchestrator.run_conversation_turn("where is it located?", conversation_id=cid)
+    assert "Tirupur" in t2["response"]
+    assert "Tamil Nadu" in t2["response"]
+
+
+def test_company_specialization_profile_query(admin_user):
+    """
+    Querying 'what does Jeevan Clothing Company specialize in?' returns core specialization.
+    """
+    company = SimpleNamespace(
+        id="comp_fbs_1",
+        name="Jeevan Clothing Company",
+        code="JCC",
+        city="Tirupur",
+        state="Tamil Nadu",
+        specialization="Export Quality T-Shirts, Polos & Knitted Garments",
+        founded_year=2004,
+        annual_capacity_description="250,000 Pcs/Month"
+    )
+    repository = SimpleNamespace(
+        get_companies=lambda _scope=None: [company],
+        get_company_by_id=lambda _id: company,
+        get_monthly_financials=lambda _ids: [],
+        add_message=lambda _m: None,
+        get_conversation_by_id=lambda _cid, _uid: None,
+        create_conversation=lambda c: c,
+        update_conversation_title=lambda *a: None
+    )
+    orchestrator = AIOrchestrator(repository=repository, user=admin_user, provider=MockAIProvider())
+
+    res = orchestrator.run_conversation_turn("what does Jeevan Clothing Company specialize in?")
+    assert "Specialization" in res["response"] or "Capabilities" in res["response"]
+    assert "Export Quality T-Shirts" in res["response"]

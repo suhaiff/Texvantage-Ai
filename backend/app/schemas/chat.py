@@ -43,3 +43,6 @@ class ConversationDetailResponse(ConversationResponse):
 class SendMessageRequest(BaseModel):
     conversation_id: Optional[str] = None
     prompt: str
+
+class RenameConversationRequest(BaseModel):
+    title: str

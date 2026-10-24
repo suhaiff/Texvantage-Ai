@@ -357,49 +357,49 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   if (hasNoData) {
     if (schema && schema.tables && schema.tables.length > 0) {
       return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-          <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 sm:p-8 shadow-sm">
-            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 animate-in fade-in duration-300">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 sm:p-8 shadow-[0_4px_25px_rgba(0,0,0,0.3)]">
+            <div className="text-xs font-semibold text-purple-300/60 uppercase tracking-wider mb-1">
               Executive Overview
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {greeting}
             </h1>
-            <p className="text-sm text-tv-text-secondary mt-1">
+            <p className="text-sm text-purple-200/70 mt-1">
               {summaryData?.company_name || currentUser.companyName || 'Enterprise'}
             </p>
           </div>
 
-          <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)]">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-tv-text-primary flex items-center gap-2">
-                <Database className="w-5 h-5 text-emerald-500" />
-                Connected to Production Database
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Database className="w-5 h-5 text-emerald-400" />
+                <span>Connected to Production Database</span>
               </h2>
-              <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-xs font-semibold">
+              <span className="bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 px-2.5 py-0.5 rounded-full text-xs font-semibold">
                 Live Schema Active
               </span>
             </div>
             
-            <p className="text-sm text-tv-text-secondary mb-6 max-w-3xl">
+            <p className="text-sm text-purple-200/80 mb-6 max-w-3xl leading-relaxed">
               We've automatically detected the following tables in your database. 
-              Upload a <b>Business Knowledge</b> document (PDF or Text) in the Knowledge &amp; Datasets tab to teach the AI how to interpret these tables, so you can start querying your metrics immediately.
+              Upload a <b>Business Knowledge</b> document (PDF or Text) in the Knowledge tab to teach the AI how to interpret these tables, so you can start querying your metrics immediately.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {schema.tables.map((table: any, idx: number) => (
-                <div key={idx} className="bg-tv-base/50 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 transition-all hover:shadow-md">
-                  <h3 className="font-semibold text-tv-text-primary text-sm flex items-center gap-2 mb-3">
-                    <Layers className="w-4 h-4 text-blue-500" />
-                    {table.name}
+                <div key={idx} className="bg-[#0C071C]/70 border border-purple-500/20 rounded-xl p-4 transition-all hover:border-purple-400/40">
+                  <h3 className="font-semibold text-white text-sm flex items-center gap-2 mb-3">
+                    <Layers className="w-4 h-4 text-[#A089E6]" />
+                    <span>{table.name}</span>
                   </h3>
                   <div className="max-h-40 overflow-y-auto no-scrollbar space-y-2 pr-2">
                     {table.columns.map((col: any, cIdx: number) => (
                       <div key={cIdx} className="flex justify-between text-xs">
-                        <span className="font-mono text-slate-700 dark:text-slate-300 truncate mr-2" title={col.name}>
+                        <span className="font-mono text-purple-200/90 truncate mr-2" title={col.name}>
                           {col.name}
                         </span>
-                        <span className="text-slate-500 dark:text-slate-500 shrink-0">
+                        <span className="text-purple-300/50 shrink-0">
                           {col.type}
                         </span>
                       </div>
@@ -412,7 +412,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="mt-8 flex justify-center">
               <button
                 onClick={() => (onNavigateTab ? onNavigateTab('datasets') : null)}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-semibold px-6 py-2.5 rounded-xl shadow-sm transition-all"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white text-sm font-semibold px-6 py-2.5 rounded-xl shadow-[0_0_15px_rgba(109,74,255,0.35)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Teach AI via Knowledge Upload</span>
@@ -424,35 +424,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
 
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6 animate-in fade-in duration-300">
         {/* Header */}
-        <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 sm:p-8 shadow-sm">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 sm:p-8 shadow-[0_4px_25px_rgba(0,0,0,0.3)]">
+          <div className="text-xs font-semibold text-purple-300/60 uppercase tracking-wider mb-1">
             Executive Overview
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             {greeting}
           </h1>
-          <p className="text-sm text-tv-text-secondary mt-1">
+          <p className="text-sm text-purple-200/70 mt-1">
             {summaryData?.company_name || currentUser.companyName || 'Enterprise'}
           </p>
         </div>
 
         {/* Empty State Banner */}
-        <div className="bg-tv-surface border border-tv-border rounded-2xl p-12 text-center shadow-sm space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 mx-auto flex items-center justify-center border border-blue-200 dark:border-blue-900/60">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-12 text-center shadow-[0_4px_25px_rgba(0,0,0,0.3)] space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-purple-950/60 border border-purple-400/30 text-[#A089E6] mx-auto flex items-center justify-center shadow-[0_0_15px_rgba(160,137,230,0.2)]">
             <Database className="w-7 h-7" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-lg font-bold text-tv-text-primary">No business data uploaded yet.</h2>
-            <p className="text-sm text-tv-text-secondary max-w-md mx-auto">
+            <h2 className="text-lg font-bold text-white">No business data uploaded yet.</h2>
+            <p className="text-sm text-purple-200/70 max-w-md mx-auto">
               Upload your first dataset to start analyzing your business performance, margins, and sales trends.
             </p>
           </div>
           <div className="pt-2">
             <button
               onClick={() => (onNavigateTab ? onNavigateTab('datasets') : null)}
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-[0_0_15px_rgba(109,74,255,0.35)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4" />
               <span>Upload Data</span>
@@ -474,136 +474,140 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const maxMargin = Math.max(1, ...sortedByMargin.map((c: any) => c.weighted_profit_margin_pct ?? 0));
 
     const getMarginBarColor = (pct: number) => {
-      if (pct > 25) return '#10b981'; // emerald
-      if (pct > 18) return '#3b82f6'; // blue
-      if (pct > 12) return '#f59e0b'; // amber
+      if (pct > 25) return '#34d399'; // emerald-400
+      if (pct > 18) return '#A089E6'; // lavender accent
+      if (pct > 12) return '#fbbf24'; // amber-400
       return '#f43f5e'; // rose
     };
 
+    const activeCount = summaryData?.companies?.length || 0;
+
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-in fade-in duration-300">
         {/* Header */}
-        <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)] flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">
-              Global Portfolio Command Center
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-950/60 border border-purple-400/30 text-[#A089E6] text-[10px] font-bold uppercase tracking-wider mb-2">
+              <Sparkles className="w-3 h-3 text-[#A089E6]" />
+              <span>Enterprise Portfolio Intelligence</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {greeting}
             </h1>
-            <p className="text-xs sm:text-sm text-tv-text-secondary mt-1">
-              10-Enterprise Aggregated Portfolio Analytics across India
+            <p className="text-xs sm:text-sm text-purple-200/70 mt-1">
+              {activeCount > 0 ? `${activeCount} Enterprises` : 'Global Portfolio'} · Consolidated Multi-Tenant Operations & Revenue Analytics
             </p>
           </div>
           <button
-            onClick={() => onOpenAIQuery('Summarize full portfolio revenue and margin performance across all 10 mills')}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all self-start md:self-auto"
+            onClick={() => onOpenAIQuery('Summarize full portfolio revenue and margin performance across all enterprises')}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-[0_0_15px_rgba(109,74,255,0.35)] hover:shadow-[0_0_25px_rgba(160,137,230,0.5)] hover:scale-105 active:scale-95 transition-all self-start md:self-auto cursor-pointer"
           >
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Consult Portfolio Advisor</span>
+            <Bot className="w-4 h-4 text-white" />
+            <span>Consult Portfolio AI Advisor</span>
           </button>
         </div>
 
         {/* Global KPI Cards — 6 cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-            <div className="text-xs font-medium text-tv-text-secondary">Total Portfolio Revenue</div>
-            <div className="text-2xl font-bold text-tv-text-primary mt-1">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+            <div className="text-xs font-semibold uppercase tracking-wider text-purple-300/60">Portfolio Revenue</div>
+            <div className="text-2xl font-bold text-white mt-1.5 tabular-nums">
               {summaryData?.total_portfolio_revenue_lakh != null
-                ? `₹${summaryData.total_portfolio_revenue_lakh.toLocaleString('en-IN')}L`
+                ? `₹${Number(summaryData.total_portfolio_revenue_lakh).toLocaleString('en-IN')}L`
                 : 'Not available'}
             </div>
-            <div className="text-xs text-tv-text-secondary mt-2">6-Month Aggregate (10 Mills)</div>
+            <div className="text-[11px] text-purple-300/50 mt-2">6-Month Aggregate</div>
           </div>
 
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-            <div className="text-xs font-medium text-tv-text-secondary">Weighted Gross Margin</div>
-            <div className="text-2xl font-bold text-tv-text-primary mt-1">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+            <div className="text-xs font-semibold uppercase tracking-wider text-purple-300/60">Weighted Margin</div>
+            <div className="text-2xl font-bold text-emerald-400 mt-1.5 tabular-nums">
               {summaryData?.portfolio_average_margin_pct != null
                 ? `${summaryData.portfolio_average_margin_pct}%`
                 : 'Not available'}
             </div>
-            <div className="text-xs text-tv-text-secondary mt-2">
+            <div className="text-[11px] text-purple-300/50 mt-2 truncate">
               {summaryData?.total_portfolio_gross_profit_lakh != null
-                ? `₹${summaryData.total_portfolio_gross_profit_lakh}L Total Gross Profit`
-                : 'Gross Profit'}
+                ? `₹${summaryData.total_portfolio_gross_profit_lakh}L Gross Profit`
+                : 'Operating realization'}
             </div>
           </div>
 
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-            <div className="text-xs font-medium text-tv-text-secondary">Top Revenue Contributor</div>
-            <div className="text-2xl font-bold text-tv-text-primary mt-1">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+            <div className="text-xs font-semibold uppercase tracking-wider text-purple-300/60">Top Contributor</div>
+            <div className="text-2xl font-bold text-white mt-1.5">
               {summaryData?.top_performing_company?.code || 'Not available'}
             </div>
-            <div className="text-xs text-tv-text-secondary mt-2 truncate">
+            <div className="text-[11px] text-purple-300/50 mt-2 truncate">
               {summaryData?.top_performing_company?.name || 'Top contributor'}
             </div>
           </div>
 
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-            <div className="text-xs font-medium text-tv-text-secondary">Highest Margin Mill</div>
-            <div className="text-2xl font-bold text-tv-text-primary mt-1">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+            <div className="text-xs font-semibold uppercase tracking-wider text-purple-300/60">Highest Margin</div>
+            <div className="text-2xl font-bold text-[#A089E6] mt-1.5 tabular-nums">
               {summaryData?.highest_margin_company?.weighted_profit_margin_pct != null
                 ? `${summaryData.highest_margin_company.weighted_profit_margin_pct}%`
                 : 'Not available'}
             </div>
-            <div className="text-xs text-tv-text-secondary mt-2 truncate">
-              {summaryData?.highest_margin_company?.name || 'Artisanal Silk & Jacquard'}
+            <div className="text-[11px] text-purple-300/50 mt-2 truncate">
+              {summaryData?.highest_margin_company?.name || 'Top margin entity'}
             </div>
           </div>
 
           {/* KPI 5: Total Units Sold */}
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-            <div className="text-xs font-medium text-tv-text-secondary">Total Units Sold</div>
-            <div className="text-2xl font-bold text-tv-text-primary mt-1">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+            <div className="text-xs font-semibold uppercase tracking-wider text-purple-300/60">Total Volume</div>
+            <div className="text-2xl font-bold text-white mt-1.5 tabular-nums">
               {summaryData?.total_units_sold != null
                 ? summaryData.total_units_sold.toLocaleString('en-IN')
                 : 'Not available'}
             </div>
-            <div className="text-xs text-tv-text-secondary mt-2">6-Month Portfolio Volume</div>
+            <div className="text-[11px] text-purple-300/50 mt-2">6-Month Units Sold</div>
           </div>
 
           {/* KPI 6: Active Companies */}
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-            <div className="text-xs font-medium text-tv-text-secondary">Active Companies</div>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">10</div>
-            <div className="text-xs text-tv-text-secondary mt-2">All mills operational</div>
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+            <div className="text-xs font-semibold uppercase tracking-wider text-purple-300/60">Enterprises</div>
+            <div className="text-2xl font-bold text-emerald-400 mt-1.5 tabular-nums">{activeCount}</div>
+            <div className="text-[11px] text-purple-300/50 mt-2">All mills operational</div>
           </div>
         </div>
 
         {/* Global Ranking Table */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-tv-border flex items-center justify-between">
-            <h2 className="text-sm font-bold text-tv-text-primary">
-              Executive Enterprise Portfolio Ranking
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.3)]">
+          <div className="px-6 py-4 border-b border-purple-400/20 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[#A089E6]" />
+              <span>Executive Enterprise Portfolio Ranking</span>
             </h2>
-            <span className="text-xs text-tv-text-secondary">
-              {summaryData?.companies?.length || 0} Enterprises Active
+            <span className="text-xs text-purple-300/60 font-mono">
+              {activeCount} Active Entities
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-tv-base/60 text-tv-text-secondary uppercase tracking-wider font-semibold border-b border-tv-border">
+              <thead className="bg-[#0C071C]/80 text-purple-300/70 uppercase tracking-wider font-semibold border-b border-purple-400/20 text-[11px]">
                 <tr>
-                  <th className="px-4 py-3">Company</th>
-                  <th className="px-4 py-3">Code</th>
-                  <th className="px-4 py-3">Specialization</th>
-                  <th className="px-4 py-3">Location</th>
-                  <th className="px-4 py-3 text-right">6M Revenue</th>
-                  <th className="px-4 py-3 text-right">Gross Margin</th>
+                  <th className="px-5 py-3">Company</th>
+                  <th className="px-5 py-3">Code</th>
+                  <th className="px-5 py-3">Specialization</th>
+                  <th className="px-5 py-3">Location</th>
+                  <th className="px-5 py-3 text-right">6M Revenue</th>
+                  <th className="px-5 py-3 text-right">Gross Margin</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+              <tbody className="divide-y divide-purple-500/10 text-purple-200/90">
                 {(summaryData?.companies || []).map((comp: any, idx: number) => (
-                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-4 py-3 font-medium text-tv-text-primary">{comp.name}</td>
-                    <td className="px-4 py-3 font-mono text-slate-500">{comp.code}</td>
-                    <td className="px-4 py-3">{comp.specialization}</td>
-                    <td className="px-4 py-3 text-slate-500">{comp.city}</td>
-                    <td className="px-4 py-3 text-right font-mono font-medium">
+                  <tr key={idx} className="hover:bg-white/[0.04] transition-colors">
+                    <td className="px-5 py-3.5 font-medium text-white">{comp.name}</td>
+                    <td className="px-5 py-3.5 font-mono text-purple-300/60">{comp.code}</td>
+                    <td className="px-5 py-3.5 text-purple-200/80">{comp.specialization}</td>
+                    <td className="px-5 py-3.5 text-purple-300/60">{comp.city}</td>
+                    <td className="px-5 py-3.5 text-right font-mono font-medium text-white">
                       {comp.total_revenue_lakh != null ? `₹${comp.total_revenue_lakh}L` : '—'}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                    <td className="px-5 py-3.5 text-right font-mono font-semibold text-emerald-400">
                       {comp.weighted_profit_margin_pct != null ? `${comp.weighted_profit_margin_pct}%` : '—'}
                     </td>
                   </tr>
@@ -615,34 +619,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Margin Distribution Chart */}
         {sortedByMargin.length > 0 && (
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)]">
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
               <div>
-                <h2 className="text-sm font-bold text-tv-text-primary">Margin Distribution</h2>
-                <p className="text-xs text-tv-text-secondary mt-0.5">
-                  Gross margin % by mill — sorted descending
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-[#A089E6]" />
+                  <span>Margin Distribution</span>
+                </h2>
+                <p className="text-xs text-purple-300/60 mt-0.5">
+                  Gross margin realization across portfolio enterprises (sorted descending)
                 </p>
               </div>
-              <div className="flex items-center gap-3 text-[10px] text-tv-text-secondary">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block bg-emerald-500" /> &gt;25%</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block bg-blue-500" /> &gt;18%</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block bg-amber-500" /> &gt;12%</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block bg-rose-500" /> ≤12%</span>
+              <div className="flex items-center gap-3 text-[11px] text-purple-300/70">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block bg-emerald-400" /> &gt;25%</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block bg-[#A089E6]" /> &gt;18%</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block bg-amber-400" /> &gt;12%</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm inline-block bg-rose-400" /> ≤12%</span>
               </div>
             </div>
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               {sortedByMargin.map((comp: any, idx: number) => {
                 const pct = comp.weighted_profit_margin_pct ?? 0;
                 const barWidth = maxMargin > 0 ? (pct / maxMargin) * 100 : 0;
                 const color = getMarginBarColor(pct);
                 return (
                   <div key={idx} className="flex items-center gap-3">
-                    <span className="w-16 text-[11px] font-mono text-tv-text-secondary shrink-0 text-right">
+                    <span className="w-16 text-[11px] font-mono text-purple-300/70 shrink-0 text-right">
                       {comp.code || `M${idx + 1}`}
                     </span>
-                    <div className="flex-1 h-5 bg-tv-base rounded overflow-hidden">
+                    <div className="flex-1 h-5 bg-[#0C071C]/80 rounded-lg overflow-hidden border border-white/[0.05]">
                       <div
-                        className="h-full rounded transition-all"
+                        className="h-full rounded-lg transition-all duration-500 shadow-sm"
                         style={{ width: `${barWidth}%`, backgroundColor: color }}
                       />
                     </div>
@@ -657,31 +664,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         )}
 
         {/* Quick AI Actions Panel */}
-        <div className="bg-gradient-to-br from-slate-900 to-blue-950 rounded-xl p-5 border border-slate-800 shadow-sm">
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3">
-            <Zap className="w-4 h-4 text-amber-400" />
-            <span>Quick AI Analysis Shortcuts</span>
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl rounded-2xl p-6 border border-purple-400/25 shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#A089E6] uppercase tracking-wider mb-4">
+            <Zap className="w-4 h-4 text-[#A089E6]" />
+            <span>Executive AI Analysis Shortcuts</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
               onClick={() => onOpenAIQuery('Show top 3 highest margin mills and their performance analysis')}
-              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/40 text-white text-xs font-semibold px-4 py-3 rounded-xl transition-all text-left"
+              className="flex items-center gap-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-purple-400/20 hover:border-purple-400/50 text-white text-xs font-semibold px-4 py-3.5 rounded-xl transition-all duration-200 text-left cursor-pointer group hover:scale-[1.01]"
             >
-              <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+              <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
               <span>Top 3 Highest Margin Mills</span>
             </button>
             <button
               onClick={() => onOpenAIQuery('Compare top revenue mills vs lowest revenue mills')}
-              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/40 text-white text-xs font-semibold px-4 py-3 rounded-xl transition-all text-left"
+              className="flex items-center gap-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-purple-400/20 hover:border-purple-400/50 text-white text-xs font-semibold px-4 py-3.5 rounded-xl transition-all duration-200 text-left cursor-pointer group hover:scale-[1.01]"
             >
-              <BarChart3 className="w-4 h-4 text-blue-400 shrink-0" />
+              <BarChart3 className="w-4 h-4 text-[#A089E6] shrink-0 group-hover:scale-110 transition-transform" />
               <span>Revenue Leaders vs Laggards</span>
             </button>
             <button
               onClick={() => onOpenAIQuery('Give full portfolio executive summary with risks and opportunities')}
-              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/40 text-white text-xs font-semibold px-4 py-3 rounded-xl transition-all text-left"
+              className="flex items-center gap-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-purple-400/20 hover:border-purple-400/50 text-white text-xs font-semibold px-4 py-3.5 rounded-xl transition-all duration-200 text-left cursor-pointer group hover:scale-[1.01]"
             >
-              <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+              <Sparkles className="w-4 h-4 text-amber-300 shrink-0 group-hover:scale-110 transition-transform" />
               <span>Portfolio Health Check</span>
             </button>
           </div>
@@ -781,24 +788,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }, [topProducts]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-in fade-in duration-300">
       {/* 2. REFINED PAGE HEADER */}
-      <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-950/60 border border-purple-400/30 text-[#A089E6] text-[10px] font-bold uppercase tracking-wider mb-2">
+            <Sparkles className="w-3 h-3 text-[#A089E6]" />
+            <span>Executive Business Overview</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             {greeting}
           </h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs sm:text-sm text-tv-text-secondary">
-            <span className="font-semibold text-slate-900 dark:text-slate-200">
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs sm:text-sm text-purple-200/70">
+            <span className="font-semibold text-white">
               {summaryData?.company_name || currentUser.companyName || currentUser.companyId}
             </span>
             <span>·</span>
-            <span>{summaryData?.latest_month || summaryData?.specialization || 'Executive Overview'}</span>
+            <span>{summaryData?.latest_month || summaryData?.specialization || 'Performance Overview'}</span>
             {lastUpdatedFormatted && (
               <>
-                <span className="text-tv-text-muted dark:text-slate-600">·</span>
-                <span className="text-tv-text-secondary flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-tv-text-muted inline" />
+                <span className="text-purple-400/40">·</span>
+                <span className="text-purple-300/60 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-purple-300/50 inline" />
                   Last updated {lastUpdatedFormatted}
                 </span>
               </>
@@ -809,16 +820,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Operational Context Badges & Export Action */}
         <div className="flex flex-wrap items-center gap-3 text-xs">
           {summaryData?.city && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-tv-base/80 text-slate-700 dark:text-slate-300 font-medium">
-              <MapPin className="w-3.5 h-3.5 text-blue-500" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-950/40 border border-purple-400/20 text-purple-200 font-medium">
+              <MapPin className="w-3.5 h-3.5 text-[#A089E6]" />
               <span>
                 {summaryData.city}, {summaryData.state}
               </span>
             </div>
           )}
           {summaryData?.capacity_description && (
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-tv-base/80 text-slate-700 dark:text-slate-300 font-medium truncate max-w-xs">
-              <Factory className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-950/40 border border-purple-400/20 text-purple-200 font-medium truncate max-w-xs">
+              <Factory className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
               <span className="truncate">{summaryData.capacity_description}</span>
             </div>
           )}
@@ -827,12 +838,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onClick={handleExportReport}
             disabled={exportingReport}
             title="Download authoritative 5-sheet Excel executive report"
-            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-all ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition-all cursor-pointer ${
               exportSuccess
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]'
                 : exportingReport
-                ? 'bg-blue-400 text-white cursor-wait'
-                : 'bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60'
+                ? 'bg-purple-900/60 text-purple-300 cursor-wait'
+                : 'bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white shadow-[0_0_15px_rgba(109,74,255,0.3)] hover:scale-105 active:scale-95'
             }`}
           >
             {exportingReport ? (
@@ -847,7 +858,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </>
             ) : (
               <>
-                <FileSpreadsheet className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <FileSpreadsheet className="w-3.5 h-3.5 text-white" />
                 <span>Export Executive Report</span>
               </>
             )}
@@ -858,57 +869,57 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 3. FOUR PRIMARY KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: Revenue */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Revenue</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[11px] font-medium text-purple-200">
               {revenuePeriod}
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+          <div className="text-2xl font-bold text-white mt-1.5 tabular-nums">
             {revenueValue}
           </div>
           <div className="flex items-center gap-1.5 mt-2.5 text-xs">
             {hasRevenueGrowth ? (
               <span
-                className={`inline-flex items-center px-1.5 py-0.5 rounded font-medium ${
+                className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${
                   revenueGrowthPct > 0
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                    ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
                     : revenueGrowthPct < 0
-                    ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
-                    : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                    ? 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
+                    : 'bg-purple-950/60 text-purple-300 border border-purple-400/20'
                 }`}
               >
                 {revenueGrowthPct > 0 && <TrendingUp className="w-3.5 h-3.5 mr-1 inline" />}
                 {revenueGrowthPct < 0 && <TrendingDown className="w-3.5 h-3.5 mr-1 inline" />}
                 {revenueGrowthPct === 0 && <Minus className="w-3.5 h-3.5 mr-1 inline" />}
                 {revenueGrowthPct >= 0 ? '+' : ''}
-                {revenueGrowthPct.toFixed(2)}% vs {prevMonthName || 'July'}
+                {revenueGrowthPct.toFixed(2)}% vs {prevMonthName || 'Prior'}
               </span>
             ) : (
-              <span className="text-tv-text-muted dark:text-slate-500">Period baseline</span>
+              <span className="text-purple-300/50">Period baseline</span>
             )}
           </div>
         </div>
 
         {/* KPI 2: Gross Margin */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Gross Margin</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[11px] font-medium text-purple-200">
               {revenuePeriod}
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+          <div className="text-2xl font-bold text-emerald-400 mt-1.5 tabular-nums">
             {marginValue}
           </div>
           <div className="flex items-center gap-1.5 mt-2.5 text-xs">
             {marginDiffVsAvg != null ? (
               <span
-                className={`inline-flex items-center px-1.5 py-0.5 rounded font-medium ${
+                className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${
                   Number(marginDiffVsAvg) >= 0
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                    : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
+                    ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
+                    : 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
                 }`}
               >
                 {Number(marginDiffVsAvg) >= 0 ? (
@@ -920,23 +931,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {marginDiffVsAvg} pts vs avg
               </span>
             ) : (
-              <span className="text-tv-text-muted dark:text-slate-500">Gross profit realization</span>
+              <span className="text-purple-300/50">Gross profit realization</span>
             )}
           </div>
         </div>
 
         {/* KPI 3: Units Sold */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Units Sold</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[11px] font-medium text-purple-200">
               {revenuePeriod}
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+          <div className="text-2xl font-bold text-white mt-1.5 tabular-nums">
             {unitsValue}
           </div>
-          <div className="flex items-center gap-1.5 mt-2.5 text-xs text-tv-text-secondary">
+          <div className="flex items-center gap-1.5 mt-2.5 text-xs text-purple-300/60">
             {summaryData?.annual_aggregate?.total_units_sold != null ? (
               <span>
                 {summaryData.annual_aggregate.total_units_sold.toLocaleString('en-IN')} total volume
@@ -948,30 +959,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* KPI 4: MoM Growth */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>MoM Growth</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
-              MoM
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[11px] font-medium text-purple-200">
+              Trajectory
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+          <div className="text-2xl font-bold text-white mt-1.5 tabular-nums">
             {momGrowthValue}
           </div>
           <div className="flex items-center gap-1.5 mt-2.5 text-xs">
             {hasRevenueGrowth ? (
               <span
-                className={`inline-flex items-center px-1.5 py-0.5 rounded font-medium ${
+                className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${
                   revenueGrowthPct >= 0
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
-                    : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400'
+                    ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
+                    : 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
                 }`}
               >
                 {revenueGrowthPct >= 0 ? '+' : ''}
                 {revenueGrowthPct.toFixed(2)}%
               </span>
             ) : (
-              <span className="text-tv-text-muted dark:text-slate-500">Revenue trajectory</span>
+              <span className="text-purple-300/50">Revenue trajectory</span>
             )}
           </div>
         </div>
@@ -980,82 +991,83 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* SECOND ROW OF 4 KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 5: Gross Profit */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Gross Profit</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[11px] font-medium text-purple-200">
               12 Months
             </span>
           </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1.5">
+          <div className="text-2xl font-bold text-emerald-400 mt-1.5 tabular-nums">
             {grossProfitValue}
           </div>
-          <div className="text-xs text-tv-text-secondary mt-2.5">Annual aggregate earnings</div>
+          <div className="text-[11px] text-purple-300/50 mt-2.5">Annual aggregate earnings</div>
         </div>
 
         {/* KPI 6: COGS % */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>COGS %</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[11px] font-medium text-purple-200">
               {revenuePeriod}
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+          <div className="text-2xl font-bold text-white mt-1.5 tabular-nums">
             {cogsPct != null ? `${cogsPct}%` : 'Not available'}
           </div>
-          <div className="text-xs text-tv-text-secondary mt-2.5">Cost of goods sold ratio</div>
+          <div className="text-[11px] text-purple-300/50 mt-2.5">Cost of goods sold ratio</div>
         </div>
 
         {/* KPI 7: Peak Revenue Month */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
-            <span>Peak Revenue Month</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
-              6M High
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
+            <span>Peak Month</span>
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[11px] font-medium text-purple-200">
+              High Point
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+          <div className="text-2xl font-bold text-white mt-1.5">
             {peakRevMonth ? peakRevMonth.month?.split(' ')[0] : 'N/A'}
           </div>
-          <div className="text-xs text-tv-text-secondary mt-2.5">
-            {peakRevMonth ? `₹${peakRevMonth.value.toFixed(2)}L peak revenue` : 'No trend data'}
+          <div className="text-[11px] text-purple-300/50 mt-2.5">
+            {peakRevMonth ? `₹${peakRevMonth.value.toFixed(2)}L peak volume` : 'No trend data'}
           </div>
         </div>
 
         {/* KPI 8: Avg Order Value */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Avg Order Value</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[11px] font-medium text-tv-text-secondary">
-              Latest
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[11px] font-medium text-purple-200">
+              Realization
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1.5">
+          <div className="text-2xl font-bold text-white mt-1.5 tabular-nums">
             {avgOrderValue}
           </div>
-          <div className="text-xs text-tv-text-secondary mt-2.5">Per transaction avg value</div>
+          <div className="text-[11px] text-purple-300/50 mt-2.5">Per order realization average</div>
         </div>
       </div>
 
       {/* 4. REVENUE TREND & 5. PROFITABILITY SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* REVENUE TREND (2 Cols) */}
-        <div className="lg:col-span-2 bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)] flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
               <div>
-                <h2 className="text-sm font-bold text-tv-text-primary">
-                  Revenue Performance Trend
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-[#A089E6]" />
+                  <span>Revenue Performance Trend</span>
                 </h2>
-                <p className="text-xs text-tv-text-secondary mt-0.5">
+                <p className="text-xs text-purple-300/60 mt-0.5">
                   Monthly sales trajectory from verified ledger records
                 </p>
               </div>
               <div className="flex items-center gap-3 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-blue-600" />
-                  <span className="text-tv-text-secondary font-medium">Revenue (₹ Lakh)</span>
+                <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-400/30">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#A089E6] shadow-[0_0_8px_#A089E6]" />
+                  <span className="text-purple-200 font-medium">Revenue (₹ Lakh)</span>
                 </div>
               </div>
             </div>
@@ -1066,8 +1078,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <svg viewBox="0 0 580 200" className="w-full h-48 select-none">
                   <defs>
                     <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="#A089E6" stopOpacity="0.35" />
+                      <stop offset="60%" stopColor="#6D4AFF" stopOpacity="0.12" />
+                      <stop offset="100%" stopColor="#271A58" stopOpacity="0.0" />
                     </linearGradient>
                   </defs>
 
@@ -1082,15 +1095,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           y1={y}
                           x2={560}
                           y2={y}
-                          stroke="currentColor"
-                          className="text-slate-100 dark:text-slate-800"
+                          stroke="rgba(160, 137, 230, 0.12)"
                           strokeDasharray={i > 0 && i < 4 ? '3 3' : undefined}
                         />
                         <text
                           x={38}
                           y={y + 3}
                           textAnchor="end"
-                          className="text-[10px] fill-slate-400 font-mono"
+                          className="text-[10px] fill-purple-300/50 font-mono"
                         >
                           ₹{labelVal}L
                         </text>
@@ -1117,7 +1129,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         <path
                           d={linePath}
                           fill="none"
-                          stroke="#3b82f6"
+                          stroke="#A089E6"
                           strokeWidth="2.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -1138,9 +1150,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                               <circle
                                 cx={x}
                                 cy={y}
-                                r={isHovered ? 5.5 : 3.5}
-                                fill="#3b82f6"
-                                stroke="#ffffff"
+                                r={isHovered ? 6 : 4}
+                                fill="#A089E6"
+                                stroke="#130C2E"
                                 strokeWidth="2"
                                 className="transition-all"
                               />
@@ -1166,8 +1178,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         textAnchor="middle"
                         className={`text-[10px] transition-colors ${
                           isHovered
-                            ? 'fill-blue-600 dark:fill-blue-400 font-bold'
-                            : 'fill-slate-500 dark:fill-slate-400 font-medium'
+                            ? 'fill-white font-bold'
+                            : 'fill-purple-300/60 font-medium'
                         }`}
                       >
                         {label}
@@ -1178,21 +1190,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 {/* Interactive Tooltip Card */}
                 {hoveredSalesIdx !== null && salesSeries[hoveredSalesIdx] && (
-                  <div className="mt-2 bg-tv-base rounded-lg px-3 py-2 text-xs flex items-center justify-between border border-slate-200 dark:border-slate-700/60">
-                    <span className="font-semibold text-tv-text-primary">
+                  <div className="mt-2 bg-[#0C071C]/90 backdrop-blur-md rounded-xl px-4 py-2.5 text-xs flex items-center justify-between border border-purple-400/30 shadow-lg">
+                    <span className="font-semibold text-white">
                       {salesSeries[hoveredSalesIdx].month}
                     </span>
                     <div className="flex items-center gap-4">
-                      <span className="text-tv-text-secondary">
+                      <span className="text-purple-200/80">
                         Revenue:{' '}
-                        <strong className="text-tv-text-primary">
+                        <strong className="text-white">
                           ₹{salesSeries[hoveredSalesIdx].revenue_lakh}L
                         </strong>
                       </span>
                       {salesSeries[hoveredSalesIdx].units_sold != null && (
-                        <span className="text-tv-text-secondary">
+                        <span className="text-purple-200/80">
                           Units:{' '}
-                          <strong className="text-tv-text-primary">
+                          <strong className="text-white">
                             {salesSeries[hoveredSalesIdx].units_sold.toLocaleString()}
                           </strong>
                         </span>
@@ -1201,8 +1213,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         <span
                           className={`font-semibold ${
                             salesSeries[hoveredSalesIdx].growth_pct >= 0
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-rose-600 dark:text-rose-400'
+                              ? 'text-emerald-400'
+                              : 'text-rose-400'
                           }`}
                         >
                           {salesSeries[hoveredSalesIdx].growth_pct >= 0 ? '+' : ''}
@@ -1214,7 +1226,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 )}
               </div>
             ) : (
-              <div className="py-12 text-center text-xs text-tv-text-muted">
+              <div className="py-12 text-center text-xs text-purple-300/50">
                 No revenue trend data available.
               </div>
             )}
@@ -1222,67 +1234,68 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* 5. PROFITABILITY SECTION (1 Col) */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm flex flex-col justify-between space-y-4">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)] flex flex-col justify-between space-y-4">
           <div>
-            <h2 className="text-sm font-bold text-tv-text-primary">
-              Profitability Breakdown
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#A089E6]" />
+              <span>Profitability Breakdown</span>
             </h2>
-            <p className="text-xs text-tv-text-secondary mt-0.5">
+            <p className="text-xs text-purple-300/60 mt-0.5">
               Margin economics for {revenuePeriod}
             </p>
           </div>
 
           <div className="space-y-3">
             {/* Gross Profit */}
-            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border">
-              <div className="text-[11px] font-medium text-tv-text-secondary uppercase tracking-wider">
+            <div className="bg-[#0C071C]/70 rounded-xl p-3.5 border border-purple-500/15">
+              <div className="text-[11px] font-semibold text-purple-300/60 uppercase tracking-wider">
                 Gross Profit
               </div>
-              <div className="text-lg font-bold text-tv-text-primary mt-1">
+              <div className="text-lg font-bold text-white mt-1 tabular-nums">
                 {latestFinancialRecord?.gross_profit_lakh != null
                   ? `₹${Number(latestFinancialRecord.gross_profit_lakh).toFixed(2)}L`
-                  : 'Not available from uploaded data'}
+                  : 'Not available'}
               </div>
               {latestFinancialRecord?.cogs_lakh != null && (
-                <div className="text-[11px] text-tv-text-secondary mt-0.5">
+                <div className="text-[11px] text-purple-300/60 mt-0.5">
                   COGS: ₹{Number(latestFinancialRecord.cogs_lakh).toFixed(2)}L
                 </div>
               )}
             </div>
 
             {/* Gross Margin */}
-            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border">
-              <div className="text-[11px] font-medium text-tv-text-secondary uppercase tracking-wider">
+            <div className="bg-[#0C071C]/70 rounded-xl p-3.5 border border-purple-500/15">
+              <div className="text-[11px] font-semibold text-purple-300/60 uppercase tracking-wider">
                 Gross Margin
               </div>
-              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              <div className="text-lg font-bold text-emerald-400 mt-1 tabular-nums">
                 {latestFinancialRecord?.profit_margin_pct != null
                   ? `${Number(latestFinancialRecord.profit_margin_pct).toFixed(2)}%`
-                  : 'Not available from uploaded data'}
+                  : 'Not available'}
               </div>
               {avgMargin != null && (
-                <div className="text-[11px] text-tv-text-secondary mt-0.5">
+                <div className="text-[11px] text-purple-300/60 mt-0.5">
                   Weighted Average: {avgMargin}%
                 </div>
               )}
             </div>
 
             {/* Net Profit */}
-            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border">
-              <div className="text-[11px] font-medium text-tv-text-secondary uppercase tracking-wider">
+            <div className="bg-[#0C071C]/70 rounded-xl p-3.5 border border-purple-500/15">
+              <div className="text-[11px] font-semibold text-purple-300/60 uppercase tracking-wider">
                 Net Profit
               </div>
-              <div className="text-lg font-bold text-tv-text-primary mt-1">
+              <div className="text-lg font-bold text-white mt-1 tabular-nums">
                 {latestFinancialRecord?.net_profit_lakh != null
                   ? `₹${Number(latestFinancialRecord.net_profit_lakh).toFixed(2)}L`
-                  : 'Not available from uploaded data'}
+                  : 'Not available'}
               </div>
               {latestFinancialRecord?.operating_expenses_lakh != null ? (
-                <div className="text-[11px] text-tv-text-secondary mt-0.5">
+                <div className="text-[11px] text-purple-300/60 mt-0.5">
                   OpEx: ₹{Number(latestFinancialRecord.operating_expenses_lakh).toFixed(2)}L
                 </div>
               ) : (
-                <div className="text-[11px] text-tv-text-muted dark:text-slate-500 mt-0.5">
+                <div className="text-[11px] text-purple-300/40 mt-0.5">
                   OpEx not specified in source data
                 </div>
               )}
@@ -1294,51 +1307,52 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 6. PRODUCT PERFORMANCE & 7. AI INSIGHT / DATA COVERAGE */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* PRODUCT PERFORMANCE (2 Cols) */}
-        <div className="lg:col-span-2 bg-tv-surface border border-tv-border rounded-xl overflow-hidden shadow-sm flex flex-col">
-          <div className="px-5 py-4 border-b border-tv-border flex items-center justify-between">
+        <div className="lg:col-span-2 bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.3)] flex flex-col">
+          <div className="px-6 py-4 border-b border-purple-400/20 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-tv-text-primary">
-                Product Performance
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <PieIcon className="w-4 h-4 text-[#A089E6]" />
+                <span>Product Performance</span>
               </h2>
-              <p className="text-xs text-tv-text-secondary mt-0.5">
+              <p className="text-xs text-purple-300/60 mt-0.5">
                 Revenue contribution and margin ranking by product category
               </p>
             </div>
-            <span className="text-xs text-tv-text-secondary">
-              {topProducts.length} categories
+            <span className="text-xs text-purple-300/60 font-mono">
+              {topProducts.length} Categories
             </span>
           </div>
 
           {topProducts.length > 0 ? (
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-xs text-left">
-                <thead className="bg-tv-base/60 text-tv-text-secondary uppercase tracking-wider font-semibold border-b border-tv-border">
+                <thead className="bg-[#0C071C]/80 text-purple-300/70 uppercase tracking-wider font-semibold border-b border-purple-400/20 text-[11px]">
                   <tr>
-                    <th className="px-4 py-3">Product / Category</th>
-                    <th className="px-4 py-3 text-right">Revenue</th>
-                    <th className="px-4 py-3 text-right">Margin</th>
-                    <th className="px-4 py-3 text-right">Units</th>
+                    <th className="px-5 py-3">Product / Category</th>
+                    <th className="px-5 py-3 text-right">Revenue</th>
+                    <th className="px-5 py-3 text-right">Margin</th>
+                    <th className="px-5 py-3 text-right">Units</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                <tbody className="divide-y divide-purple-500/10 text-purple-200/90">
                   {topProducts.map((prod, idx) => (
                     <tr
                       key={idx}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                      className="hover:bg-white/[0.04] transition-colors"
                     >
-                      <td className="px-4 py-3 font-medium text-tv-text-primary">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      <td className="px-5 py-3.5 font-medium text-white">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-2 h-2 rounded-full bg-[#A089E6] shadow-[0_0_6px_#A089E6]" />
                           <span className="truncate">{prod.category_name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right font-mono font-medium text-tv-text-primary">
+                      <td className="px-5 py-3.5 text-right font-mono font-medium text-white">
                         {prod.total_revenue_lakh != null ? `₹${prod.total_revenue_lakh}L` : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                      <td className="px-5 py-3.5 text-right font-mono font-semibold text-emerald-400">
                         {prod.avg_margin_pct != null ? `${prod.avg_margin_pct}%` : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-tv-text-secondary">
+                      <td className="px-5 py-3.5 text-right font-mono text-purple-300/70">
                         {prod.total_volume_units != null
                           ? `${prod.total_volume_units.toLocaleString()} ${prod.unit_of_measure || ''}`
                           : '—'}
@@ -1349,7 +1363,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </table>
             </div>
           ) : (
-            <div className="p-8 text-center text-xs text-tv-text-muted dark:text-slate-500">
+            <div className="p-8 text-center text-xs text-purple-300/50">
               No product-level data uploaded yet.
             </div>
           )}
@@ -1358,18 +1372,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* 7. AI BUSINESS INSIGHT & 8. DATA COVERAGE (1 Col) */}
         <div className="space-y-6">
           {/* AI Executive Insight Card */}
-          <div className="bg-gradient-to-br from-slate-900 to-blue-950 rounded-xl p-5 text-white border border-slate-800 shadow-sm space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-wider">
-              <Bot className="w-4 h-4 text-blue-400" />
-              <span>AI Business Insight</span>
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl rounded-2xl p-6 text-white border border-purple-400/25 shadow-[0_4px_30px_rgba(0,0,0,0.4)] space-y-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#A089E6] uppercase tracking-wider">
+              <Bot className="w-4 h-4 text-[#A089E6]" />
+              <span>AI Strategic Briefing</span>
             </div>
-            <p className="text-sm font-medium text-slate-200 leading-relaxed">
+            <p className="text-sm font-medium text-white leading-relaxed">
               Ask your AI Advisor to analyze this performance.
             </p>
-            <p className="text-xs text-tv-text-muted">
+            <p className="text-xs text-purple-300/70 leading-relaxed">
               Get an instant strategic briefing on product profitability, volume trends, and margin optimization opportunities.
             </p>
-            <div className="pt-1">
+            <div className="pt-2">
               <button
                 onClick={() =>
                   onOpenAIQuery(
@@ -1378,7 +1392,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     }`
                   )
                 }
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow transition-all hover:scale-[1.02]"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-[0_0_15px_rgba(109,74,255,0.35)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>Analyze with AI</span>
@@ -1387,27 +1401,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* 8. DATA COVERAGE CARD */}
-          <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm space-y-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-tv-text-secondary">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)] space-y-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-purple-300/60">
               Data Coverage
             </div>
 
-            <div className="space-y-2.5 text-xs">
-              <div className="flex items-center justify-between pb-2 border-b border-tv-border">
-                <span className="text-tv-text-secondary">Period Covered</span>
-                <span className="font-semibold text-tv-text-primary">
+            <div className="space-y-3 text-xs">
+              <div className="flex items-center justify-between pb-2.5 border-b border-purple-500/15">
+                <span className="text-purple-300/70">Period Covered</span>
+                <span className="font-semibold text-white">
                   {dataCoverage.dateRange}
                 </span>
               </div>
-              <div className="flex items-center justify-between pb-2 border-b border-tv-border">
-                <span className="text-tv-text-secondary">Uploaded Datasets</span>
-                <span className="font-semibold text-tv-text-primary font-mono">
+              <div className="flex items-center justify-between pb-2.5 border-b border-purple-500/15">
+                <span className="text-purple-300/70">Uploaded Datasets</span>
+                <span className="font-semibold text-white font-mono">
                   {dataCoverage.datasetCount}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-tv-text-secondary">Audited Records</span>
-                <span className="font-semibold text-tv-text-primary font-mono">
+                <span className="text-purple-300/70">Audited Records</span>
+                <span className="font-semibold text-white font-mono">
                   {dataCoverage.totalRecords.toLocaleString()}
                 </span>
               </div>
@@ -1418,57 +1432,60 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* TOP PRODUCT CATEGORIES CARD (Product Mix) */}
       {topProducts.length > 0 && (
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)]">
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="text-sm font-bold text-tv-text-primary">Top Product Categories</h2>
-              <p className="text-xs text-tv-text-secondary mt-0.5">
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <PieIcon className="w-4 h-4 text-[#A089E6]" />
+                <span>Top Product Categories</span>
+              </h2>
+              <p className="text-xs text-purple-300/60 mt-0.5">
                 Revenue share, margin health and customer mix
               </p>
             </div>
-            <PieIcon className="w-4 h-4 text-tv-text-secondary" />
+            <span className="text-xs text-purple-300/60 font-mono">{topProducts.length} Products</span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {topProducts.map((prod, idx) => {
               const rev = Number(prod.total_revenue_lakh) || 0;
               const margin = Number(prod.avg_margin_pct) ?? null;
               const share = totalProductRevenue > 0 ? (rev / totalProductRevenue) * 100 : 0;
               const marginBadgeClass =
                 margin === null
-                  ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                  ? 'bg-purple-950/60 text-purple-300/60'
                   : margin > 20
-                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                  ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
                   : margin >= 10
-                  ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
-                  : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400';
+                  ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
+                  : 'bg-rose-950/60 text-rose-400 border border-rose-800/40';
 
               return (
                 <div key={idx} className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                      <span className="font-medium text-tv-text-primary truncate">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-2 h-2 rounded-full bg-[#A089E6] shadow-[0_0_6px_#A089E6] shrink-0" />
+                      <span className="font-medium text-white truncate">
                         {prod.category_name}
                       </span>
                       {prod.top_customer_segment && (
-                        <span className="hidden sm:inline text-tv-text-secondary truncate">
+                        <span className="hidden sm:inline text-purple-300/60 truncate">
                           · {prod.top_customer_segment}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
-                      <span className="font-mono text-tv-text-primary font-medium">
+                    <div className="flex items-center gap-2.5 shrink-0 ml-2">
+                      <span className="font-mono text-white font-medium">
                         {rev > 0 ? `₹${rev.toFixed(2)}L` : '—'}
                       </span>
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${marginBadgeClass}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${marginBadgeClass}`}>
                         {margin != null ? `${margin}%` : '—'}
                       </span>
                     </div>
                   </div>
                   {/* Revenue share progress bar */}
-                  <div className="h-1.5 bg-tv-base rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#0C071C]/80 rounded-full overflow-hidden border border-white/[0.05]">
                     <div
-                      className="h-full bg-blue-500 rounded-full transition-all"
+                      className="h-full bg-gradient-to-r from-[#8155F5] to-[#A089E6] rounded-full transition-all duration-500 shadow-sm"
                       style={{ width: `${Math.min(100, share)}%` }}
                     />
                   </div>
@@ -1481,31 +1498,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* FINANCIAL LEDGER SUMMARY TABLE */}
       {last6Financials.length > 0 && (
-        <div className="bg-tv-surface border border-tv-border rounded-xl overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-tv-border flex items-center justify-between">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.3)]">
+          <div className="px-6 py-4 border-b border-purple-400/20 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-tv-text-primary">
-                Monthly Financial Ledger (Last 6 Months)
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-[#A089E6]" />
+                <span>Monthly Financial Ledger (Last 6 Months)</span>
               </h2>
-              <p className="text-xs text-tv-text-secondary mt-0.5">
+              <p className="text-xs text-purple-300/60 mt-0.5">
                 Verified ledger records with margin color-coding
               </p>
             </div>
-            <Calendar className="w-4 h-4 text-tv-text-secondary" />
+            <span className="text-xs text-purple-300/60 font-mono">{last6Financials.length} Periods</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-tv-base/60 text-tv-text-secondary uppercase tracking-wider font-semibold border-b border-tv-border">
+              <thead className="bg-[#0C071C]/80 text-purple-300/70 uppercase tracking-wider font-semibold border-b border-purple-400/20 text-[11px]">
                 <tr>
-                  <th className="px-4 py-3">Month</th>
-                  <th className="px-4 py-3 text-right">Revenue (₹L)</th>
-                  <th className="px-4 py-3 text-right">Gross Profit</th>
-                  <th className="px-4 py-3 text-right">Margin %</th>
-                  <th className="px-4 py-3 text-right">Units Sold</th>
-                  <th className="px-4 py-3 text-right">MoM Growth</th>
+                  <th className="px-5 py-3">Month</th>
+                  <th className="px-5 py-3 text-right">Revenue (₹L)</th>
+                  <th className="px-5 py-3 text-right">Gross Profit</th>
+                  <th className="px-5 py-3 text-right">Margin %</th>
+                  <th className="px-5 py-3 text-right">Units Sold</th>
+                  <th className="px-5 py-3 text-right">MoM Growth</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-purple-500/10 text-purple-200/90">
                 {last6Financials.map((row: any, idx: number) => {
                   const isLatest = idx === last6Financials.length - 1;
                   const prevRow = idx > 0 ? last6Financials[idx - 1] : null;
@@ -1524,61 +1542,61 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   const margin = row.profit_margin_pct != null ? Number(row.profit_margin_pct) : null;
                   const marginBadgeClass =
                     margin === null
-                      ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                      ? 'bg-purple-950/60 text-purple-300/60'
                       : margin > 20
-                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                      ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
                       : margin >= 12
-                      ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
-                      : 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400';
+                      ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
+                      : 'bg-rose-950/60 text-rose-400 border border-rose-800/40';
 
                   const rowBg = isLatest
-                    ? 'bg-blue-50/60 dark:bg-blue-950/20 border-l-2 border-l-blue-500'
+                    ? 'bg-purple-950/30 border-l-2 border-l-[#A089E6]'
                     : idx % 2 === 0
-                    ? 'bg-tv-base/30'
+                    ? 'bg-white/[0.015]'
                     : '';
 
                   return (
-                    <tr key={idx} className={`${rowBg} hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors`}>
-                      <td className="px-4 py-3 font-medium text-tv-text-primary">
+                    <tr key={idx} className={`${rowBg} hover:bg-white/[0.04] transition-colors`}>
+                      <td className="px-5 py-3.5 font-medium text-white">
                         {row.month_name || '—'}
                         {isLatest && (
-                          <span className="ml-1.5 text-[10px] font-semibold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                          <span className="ml-2 text-[10px] font-semibold bg-purple-950/70 border border-purple-400/30 text-[#A089E6] px-2 py-0.5 rounded-full">
                             Latest
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono font-medium text-tv-text-primary">
+                      <td className="px-5 py-3.5 text-right font-mono font-medium text-white">
                         {row.revenue_lakh != null ? `₹${Number(row.revenue_lakh).toFixed(2)}` : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-emerald-600 dark:text-emerald-400">
+                      <td className="px-5 py-3.5 text-right font-mono text-emerald-400">
                         {row.gross_profit_lakh != null ? `₹${Number(row.gross_profit_lakh).toFixed(2)}` : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-5 py-3.5 text-right">
                         {margin != null ? (
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${marginBadgeClass}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${marginBadgeClass}`}>
                             {margin.toFixed(2)}%
                           </span>
                         ) : (
-                          <span className="text-tv-text-muted">—</span>
+                          <span className="text-purple-300/40">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-tv-text-secondary">
+                      <td className="px-5 py-3.5 text-right font-mono text-purple-300/70">
                         {row.units_sold != null ? row.units_sold.toLocaleString('en-IN') : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono">
+                      <td className="px-5 py-3.5 text-right font-mono">
                         {momGrowth != null ? (
                           <span
                             className={`font-semibold ${
                               Number(momGrowth) >= 0
-                                ? 'text-emerald-600 dark:text-emerald-400'
-                                : 'text-rose-600 dark:text-rose-400'
+                                ? 'text-emerald-400'
+                                : 'text-rose-400'
                             }`}
                           >
                             {Number(momGrowth) >= 0 ? '+' : ''}
                             {momGrowth}%
                           </span>
                         ) : (
-                          <span className="text-tv-text-muted">—</span>
+                          <span className="text-purple-300/40">—</span>
                         )}
                       </td>
                     </tr>
@@ -1591,20 +1609,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       )}
 
       {/* 9. RECENT DATASETS SECTION */}
-      <div className="bg-tv-surface border border-tv-border rounded-xl overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-tv-border flex items-center justify-between">
+      <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.3)]">
+        <div className="px-6 py-4 border-b border-purple-400/20 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold text-tv-text-primary">
-              Recent Datasets
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <FileSpreadsheet className="w-4 h-4 text-[#A089E6]" />
+              <span>Recent Datasets</span>
             </h2>
-            <p className="text-xs text-tv-text-secondary mt-0.5">
+            <p className="text-xs text-purple-300/60 mt-0.5">
               Uploaded source data files for {summaryData?.company_name || currentUser.companyName}
             </p>
           </div>
           {onNavigateTab && (
             <button
               onClick={() => onNavigateTab('datasets')}
-              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+              className="text-xs font-semibold text-[#A089E6] hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
             >
               <span>Manage Datasets</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -1613,7 +1632,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {datasets.length > 0 ? (
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="divide-y divide-purple-500/10">
             {datasets.slice(0, 4).map((d: any, idx: number) => {
               const uploadDateStr = d.uploaded_at
                 ? new Intl.DateTimeFormat('en-IN', { month: 'short', day: 'numeric' }).format(
@@ -1624,17 +1643,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               return (
                 <div
                   key={idx}
-                  className="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                  className="px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-white/[0.04] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-purple-950/60 border border-purple-400/25 text-[#A089E6] flex items-center justify-center flex-shrink-0">
                       <FileSpreadsheet className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-tv-text-primary">
+                      <div className="text-xs font-semibold text-white">
                         {d.original_filename || d.dataset_name}
                       </div>
-                      <div className="text-[11px] text-tv-text-secondary">
+                      <div className="text-[11px] text-purple-300/60">
                         {d.record_count != null ? `${d.record_count.toLocaleString()} records` : ''} ·
                         Imported {uploadDateStr}
                       </div>
@@ -1643,12 +1662,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded ${
+                      className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
                         d.status === 'COMPLETED'
-                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                          ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
                           : d.status === 'PROCESSING'
-                          ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
-                          : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                          ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
+                          : 'bg-purple-950/60 text-purple-300 border border-purple-400/20'
                       }`}
                     >
                       {d.status}
@@ -1659,24 +1678,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             })}
           </div>
         ) : (
-          <div className="p-8 text-center text-xs text-tv-text-muted dark:text-slate-500">
+          <div className="p-8 text-center text-xs text-purple-300/50">
             No datasets uploaded yet.
           </div>
         )}
       </div>
 
       {/* 10. PRIMARY AI CTA */}
-      <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/25 rounded-2xl p-6 shadow-[0_4px_30px_rgba(0,0,0,0.4)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#A089E6] uppercase tracking-wider">
             <Bot className="w-4 h-4" />
             <span>Ask your AI Advisor</span>
           </div>
-          <h3 className="text-base font-bold text-tv-text-primary">
-            Analyze sales, margins, products and business performance.
+          <h3 className="text-base font-bold text-white">
+            Analyze sales, margins, products, and business performance.
           </h3>
-          <p className="text-xs text-tv-text-secondary">
-            Inquire in natural language with verified data grounding and automatic executive artifacts.
+          <p className="text-xs text-purple-300/70">
+            Inquire in natural language with verified data grounding and automatic executive visual artifacts.
           </p>
         </div>
 
@@ -1688,7 +1707,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               }.`
             )
           }
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-sm transition-all self-start sm:self-auto hover:scale-[1.02]"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-[0_0_15px_rgba(109,74,255,0.35)] hover:shadow-[0_0_25px_rgba(160,137,230,0.5)] transition-all self-start sm:self-auto hover:scale-105 active:scale-95 cursor-pointer"
         >
           <Sparkles className="w-4 h-4 text-amber-300" />
           <span>Open AI Advisor</span>

@@ -53,6 +53,7 @@ CRITICAL ANALYTICAL RESPONSE RULES (Follow these STRICTLY):
 8. Always show exact numbers from the database with appropriate units (₹ Lakh, %, units). Round to 2 decimal places.
 9. The response should feel like talking to an insightful senior analyst, not reading a database printout.
 10. Every response MUST have at least 150 words of meaningful analysis.
+11. Directly and specifically answer the user's explicit question first. If the user asks for location, address, city, state, facility base, specialization, or enterprise background, clearly provide that factual profile information from verified records before summarizing metrics.
 """
 
 class AIOrchestrator:
@@ -228,7 +229,15 @@ class AIOrchestrator:
                 "mill", "company", "companies", "portfolio", "textile", "financial",
             }
             _has_bi_keyword = any(kw in prompt_lower for kw in _BI_KEYWORDS)
-            if not matched_company and _has_bi_keyword and intent in ("revenue", "profit", "margin", "summary", "trend", "growth"):
+            if not matched_company and (_has_bi_keyword or any(w in prompt_lower for w in ("location", "located", "where", "city", "headquarter", "profile", "specializ"))) and intent in ("revenue", "profit", "margin", "summary", "trend", "growth", "profile"):
+                if intent == "profile" or any(w in prompt_lower for w in ("location", "located", "where", "city", "headquarter")):
+                    return AIToolCall(
+                        name="compare_companies",
+                        arguments={
+                            "company_ids": [c.id for c in companies],
+                            "period_months": months,
+                        },
+                    )
                 return AIToolCall(name="get_global_summary", arguments={"period_months": months})
 
         # --- Single-company routing ---
@@ -236,6 +245,13 @@ class AIOrchestrator:
             return None
 
         company_id = matched_company.id
+
+        # Company profile / location / background / metadata
+        if intent == "profile":
+            return AIToolCall(
+                name="get_company_summary",
+                arguments={"company_id": company_id},
+            )
 
         # Products / category mix
         if intent == "products":
@@ -420,9 +436,10 @@ class AIOrchestrator:
         )
         self.repository.add_message(user_msg)
 
-        # Update conversation title if default
-        if conv.title == "Business Intelligence Consultation":
-            trimmed = prompt[:40] + ("..." if len(prompt) > 40 else "")
+        # Update conversation title in database if default
+        if conv.title in ("Business Intelligence Consultation", "New Conversation"):
+            trimmed = prompt[:45] + ("..." if len(prompt) > 45 else "")
+            self.repository.update_conversation_title(conv.id, self.user.id, trimmed)
             conv.title = trimmed
 
         # Provider configuration is checked lazily during generate_response()
@@ -454,27 +471,48 @@ class AIOrchestrator:
         # Prevents duplicate charts/KPIs when the same tool is called >1 time
         # in a multi-step loop (e.g. compare_companies on iter 1 AND iter 2).
         tools_that_generated_artifacts: set = set()
-        verified_tool_call = self._build_verified_tool_call(prompt)
 
-        # Context carry-forward: if nothing was matched but the previous assistant
-        # message mentioned a company, re-run the last tool for that company with
-        # the updated intent from the new prompt.
-        if verified_tool_call is None:
-            try:
+        # Resolve contextual pronoun or follow-up before tool selection
+        effective_prompt = prompt
+        companies_scope = self.repository.get_companies(
+            None if self.user.is_admin() else [self.user.company_id]
+        )
+        has_explicit_company = fuzzy_match_company(normalize_prompt(prompt), companies_scope) is not None
+
+        if not has_explicit_company and len(raw_messages) >= 2:
+            prompt_cf = prompt.casefold()
+            has_pronoun = any(
+                re.search(r"\b" + re.escape(w) + r"\b", prompt_cf)
+                for w in ("it", "its", "it's", "they", "their", "this company", "this mill", "that company", "that mill", "the company", "the mill", "here", "there")
+            )
+            is_attribute_query = any(w in prompt_cf for w in (
+                "where", "location", "located", "address", "city", "state", "place",
+                "specializ", "capacity", "founded", "established", "who is",
+                "revenue", "sales", "margin", "profit", "growth", "units", "trend"
+            ))
+            is_explicit_portfolio = any(w in prompt_cf for w in (
+                "all companies", "all mills", "across mills", "every company", "every mill",
+                "portfolio", "compare all", "which companies", "which mills"
+            ))
+
+            if (has_pronoun or is_attribute_query) and not is_explicit_portfolio:
+                prev_company = None
                 last_user_msgs = [m for m in raw_messages if m.sender_role == "user"]
                 prev_user_prompt = last_user_msgs[-2].content if len(last_user_msgs) >= 2 else ""
                 if prev_user_prompt:
-                    prev_normalized = normalize_prompt(prev_user_prompt)
-                    companies_scope = self.repository.get_companies(
-                        None if self.user.is_admin() else [self.user.company_id]
-                    )
-                    prev_company, prev_score = fuzzy_match_company_with_score(prev_normalized, companies_scope)
-                    if prev_company and prev_score >= 60:
-                        # Build a synthetic combined prompt and re-attempt routing
-                        combined = prev_normalized + " " + prompt
-                        verified_tool_call = self._build_verified_tool_call(combined)
-            except Exception:
-                pass  # Never let context carry-forward break the request
+                    prev_company, prev_score = fuzzy_match_company_with_score(normalize_prompt(prev_user_prompt), companies_scope)
+                    if not prev_company or prev_score < 60:
+                        prev_company = None
+                if not prev_company:
+                    assistant_msgs = [m for m in raw_messages if m.sender_role == "assistant"]
+                    if assistant_msgs:
+                        prev_company, prev_score = fuzzy_match_company_with_score(normalize_prompt(assistant_msgs[-1].content), companies_scope)
+                        if not prev_company or prev_score < 60:
+                            prev_company = None
+                if prev_company:
+                    effective_prompt = f"{prev_company.name} {prompt}"
+
+        verified_tool_call = self._build_verified_tool_call(effective_prompt)
 
         unrecognized_company_message = (
             self._unrecognized_company_message(prompt)
@@ -628,9 +666,25 @@ class AIOrchestrator:
             id=assistant_msg_id,
             conversation_id=conv.id,
             sender_role="assistant",
-            content=final_content
+            content=final_content,
+            thinking_steps_json=json.dumps([t[0] for t in completed_tool_results]) if completed_tool_results else None
         )
         self.repository.add_message(assistant_msg)
+
+        # Persist captured artifacts so they reload on subsequent conversation views
+        for art in captured_artifacts:
+            try:
+                art_id = art.get("id") or f"art_{uuid.uuid4().hex[:12]}"
+                artifact_model = Artifact(
+                    id=art_id,
+                    company_id=self.user.company_id,
+                    artifact_type=art.get("type", "chart"),
+                    title=art.get("title", "Analysis Artifact"),
+                    payload_json=json.dumps(art)
+                )
+                self.repository.save_artifact(artifact_model, message_id=assistant_msg_id)
+            except Exception as e:
+                logger.error(f"Failed to persist artifact {art}: {e}")
 
         # Stream words/tokens smoothly with ChatGPT/Claude-like typing cadence
         tokens = re.split(r'(\s+)', final_content)

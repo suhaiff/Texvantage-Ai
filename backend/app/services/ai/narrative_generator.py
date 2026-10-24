@@ -123,7 +123,32 @@ def _narrative_compare_companies(tool_result: Dict[str, Any], prompt_lower: str)
         "total revenue", "total sales", "combined revenue", "aggregate revenue",
         "revenue across all", "how much revenue did all", "what is the total revenue"
     ))
+    is_location_query = any(w in prompt_lower for w in (
+        "location", "located", "where", "city", "cities", "state", "states",
+        "geography", "geographical", "base", "headquarters", "situated", "address"
+    ))
     is_head_to_head = len(companies) == 2 or any(w in prompt_lower for w in (" vs ", " versus ", "head to head", "side by side"))
+
+    # ── ANGLE LOCATIONS: GEOGRAPHIC PRESENCE ACROSS PORTFOLIO ─────────────────
+    if is_location_query:
+        loc_lines = "\n".join([
+            f"{i+1}. **{c.get('company_name')}** (Code: `{c.get('code')}`) — **{c.get('city')}, {c.get('state')}** "
+            f"| Specialization: {c.get('specialization', 'Textiles')} | Est. {c.get('founded_year', 'N/A')}"
+            for i, c in enumerate(companies)
+        ])
+        return (
+            f"### 📍 Enterprise Locations & Manufacturing Hubs\n\n"
+            f"Across the verified portfolio of **{len(companies)} textile enterprises**, manufacturing facilities are "
+            f"distributed across premier industrial clusters:\n\n"
+            f"---\n\n"
+            f"### 🏢 Manufacturing Bases & Regional Presence\n\n"
+            f"{loc_lines}\n\n"
+            f"---\n\n"
+            f"### 🔍 Regional Footprint & Operational Context\n\n"
+            f"- **Textile Clusters**: Operations encompass prominent textile corridors including Tirupur, Savar / Ashulia, and Mirigama.\n"
+            f"- **Supply Chain Proximity**: Locations provide strategic proximity to cotton spinning belts, garment accessory hubs, and international maritime export corridors.\n\n"
+            f"The comparative table and charts below display full operational and financial records for each enterprise."
+        )
 
     # ── ANGLE A: HEAD-TO-HEAD (2 Companies) ───────────────────────────────────
     if is_head_to_head and len(companies) == 2:
@@ -387,8 +412,8 @@ def _narrative_global_summary(tool_result: Dict[str, Any], prompt_lower: str) ->
 
 def _narrative_company_summary(tool_result: Dict[str, Any], prompt_lower: str) -> str:
     s = tool_result.get("company_summary", {})
-    agg = s.get("annual_aggregate", {})
-    peaks = s.get("peaks_and_troughs", {})
+    agg = s.get("annual_aggregate") or {}
+    peaks = s.get("peaks_and_troughs") or {}
     name = s.get("company_name", "the company")
     latest_month = s.get("latest_month", "the latest period")
     latest_rev = _safe_float(s.get("latest_monthly_revenue_lakh"))
@@ -405,12 +430,71 @@ def _narrative_company_summary(tool_result: Dict[str, Any], prompt_lower: str) -
     total_units_agg = int(_safe_float(agg.get("total_units_sold")))
     avg_util_agg = _safe_float(agg.get("average_capacity_utilization_pct"))
 
-    hr = peaks.get("highest_revenue", {})
-    lr = peaks.get("lowest_revenue", {})
-    hm = peaks.get("highest_margin", {})
-    lm = peaks.get("lowest_margin", {})
+    hr = (peaks.get("highest_revenue") or {}) if isinstance(peaks, dict) else {}
+    lr = (peaks.get("lowest_revenue") or {}) if isinstance(peaks, dict) else {}
+    hm = (peaks.get("highest_margin") or {}) if isinstance(peaks, dict) else {}
+    lm = (peaks.get("lowest_margin") or {}) if isinstance(peaks, dict) else {}
 
+    city = s.get("city") or "N/A"
+    state = s.get("state") or "N/A"
+    code = s.get("code") or ""
+    specialization = s.get("specialization") or "Textile & Garment Manufacturing"
+    founded_year = s.get("founded_year") or "N/A"
+    capacity_desc = s.get("capacity_description") or "Commercial Scale Production"
+
+    is_location_query = any(w in prompt_lower for w in (
+        "where is", "where are", "location", "located", "address", "city", "state", "place",
+        "headquarters", "headquarter", "hq", "based in", "situated", "where's", "where does"
+    ))
+    is_profile_query = any(w in prompt_lower for w in (
+        "specializ", "what do they make", "what does it make", "what product", "what kind of",
+        "capacity", "annual capacity", "production capacity", "founded", "established",
+        "history", "background", "who is", "who are", "profile", "about the company",
+        "company code", "code of"
+    ))
     is_decline_query = any(w in prompt_lower for w in ("decline", "why did", "why has", "fall", "drop", "struggle", "underperform", "down"))
+
+    # ── Single Company Location & Geographic Presence ────────────────────────
+    if is_location_query:
+        return (
+            f"### 📍 Enterprise Location & Operational Base — {name}\n\n"
+            f"**{name}** (Code: **{code}**) is located in **{city}, {state}**.\n\n"
+            f"---\n\n"
+            f"### 🏢 Corporate & Facility Profile\n\n"
+            f"- **Headquarters & Manufacturing Base**: {city}, {state}\n"
+            f"- **Core Specialization**: {specialization}\n"
+            f"- **Annual Production Capacity**: {capacity_desc}\n"
+            f"- **Established / Founded**: {founded_year}\n"
+            f"- **ERP Data Coverage**: {period_months} verified reporting periods in the connected enterprise ledger.\n\n"
+            f"---\n\n"
+            f"### 📊 Operational & Production Standing\n\n"
+            f"- **Recent Production Output**: {latest_units:,} units dispatched in **{latest_month}**\n"
+            f"- **Plant Capacity Utilization**: **{latest_util:.1f}%** ({'optimal plant utilization' if latest_util >= 75 else 'operating with spare capacity headroom'})\n"
+            f"- **Latest Monthly Revenue**: **₹{latest_rev:,.2f} Lakh** (Gross Margin: **{latest_margin:.2f}%**)\n"
+            f"- **Total Cumulative Revenue**: **₹{total_rev:,.2f} Lakh** across verified historical records\n\n"
+            f"The facility profile cards and monthly ledger below display full operational and financial records."
+        )
+
+    # ── Single Company Profile & Specialization ──────────────────────────────
+    if is_profile_query:
+        return (
+            f"### 🏢 Enterprise Profile & Manufacturing Capabilities — {name}\n\n"
+            f"**{name}** (Code: **{code}**) is a premier textile manufacturing enterprise established in **{founded_year}**, "
+            f"headquartered and operating out of **{city}, {state}**.\n\n"
+            f"---\n\n"
+            f"### 🧵 Core Capabilities & Specialization\n\n"
+            f"- **Manufacturing Specialization**: {specialization}\n"
+            f"- **Rated Production Capacity**: {capacity_desc}\n"
+            f"- **Manufacturing Base**: {city}, {state}\n"
+            f"- **Operating History**: Continuous commercial production since {founded_year} with {period_months} months of verified ERP records.\n\n"
+            f"---\n\n"
+            f"### 📈 Current Operational Overview\n\n"
+            f"- **Recent Monthly Output**: {latest_units:,} units dispatched in **{latest_month}**\n"
+            f"- **Plant Capacity Utilization**: **{latest_util:.1f}%** (Annual Average: {avg_util_agg:.1f}%)\n"
+            f"- **Latest Monthly Revenue**: **₹{latest_rev:,.2f} Lakh** with a gross profit margin of **{latest_margin:.2f}%**\n"
+            f"- **Cumulative Production**: **{total_units_agg:,} units** dispatched over the verified period\n\n"
+            f"The interactive summary cards and ledger records below show full performance metrics."
+        )
 
     # ── Single Company Decline Investigation ─────────────────────────────────
     if is_decline_query:

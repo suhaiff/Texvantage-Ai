@@ -55,7 +55,11 @@ class DevRepository(IDataRepository):
                 self.check_connection()
                 return
 
-            Base.metadata.create_all(bind=self.engine)
+            try:
+                Base.metadata.create_all(bind=self.engine)
+            except Exception as e:
+                if "already exists" not in str(e).lower():
+                    raise
             
             # Check environment rules for seed data population
             if settings.APP_ENV.lower() == "production":
@@ -333,18 +337,26 @@ class DevRepository(IDataRepository):
     # Conversations & Chat Memory
     def get_conversations_for_user(self, user_id: str) -> List[Conversation]:
         with self.SessionLocal() as session:
-            stmt = select(Conversation).where(Conversation.user_id == user_id).order_by(Conversation.updated_at.desc())
+            stmt = (
+                select(Conversation)
+                .options(selectinload(Conversation.messages))
+                .where(Conversation.user_id == user_id)
+                .order_by(Conversation.updated_at.desc())
+            )
             return list(session.scalars(stmt).all())
 
-    def get_conversation_by_id(self, conversation_id: str, user_id: str) -> Optional[Conversation]:
+    def get_conversation_by_id(self, conversation_id: str, user_id: str, is_admin: bool = False) -> Optional[Conversation]:
         with self.SessionLocal() as session:
             stmt = (
                 select(Conversation)
                 .options(
                     selectinload(Conversation.messages).selectinload(Message.artifacts).joinedload(MessageArtifact.artifact)
                 )
-                .where(Conversation.id == conversation_id, Conversation.user_id == user_id)
             )
+            if is_admin:
+                stmt = stmt.where(Conversation.id == conversation_id)
+            else:
+                stmt = stmt.where(Conversation.id == conversation_id, Conversation.user_id == user_id)
             return session.scalars(stmt).first()
 
     def create_conversation(self, conversation: Conversation) -> Conversation:
@@ -372,6 +384,32 @@ class DevRepository(IDataRepository):
                 session.commit()
                 return True
             return False
+
+    def update_conversation_title(self, conversation_id: str, user_id: str, title: str) -> Optional[Conversation]:
+        with self.SessionLocal() as session:
+            stmt = (
+                select(Conversation)
+                .options(selectinload(Conversation.messages))
+                .where(Conversation.id == conversation_id, Conversation.user_id == user_id)
+            )
+            conv = session.scalars(stmt).first()
+            if conv:
+                conv.title = title
+                conv.updated_at = datetime.now(timezone.utc)
+                session.commit()
+                session.refresh(conv)
+                return conv
+            return None
+
+    def clear_all_conversations(self, user_id: str) -> int:
+        with self.SessionLocal() as session:
+            stmt = select(Conversation).where(Conversation.user_id == user_id)
+            convs = session.scalars(stmt).all()
+            count = len(convs)
+            for c in convs:
+                session.delete(c)
+            session.commit()
+            return count
 
     # Artifacts
     def save_artifact(self, artifact: Artifact, message_id: Optional[str] = None) -> Artifact:

@@ -103,6 +103,19 @@ class BusinessQueryService:
             prev_record.revenue_lakh if prev_record else 0.0
         ) if prev_record and latest_record else 0.0
 
+        monthly_trend = [
+            {
+                "month": r.month_name,
+                "period_date": r.period_date.isoformat(),
+                "revenue_lakh": r.revenue_lakh,
+                "gross_profit_lakh": r.gross_profit_lakh,
+                "profit_margin_pct": r.profit_margin_pct,
+                "units_sold": r.units_sold,
+                "capacity_utilization_pct": r.capacity_utilization_pct,
+            }
+            for r in financials[-12:]
+        ]
+
         return {
             "company_id": company.id,
             "company_name": company.name,
@@ -120,7 +133,8 @@ class BusinessQueryService:
             "latest_capacity_utilization_pct": latest_record.capacity_utilization_pct if latest_record else 0.0,
             "mom_revenue_growth_pct": mom_rev_growth,
             "annual_aggregate": agg,
-            "peaks_and_troughs": peaks
+            "peaks_and_troughs": peaks,
+            "monthly_trend": monthly_trend,
         }
 
     def get_monthly_financials(
@@ -260,8 +274,15 @@ class BusinessQueryService:
         """
         Retrieves top revenue-generating categories.
         """
-        comp_id = self._resolve_company_scope(company_id)
-        products = self.repository.get_product_metrics([comp_id])
+        if company_id:
+            comp_id = self._resolve_company_scope(company_id)
+            products = self.repository.get_product_metrics([comp_id])
+        elif self.user.is_admin():
+            all_comps = self.repository.get_companies()
+            products = self.repository.get_product_metrics([c.id for c in all_comps])
+        else:
+            comp_id = self._resolve_company_scope(None)
+            products = self.repository.get_product_metrics([comp_id])
         
         # Aggregate by category across all recorded periods
         category_map: Dict[str, Dict[str, Any]] = {}

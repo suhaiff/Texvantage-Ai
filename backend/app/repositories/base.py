@@ -104,7 +104,7 @@ class IDataRepository(ABC):
         pass
 
     @abstractmethod
-    def get_conversation_by_id(self, conversation_id: str, user_id: str) -> Optional[Conversation]:
+    def get_conversation_by_id(self, conversation_id: str, user_id: str, is_admin: bool = False) -> Optional[Conversation]:
         pass
 
     @abstractmethod
@@ -117,6 +117,14 @@ class IDataRepository(ABC):
 
     @abstractmethod
     def delete_conversation(self, conversation_id: str, user_id: str) -> bool:
+        pass
+
+    @abstractmethod
+    def update_conversation_title(self, conversation_id: str, user_id: str, title: str) -> Optional[Conversation]:
+        pass
+
+    @abstractmethod
+    def clear_all_conversations(self, user_id: str) -> int:
         pass
 
     # Artifacts & Reports

@@ -408,6 +408,25 @@ class ApiClient {
       return this.request<any[]>('/chat/conversations');
     },
 
+    getConversation: async (id: string) => {
+      return this.request<any>(`/chat/conversations/${id}`);
+    },
+
+    renameConversation: async (id: string, title: string) => {
+      return this.request<any>(`/chat/conversations/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ title })
+      });
+    },
+
+    deleteConversation: async (id: string) => {
+      return this.request<void>(`/chat/conversations/${id}`, { method: 'DELETE' });
+    },
+
+    clearAllConversations: async () => {
+      return this.request<void>('/chat/conversations', { method: 'DELETE' });
+    },
+
     streamMessage: async (
       prompt: string,
       conversationId: string | undefined,
@@ -417,6 +436,7 @@ class ApiClient {
         onToolComplete?: (tool: string, resultSummary: string, result: any) => void;
         onToken?: (token: string) => void;
         onArtifact?: (artifact: any) => void;
+        onConversationId?: (id: string) => void;
         onDone?: () => void;
         onError?: (error: string) => void;
       }
@@ -495,6 +515,9 @@ class ApiClient {
 
         try {
           const event = JSON.parse(payloadStr);
+          if (event.conversation_id) {
+            callbacks.onConversationId?.(event.conversation_id);
+          }
           if (event.type === 'status') {
             callbacks.onStatus?.(event.message);
           } else if (event.type === 'tool_start') {

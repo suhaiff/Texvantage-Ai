@@ -93,10 +93,11 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
   const [activeView, setActiveView] = useState<'list' | 'upload' | 'mapping'>('list');
 
   // Upload Form State
+  const [companies, setCompanies] = useState<any[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [customName, setCustomName] = useState('');
   const [customDesc, setCustomDesc] = useState('');
-  const [targetCompanyId, setTargetCompanyId] = useState(currentUser.companyId || 'comp_textile_a');
+  const [targetCompanyId, setTargetCompanyId] = useState(currentUser.companyId || '');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadType, setUploadType] = useState<'dataset' | 'knowledge'>('dataset');
@@ -128,6 +129,16 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
 
   useEffect(() => {
     fetchDatasets();
+    const fetchCompanies = async () => {
+      try {
+        const comps = await apiClient.companies.list();
+        setCompanies(comps);
+        if (comps.length > 0 && !currentUser.companyId) {
+          setTargetCompanyId(prev => prev || comps[0].id);
+        }
+      } catch {}
+    };
+    fetchCompanies();
   }, [currentUser]);
 
   // Handle Drag & Drop
@@ -306,32 +317,32 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in fade-in duration-300">
       {/* Header Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#8A5CFF]/15 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-400/30 text-[#A089E6] text-xs font-semibold">
               <Database className="w-3.5 h-3.5" />
               <span>Real-Time Business Knowledge Engine</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               Knowledge & Dataset Management
             </h1>
-            <p className="text-sm text-tv-text-muted max-w-2xl">
-              Upload PDF/TXT documents for AI business knowledge, or multi-format manufacturing and sales ledgers (.xlsx, .csv).
-              AI will automatically use this knowledge to directly query the connected database via SQL.
+            <p className="text-sm text-purple-200/70 max-w-2xl leading-relaxed">
+              Upload business documents (PDF or TXT) to teach the AI domain rules, or multi-format manufacturing and sales ledgers (.xlsx, .csv).
+              The AI automatically synthesizes this knowledge to query the connected database with verified grounding.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleDownloadSample}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#1F1640]/70 hover:bg-[#281D52]/80 text-purple-200 border border-purple-400/20 transition shadow-sm cursor-pointer"
             >
-              <Download className="w-4 h-4 text-blue-400" />
+              <Download className="w-4 h-4 text-[#A089E6]" />
               <span>Download Sample CSV</span>
             </button>
 
@@ -341,7 +352,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   setActiveView('upload');
                   setError(null);
                 }}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/25 transition"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white shadow-[0_0_15px_rgba(109,74,255,0.35)] hover:shadow-[0_0_25px_rgba(160,137,230,0.5)] transition hover:scale-105 active:scale-95 cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
                 <span>Upload Data & Knowledge</span>
@@ -353,7 +364,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   setSelectedFile(null);
                   setError(null);
                 }}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#1F1640]/70 hover:bg-[#281D52]/80 text-purple-200 border border-purple-400/20 transition cursor-pointer"
               >
                 Back to Datasets List
               </button>
@@ -364,20 +375,20 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
 
       {/* Global Alerts / Messages */}
       {error && (
-        <div className="bg-rose-950/40 border border-rose-800/80 p-4 rounded-2xl flex items-start gap-3 text-rose-300 text-sm">
+        <div className="bg-rose-950/40 border border-rose-800/80 p-4 rounded-2xl flex items-start gap-3 text-rose-300 text-sm backdrop-blur-md">
           <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="font-semibold text-rose-200">Operation Error</p>
             <p className="text-xs text-rose-300 mt-0.5">{error}</p>
           </div>
-          <button onClick={() => setError(null)} className="text-xs text-rose-400 hover:underline">
+          <button onClick={() => setError(null)} className="text-xs text-rose-400 hover:underline cursor-pointer">
             Dismiss
           </button>
         </div>
       )}
 
       {ingestSuccessMsg && (
-        <div className="bg-emerald-950/40 border border-emerald-800/80 p-4 rounded-2xl flex items-start gap-3 text-emerald-300 text-sm animate-in fade-in duration-200">
+        <div className="bg-emerald-950/40 border border-emerald-800/80 p-4 rounded-2xl flex items-start gap-3 text-emerald-300 text-sm backdrop-blur-md animate-in fade-in duration-200">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="font-semibold text-emerald-200">Data Successfully Ingested</p>
@@ -393,13 +404,13 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <span>Active Datasets</span>
-                <span className="bg-slate-800 text-tv-text-muted text-xs px-2 py-0.5 rounded-full border border-slate-700 font-mono">
+                <span className="bg-purple-950/60 text-[#A089E6] text-xs px-2.5 py-0.5 rounded-full border border-purple-400/30 font-mono">
                   {datasets.length}
                 </span>
               </h2>
-              <p className="text-xs text-tv-text-muted">
+              <p className="text-xs text-purple-300/60 mt-0.5">
                 {currentUser.role === 'ADMIN'
-                  ? 'All uploaded business datasets across the 10 textile mills'
+                  ? 'All uploaded business datasets across connected enterprises'
                   : `Datasets registered for ${currentUser.companyName || currentUser.companyId}`}
               </p>
             </div>
@@ -407,7 +418,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
             <button
               onClick={fetchDatasets}
               disabled={loading}
-              className="flex items-center gap-1.5 text-xs text-tv-text-muted hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-slate-800"
+              className="flex items-center gap-1.5 text-xs text-purple-300/70 hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-white/[0.05] cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
@@ -415,23 +426,23 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
           </div>
 
           {loading ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center space-y-3">
-              <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
-              <p className="text-sm font-mono text-tv-text-muted">Loading verified datasets...</p>
+            <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-12 text-center space-y-3">
+              <RefreshCw className="w-8 h-8 text-[#A089E6] animate-spin mx-auto" />
+              <p className="text-sm font-mono text-purple-300/60">Loading verified datasets...</p>
             </div>
           ) : datasets.length === 0 ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center mx-auto text-blue-400">
+            <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-3xl p-12 text-center space-y-4 shadow-[0_4px_25px_rgba(0,0,0,0.3)]">
+              <div className="w-14 h-14 rounded-2xl bg-purple-950/60 border border-purple-400/30 flex items-center justify-center mx-auto text-[#A089E6]">
                 <FileSpreadsheet className="w-7 h-7" />
               </div>
               <h3 className="text-base font-bold text-white">No Datasets Uploaded Yet</h3>
-              <p className="text-xs text-tv-text-muted max-w-md mx-auto">
-                Get started by uploading your mill's Excel or CSV financial ledger to populate historical
+              <p className="text-xs text-purple-200/70 max-w-md mx-auto leading-relaxed">
+                Get started by uploading your Excel or CSV financial ledger to populate historical
                 performance and unlock AI Advisor insights.
               </p>
               <button
                 onClick={() => setActiveView('upload')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white shadow-[0_0_15px_rgba(109,74,255,0.35)] transition cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
                 <span>Upload First Dataset</span>
@@ -444,13 +455,13 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   ds.file_format === 'XLSX' || ds.file_format === 'XLS'
                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                     : ds.file_format === 'CSV'
-                    ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                    : 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+                    ? 'bg-purple-500/20 text-purple-200 border-purple-400/30'
+                    : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
 
                 return (
                   <div
                     key={ds.id}
-                    className="bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-5 space-y-4 transition flex flex-col justify-between group shadow-lg"
+                    className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 hover:border-purple-400/40 rounded-2xl p-5 space-y-4 transition-all duration-300 flex flex-col justify-between group shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)]"
                   >
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-2">
@@ -458,12 +469,12 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                           {ds.file_format}
                         </span>
                         <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                             ds.status === 'COMPLETED'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
                               : ds.status === 'FAILED'
-                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                              ? 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
+                              : 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
                           }`}
                         >
                           {ds.status}
@@ -471,28 +482,28 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition line-clamp-1">
+                        <h4 className="text-sm font-bold text-white group-hover:text-[#A089E6] transition line-clamp-1">
                           {ds.dataset_name}
                         </h4>
-                        <p className="text-[11px] font-mono text-tv-text-muted truncate mt-0.5">
+                        <p className="text-[11px] font-mono text-purple-300/50 truncate mt-0.5">
                           {ds.original_filename}
                         </p>
                       </div>
 
                       {ds.description && (
-                        <p className="text-xs text-tv-text-muted line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-purple-200/70 line-clamp-2 leading-relaxed">
                           {ds.description}
                         </p>
                       )}
 
-                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-purple-500/15 text-xs">
                         <div>
-                          <span className="text-[10px] text-slate-500 block">Records</span>
+                          <span className="text-[10px] text-purple-300/50 block">Records</span>
                           <span className="font-semibold text-white font-mono">{ds.record_count} months</span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-500 block">Date Range</span>
-                          <span className="font-semibold text-slate-300 text-[11px]">
+                          <span className="text-[10px] text-purple-300/50 block">Date Range</span>
+                          <span className="font-semibold text-purple-200 text-[11px]">
                             {ds.date_range_start && ds.date_range_end
                               ? `${ds.date_range_start.slice(0, 7)} ~ ${ds.date_range_end.slice(0, 7)}`
                               : 'Historical'}
@@ -501,10 +512,10 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                    <div className="pt-3 border-t border-purple-500/15 flex items-center justify-between gap-2">
                       <button
                         onClick={() => loadPreviewAndOpenMapping(ds.id)}
-                        className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-semibold px-3 py-1.5 rounded-lg hover:bg-slate-800 transition"
+                        className="flex items-center gap-1.5 text-xs text-[#A089E6] hover:text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-white/[0.05] transition cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>Preview / Map</span>
@@ -515,7 +526,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                           <button
                             onClick={() => onOpenAIQuery(`Analyze the data trends from ${ds.dataset_name}`)}
                             title="Ask AI Advisor about this dataset"
-                            className="p-1.5 rounded-lg text-tv-text-muted hover:text-amber-300 hover:bg-slate-800 transition"
+                            className="p-1.5 rounded-lg text-purple-300/60 hover:text-amber-300 hover:bg-white/[0.05] transition cursor-pointer"
                           >
                             <Sparkles className="w-4 h-4" />
                           </button>
@@ -523,7 +534,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                         <button
                           onClick={() => handleDeleteDataset(ds.id)}
                           title="Delete Dataset"
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition"
+                          className="p-1.5 rounded-lg text-purple-300/40 hover:text-rose-400 hover:bg-white/[0.05] transition cursor-pointer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -539,33 +550,37 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
 
       {/* VIEW 2: FILE UPLOAD FORM */}
       {activeView === 'upload' && (
-        <div className="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-          <div className="border-b border-slate-800 pb-4">
+        <div className="max-w-3xl mx-auto bg-[#130C2E]/80 backdrop-blur-xl border border-purple-400/25 rounded-3xl p-6 sm:p-8 space-y-6 shadow-[0_4px_35px_rgba(0,0,0,0.5)]">
+          <div className="border-b border-purple-500/20 pb-4">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Upload className="w-5 h-5 text-blue-400" />
+              <Upload className="w-5 h-5 text-[#A089E6]" />
               <span>Upload Data & Knowledge</span>
             </h2>
-            <div className="flex gap-4 mt-4">
+            <div className="flex gap-3 mt-4">
               <button
                 type="button"
                 onClick={() => setUploadType('dataset')}
-                className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${
-                  uploadType === 'dataset' ? 'bg-tv-accent text-slate-900' : 'bg-slate-800 text-tv-text-muted hover:bg-slate-700'
+                className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  uploadType === 'dataset'
+                    ? 'bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] text-white shadow-[0_0_12px_rgba(109,74,255,0.35)]'
+                    : 'bg-[#1A1238] text-purple-300/70 hover:bg-[#221848]'
                 }`}
               >
-                Business Ledger (CSV/Excel)
+                Business Ledger (CSV / Excel)
               </button>
               <button
                 type="button"
                 onClick={() => setUploadType('knowledge')}
-                className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${
-                  uploadType === 'knowledge' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-tv-text-muted hover:bg-slate-700'
+                className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  uploadType === 'knowledge'
+                    ? 'bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] text-white shadow-[0_0_12px_rgba(109,74,255,0.35)]'
+                    : 'bg-[#1A1238] text-purple-300/70 hover:bg-[#221848]'
                 }`}
               >
-                Business Knowledge (PDF/TXT)
+                Business Knowledge (PDF / TXT)
               </button>
             </div>
-            <p className="text-xs text-tv-text-muted mt-4">
+            <p className="text-xs text-purple-200/70 mt-3 leading-relaxed">
               {uploadType === 'dataset' 
                 ? 'Supports Excel (.xlsx, .xls), CSV (.csv), and JSON (.json) files up to 25MB.'
                 : 'Supports PDF (.pdf) and Text (.txt) files. AI will use this knowledge to understand your business and query the database directly.'}
@@ -582,10 +597,10 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-3 ${
                 dragActive
-                  ? 'border-blue-500 bg-blue-500/10'
+                  ? 'border-purple-400 bg-purple-500/10'
                   : selectedFile
                   ? 'border-emerald-500/60 bg-emerald-500/5'
-                  : 'border-slate-700 hover:border-slate-600 bg-slate-800/40 hover:bg-slate-800/60'
+                  : 'border-purple-400/30 hover:border-purple-400/60 bg-[#0C071C]/50 hover:bg-[#0C071C]/80'
               }`}
             >
               <input
@@ -606,19 +621,19 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                     <CheckCircle2 className="w-6 h-6" />
                   </div>
                   <div className="font-semibold text-white text-sm">{selectedFile.name}</div>
-                  <div className="text-xs text-tv-text-muted font-mono">
+                  <div className="text-xs text-purple-300/60 font-mono">
                     {(selectedFile.size / 1024).toFixed(1)} KB • Click or drop to replace
                   </div>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-950/60 border border-purple-400/30 text-[#A089E6] flex items-center justify-center mx-auto">
                     <Upload className="w-6 h-6" />
                   </div>
                   <div className="text-sm font-semibold text-white">
                     Drop your {uploadType === 'dataset' ? 'spreadsheet' : 'document'} or click to browse
                   </div>
-                  <div className="text-xs text-tv-text-muted">
+                  <div className="text-xs text-purple-300/60">
                     {uploadType === 'dataset' ? 'Excel (.xlsx, .xls), CSV (.csv), or JSON (.json)' : 'PDF (.pdf) or Text (.txt)'}
                   </div>
                 </div>
@@ -628,24 +643,19 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
             {/* Admin Company Selector if user is ADMIN */}
             {currentUser.role === 'ADMIN' && (
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">
-                  Target Textile Mill (Tenant)
+                <label className="text-xs font-semibold text-purple-200">
+                  Target Enterprise (Tenant)
                 </label>
                 <select
                   value={targetCompanyId}
                   onChange={e => setTargetCompanyId(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#1A1238] border border-purple-400/25 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-400"
                 >
-                  <option value="comp_textile_a">Mill A — Vardhman Spinning & Weaving</option>
-                  <option value="comp_textile_b">Mill B — Arvind Silks & Couture</option>
-                  <option value="comp_textile_c">Mill C — Raymond Eco Cottons</option>
-                  <option value="comp_textile_d">Mill D — Reliance Petro-Poly Fab</option>
-                  <option value="comp_textile_e">Mill E — Welspun Denim Dynamics</option>
-                  <option value="comp_textile_f">Mill F — Trident Technical Weaves</option>
-                  <option value="comp_textile_g">Mill G — Bombay Dyeing Home Linen</option>
-                  <option value="comp_textile_h">Mill H — Banaras Zari Heritage</option>
-                  <option value="comp_textile_i">Mill I — Kankatala Fine Worsted</option>
-                  <option value="comp_textile_j">Mill J — Alok Fast Fashion Knits</option>
+                  {companies.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.code})
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
@@ -653,44 +663,44 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
             {/* Custom Dataset Name & Description */}
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Dataset Name</label>
+                <label className="text-xs font-semibold text-purple-200">Dataset Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Q3 2026 Production & Financial Ledger"
                   value={customName}
                   onChange={e => setCustomName(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[#1A1238] border border-purple-400/25 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-purple-300/40 focus:outline-none focus:border-purple-400"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Description (Optional)</label>
+                <label className="text-xs font-semibold text-purple-200">Description (Optional)</label>
                 <textarea
                   placeholder="Notes on source ERP, audited status, or product line coverage..."
                   rows={2}
                   value={customDesc}
                   onChange={e => setCustomDesc(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full bg-[#1A1238] border border-purple-400/25 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-purple-300/40 focus:outline-none focus:border-purple-400 resize-none"
                 />
               </div>
             </div>
 
             {/* Submit Action */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-purple-500/20">
               <button
                 type="button"
                 onClick={() => {
                   setActiveView('list');
                   setSelectedFile(null);
                 }}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-tv-text-muted hover:text-white hover:bg-slate-800 transition"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-purple-300/60 hover:text-white hover:bg-white/[0.05] transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!selectedFile || uploading}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white shadow-lg shadow-blue-500/20 transition"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] disabled:opacity-50 text-white shadow-[0_0_15px_rgba(109,74,255,0.35)] transition cursor-pointer"
               >
                 {uploading ? (
                   <>
@@ -713,14 +723,14 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
       {activeView === 'mapping' && previewData && (
         <div className="space-y-8">
           {/* Header */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-3xl p-6 space-y-4 shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2 py-0.5 rounded">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#A089E6] bg-purple-950/60 border border-purple-400/30 px-2.5 py-0.5 rounded-full">
                   Step 2 of 2: Schema Mapping & Validation
                 </span>
-                <h2 className="text-xl font-bold text-white mt-1">{previewData.dataset_name}</h2>
-                <p className="text-xs text-tv-text-muted font-mono mt-0.5">
+                <h2 className="text-xl font-bold text-white mt-1.5">{previewData.dataset_name}</h2>
+                <p className="text-xs text-purple-300/60 font-mono mt-0.5">
                   {previewData.original_filename} • {previewData.total_rows} rows detected • Format: {previewData.file_format}
                 </p>
               </div>
@@ -728,7 +738,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveView('list')}
-                  className="px-3 py-1.5 rounded-lg text-xs text-tv-text-muted hover:text-white hover:bg-slate-800 transition"
+                  className="px-3.5 py-1.5 rounded-xl text-xs text-purple-300/60 hover:text-white hover:bg-white/[0.05] transition cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -737,36 +747,36 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
           </div>
 
           {/* Sample Rows Preview */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl overflow-hidden">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-3xl p-6 space-y-4 shadow-[0_4px_30px_rgba(0,0,0,0.4)] overflow-hidden">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Eye className="w-4 h-4 text-blue-400" />
+                <Eye className="w-4 h-4 text-[#A089E6]" />
                 <span>Raw Data Preview (First 5 Rows)</span>
               </h3>
-              <span className="text-xs text-tv-text-muted font-mono">
+              <span className="text-xs text-purple-300/60 font-mono">
                 {previewData.columns.length} columns detected
               </span>
             </div>
 
-            <div className="overflow-x-auto border border-slate-800 rounded-xl max-h-60">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-800/80 text-tv-text-muted font-semibold border-b border-slate-700 sticky top-0">
+            <div className="overflow-x-auto border border-purple-500/20 rounded-xl max-h-60 custom-scrollbar">
+              <table className="w-full text-left text-xs text-purple-200">
+                <thead className="bg-[#0C071C]/80 text-purple-300/70 font-semibold border-b border-purple-400/20 sticky top-0">
                   <tr>
                     {previewData.columns.map(col => (
-                      <th key={col.column_name} className="px-3.5 py-2.5 whitespace-nowrap">
-                        <div>{col.column_name}</div>
-                        <span className="text-[9px] font-mono text-slate-500 uppercase">
+                      <th key={col.column_name} className="px-4 py-3 whitespace-nowrap">
+                        <div className="font-semibold text-white">{col.column_name}</div>
+                        <span className="text-[10px] font-mono text-purple-400/60 uppercase">
                           {col.data_type}
                         </span>
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800 font-mono text-[11px]">
+                <tbody className="divide-y divide-purple-500/10 font-mono text-[11px]">
                   {previewData.sample_rows.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-800/40">
+                    <tr key={idx} className="hover:bg-white/[0.04]">
                       {previewData.columns.map(col => (
-                        <td key={col.column_name} className="px-3.5 py-2 whitespace-nowrap text-slate-300">
+                        <td key={col.column_name} className="px-4 py-2.5 whitespace-nowrap text-purple-200/90">
                           {String(row[col.column_name] ?? '')}
                         </td>
                       ))}
@@ -778,13 +788,13 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
           </div>
 
           {/* Column Mapping Interface */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
+          <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-3xl p-6 sm:p-8 space-y-6 shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Layers className="w-5 h-5 text-indigo-400" />
+                <Layers className="w-5 h-5 text-[#A089E6]" />
                 <span>Map Columns to Standard Financial Fields</span>
               </h3>
-              <p className="text-xs text-tv-text-muted mt-1">
+              <p className="text-xs text-purple-200/70 mt-1">
                 Confirm or adjust which column corresponds to each analytical business field.
                 Period Date and Revenue are mandatory for historical indexing.
               </p>
@@ -799,12 +809,12 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                     key={col.column_name}
                     className={`border rounded-2xl p-4 space-y-3 transition ${
                       col.confidence === 'identifier'
-                        ? 'bg-slate-800/40 border-slate-700/50'
+                        ? 'bg-[#120B28]/50 border-purple-500/20'
                         : col.confidence === 'unknown_unit'
                         ? 'bg-amber-950/20 border-amber-500/40'
                         : currentMappedField !== 'ignore'
-                        ? 'bg-slate-800/80 border-blue-500/40'
-                        : 'bg-slate-800/60 border-slate-700/60'
+                        ? 'bg-[#180E38]/80 border-purple-400/40'
+                        : 'bg-[#120B28]/60 border-purple-500/20'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -813,47 +823,47 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                           <span className="text-xs font-bold text-white block truncate">
                             {col.column_name}
                           </span>
-                          <span className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded font-mono">
+                          <span className="text-[10px] bg-purple-950/70 text-purple-300 border border-purple-400/25 px-1.5 py-0.5 rounded font-mono">
                             {col.data_type}
                           </span>
                         </div>
-                        <span className="text-[10px] text-tv-text-muted font-mono block truncate">
+                        <span className="text-[10px] text-purple-300/50 font-mono block truncate">
                           Sample: {col.sample_value || 'None'}
                         </span>
                       </div>
 
                       {/* Confidence Badge */}
                       {col.confidence === 'high' && (
-                        <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="text-[10px] font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 px-2 py-0.5 rounded-full whitespace-nowrap">
                           Auto-detected
                         </span>
                       )}
                       {col.confidence === 'medium' && (
-                        <span className="text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="text-[10px] font-semibold bg-purple-950/60 text-[#A089E6] border border-purple-400/30 px-2 py-0.5 rounded-full whitespace-nowrap">
                           Review recommended
                         </span>
                       )}
                       {col.confidence === 'unknown_unit' && (
-                        <span className="text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1">
+                        <span className="text-[10px] font-semibold bg-amber-950/60 text-amber-300 border border-amber-800/40 px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1">
                           <AlertCircle className="w-3 h-3 text-amber-400" />
                           <span>Requires confirmation</span>
                         </span>
                       )}
                       {col.confidence === 'identifier' && (
-                        <span className="text-[10px] font-semibold bg-slate-700/60 text-tv-text-muted border border-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="text-[10px] font-semibold bg-purple-950/40 text-purple-300/50 border border-purple-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
                           Identifier (Ignored)
                         </span>
                       )}
                     </div>
 
                     {col.confidence === 'unknown_unit' && (
-                      <p className="text-[11px] text-amber-300/90 leading-tight bg-amber-950/40 p-2 rounded-lg border border-amber-800/40">
+                      <p className="text-[11px] text-amber-300/90 leading-tight bg-amber-950/40 p-2.5 rounded-xl border border-amber-800/40">
                         Currency unit not specified in header. Choose 'Standard Currency' or explicit '₹ Lakh INR'.
                       </p>
                     )}
 
                     {col.confidence === 'identifier' && (
-                      <p className="text-[11px] text-tv-text-muted leading-tight">
+                      <p className="text-[11px] text-purple-300/60 leading-tight">
                         Safe default: Identifier is ignored to prevent incorrect metric interpretations.
                       </p>
                     )}
@@ -867,10 +877,10 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                             [col.column_name]: e.target.value
                           });
                         }}
-                        className={`w-full text-xs rounded-xl px-3 py-2 border font-medium focus:outline-none transition ${
+                        className={`w-full text-xs rounded-xl px-3 py-2 border font-medium focus:outline-none transition cursor-pointer ${
                           currentMappedField !== 'ignore'
-                            ? 'bg-blue-900/30 border-blue-500/50 text-blue-200'
-                            : 'bg-slate-800 border-slate-700 text-tv-text-muted'
+                            ? 'bg-purple-950/60 border-purple-400/50 text-[#A089E6]'
+                            : 'bg-[#1A1238] border-purple-400/25 text-purple-300/70'
                         }`}
                       >
                         {TARGET_BUSINESS_FIELDS.map(f => (
@@ -886,8 +896,8 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
             </div>
 
             {/* Ingestion Mode Configuration */}
-            <div className="pt-6 border-t border-slate-800 space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-tv-text-muted">
+            <div className="pt-6 border-t border-purple-500/20 space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-purple-300/60">
                 Ingestion Strategy & Data Retention
               </h4>
 
@@ -896,8 +906,8 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   onClick={() => setIngestionMode('APPEND')}
                   className={`p-4 rounded-2xl border cursor-pointer transition space-y-2 ${
                     ingestionMode === 'APPEND'
-                      ? 'bg-blue-600/10 border-blue-500 text-white'
-                      : 'bg-slate-800/40 border-slate-800 text-tv-text-muted hover:border-slate-700'
+                      ? 'bg-purple-950/60 border-purple-400 text-white shadow-[0_0_15px_rgba(160,137,230,0.15)]'
+                      : 'bg-[#120B28]/60 border-purple-500/20 text-purple-300/60 hover:border-purple-400/40'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -905,11 +915,11 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                       <TrendingUp className="w-4 h-4 text-emerald-400" />
                       <span>Accumulate / Append (Recommended)</span>
                     </span>
-                    {ingestionMode === 'APPEND' && <Check className="w-4 h-4 text-blue-400" />}
+                    {ingestionMode === 'APPEND' && <Check className="w-4 h-4 text-[#A089E6]" />}
                   </div>
-                  <p className="text-[11px] text-tv-text-muted leading-relaxed">
-                    Maintains full existing historical ledger. Merges/upserts monthly periods from this upload
-                    so AI can analyze historical timelines (e.g. July + August + September).
+                  <p className="text-[11px] text-purple-200/70 leading-relaxed">
+                    Maintains full existing historical ledger. Merges and updates monthly periods from this upload
+                    so AI can analyze multi-month historical trends.
                   </p>
                 </div>
 
@@ -917,8 +927,8 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                   onClick={() => setIngestionMode('REPLACE')}
                   className={`p-4 rounded-2xl border cursor-pointer transition space-y-2 ${
                     ingestionMode === 'REPLACE'
-                      ? 'bg-amber-500/10 border-amber-500 text-white'
-                      : 'bg-slate-800/40 border-slate-800 text-tv-text-muted hover:border-slate-700'
+                      ? 'bg-amber-950/40 border-amber-500 text-white shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                      : 'bg-[#120B28]/60 border-purple-500/20 text-purple-300/60 hover:border-purple-400/40'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -928,8 +938,8 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                     </span>
                     {ingestionMode === 'REPLACE' && <Check className="w-4 h-4 text-amber-400" />}
                   </div>
-                  <p className="text-[11px] text-tv-text-muted leading-relaxed">
-                    Overwrites past monthly financials for this company with only this dataset's rows.
+                  <p className="text-[11px] text-purple-200/70 leading-relaxed">
+                    Overwrites past monthly financials for this enterprise with only this dataset's rows.
                     Use only when replacing corrupted legacy records.
                   </p>
                 </div>
@@ -945,18 +955,18 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                     className="w-4 h-4 rounded border-amber-600 text-amber-500 focus:ring-amber-500"
                   />
                   <label htmlFor="confirmReplaceCheck" className="text-xs text-amber-200 cursor-pointer">
-                    I confirm I want to overwrite all existing historical data for this textile mill.
+                    I confirm I want to overwrite all existing historical data for this enterprise.
                   </label>
                 </div>
               )}
             </div>
 
             {/* Action Bar */}
-            <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-purple-500/20">
               <button
                 type="button"
                 onClick={() => setActiveView('list')}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-tv-text-muted hover:text-white hover:bg-slate-800 transition"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-purple-300/60 hover:text-white hover:bg-white/[0.05] transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -964,7 +974,7 @@ export const DatasetManager: React.FC<DatasetManagerProps> = ({
                 type="button"
                 onClick={handleConfirmIngestion}
                 disabled={ingesting}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white shadow-lg shadow-blue-500/25 transition"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] disabled:opacity-50 text-white shadow-[0_0_15px_rgba(109,74,255,0.35)] transition cursor-pointer"
               >
                 {ingesting ? (
                   <>

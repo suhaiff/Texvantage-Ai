@@ -620,31 +620,31 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       {/* 1. EXECUTIVE PAGE HEADER */}
       {/* ================================================== */}
-      <div className="bg-tv-surface border border-tv-border rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#A089E6] bg-purple-950/60 border border-purple-400/30 px-2.5 py-0.5 rounded-full">
               Enterprise Portfolio Intelligence
             </span>
-            <span className="bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-purple-950/80 text-purple-300 border border-purple-400/30 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
               ADMIN COMMAND
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-tv-text-primary tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             Portfolio Command Center
           </h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs sm:text-sm text-tv-text-secondary">
-            <span className="font-semibold text-slate-900 dark:text-slate-200">
-              {companiesCount} Textile Enterprises
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs sm:text-sm text-purple-200/70">
+            <span className="font-semibold text-white">
+              {companiesCount} Enterprises Tracked
             </span>
             <span>·</span>
-            <span>Monitor performance, compare companies, and ask Portfolio AI</span>
+            <span>Cross-enterprise performance monitoring, benchmarking & Portfolio AI</span>
             {portfolioFreshness && (
               <>
-                <span className="text-tv-text-muted dark:text-slate-600">·</span>
-                <span className="text-tv-text-secondary flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-tv-text-muted inline" />
-                  Latest portfolio data: {portfolioFreshness}
+                <span className="text-purple-400/40">·</span>
+                <span className="text-purple-300/60 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-purple-300/50 inline" />
+                  Latest data: {portfolioFreshness}
                 </span>
               </>
             )}
@@ -653,23 +653,23 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
         <div className="flex items-center gap-3 flex-wrap">
           {/* Period selector */}
-          <div className="flex items-center gap-1 bg-tv-base p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+          <div className="flex items-center gap-1 bg-[#0C071C]/80 p-1 rounded-xl border border-purple-400/20 text-xs">
             <button
               onClick={() => setPeriodMonths(6)}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
                 periodMonths === 6
-                  ? 'bg-tv-surface text-tv-text-primary shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-purple-950/80 text-white shadow font-bold border border-purple-400/30'
+                  : 'text-purple-300/60 hover:text-white'
               }`}
             >
               6 Months
             </button>
             <button
               onClick={() => setPeriodMonths(12)}
-              className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
+              className={`px-3.5 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
                 periodMonths === 12
-                  ? 'bg-tv-surface text-tv-text-primary shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-purple-950/80 text-white shadow font-bold border border-purple-400/30'
+                  : 'text-purple-300/60 hover:text-white'
               }`}
             >
               12 Months
@@ -680,12 +680,12 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             onClick={handleExportPortfolioReport}
             disabled={exportingExcel}
             title="Download authoritative 5-sheet consolidated Excel portfolio report"
-            className={`inline-flex items-center gap-2 text-xs font-semibold px-3.5 py-2 rounded-xl transition-all shadow-xs ${
+            className={`inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-md cursor-pointer ${
               excelExportSuccess
                 ? 'bg-emerald-600 text-white'
                 : exportingExcel
-                ? 'bg-blue-400 text-white cursor-wait'
-                : 'bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60'
+                ? 'bg-purple-900/60 text-purple-300 cursor-wait'
+                : 'bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white shadow-[0_0_15px_rgba(109,74,255,0.35)] hover:scale-105 active:scale-95'
             }`}
           >
             {exportingExcel ? (
@@ -700,7 +700,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
               </>
             ) : (
               <>
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <FileSpreadsheet className="w-3.5 h-3.5 text-white" />
                 <span>
                   {selectedForComparison.length > 0
                     ? `Export Comparison (${selectedForComparison.length})`
@@ -712,15 +712,15 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
 
           <button
             onClick={handleExportMatrix}
-            className="inline-flex items-center gap-2 bg-slate-100 hover:bg-tv-border dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors border border-slate-200 dark:border-slate-700"
+            className="inline-flex items-center gap-2 bg-[#1F1640]/70 hover:bg-[#281D52]/80 text-purple-200 text-xs font-semibold px-3.5 py-2 rounded-xl transition-colors border border-purple-400/20 cursor-pointer"
           >
-            {exported ? <Check className="w-4 h-4 text-emerald-500" /> : <Download className="w-4 h-4" />}
+            {exported ? <Check className="w-4 h-4 text-emerald-400" /> : <Download className="w-4 h-4" />}
             <span>Export CSV</span>
           </button>
 
           <button
             onClick={() => handleSendPortfolioAI('Give me a full executive performance briefing across all textile companies')}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-tv-accent-hover text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-sm"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all shadow-[0_0_15px_rgba(109,74,255,0.35)] hover:scale-105 active:scale-95 cursor-pointer"
           >
             <Sparkles className="w-4 h-4 text-amber-300" />
             <span>Consult Portfolio AI</span>
@@ -733,37 +733,37 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* KPI 1: Total Portfolio Revenue */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Total Revenue</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[10px] font-medium text-tv-text-secondary">
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[10px] font-medium text-purple-200">
               {periodMonths}M Total
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1">
+          <div className="text-2xl font-bold text-white mt-1 tabular-nums">
             {portfolioSummary.total_portfolio_revenue_lakh != null
               ? `₹${Number(portfolioSummary.total_portfolio_revenue_lakh).toLocaleString('en-IN')}L`
               : 'Not available'}
           </div>
-          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
-            Across {companiesCount} Textile Mills
+          <div className="text-[11px] text-purple-300/50 mt-2 truncate">
+            Across {companiesCount} Enterprises
           </div>
         </div>
 
         {/* KPI 2: Weighted Gross Margin */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Avg Gross Margin</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[10px] font-medium text-tv-text-secondary">
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[10px] font-medium text-purple-200">
               Weighted
             </span>
           </div>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+          <div className="text-2xl font-bold text-emerald-400 mt-1 tabular-nums">
             {portfolioSummary.portfolio_weighted_margin_pct != null
               ? `${Number(portfolioSummary.portfolio_weighted_margin_pct).toFixed(2)}%`
               : 'Not available'}
           </div>
-          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
+          <div className="text-[11px] text-purple-300/50 mt-2 truncate">
             {portfolioSummary.total_portfolio_gross_profit_lakh != null
               ? `₹${Number(portfolioSummary.total_portfolio_gross_profit_lakh).toFixed(2)}L Gross Profit`
               : 'Portfolio Gross Profit'}
@@ -771,49 +771,49 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         </div>
 
         {/* KPI 3: Companies Tracked */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Enterprises</span>
-            <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 px-2 py-0.5 rounded text-[10px] font-medium">
+            <span className="bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 px-2 py-0.5 rounded text-[10px] font-medium">
               Active
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1">
+          <div className="text-2xl font-bold text-white mt-1 tabular-nums">
             {companiesCount}
           </div>
-          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
-            Pan-India Textile Clusters
+          <div className="text-[11px] text-purple-300/50 mt-2 truncate">
+            Operational Manufacturing Entities
           </div>
         </div>
 
         {/* KPI 4: Total Units Sold / Volume */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Total Units</span>
-            <span className="bg-tv-base px-2 py-0.5 rounded text-[10px] font-medium text-tv-text-secondary">
+            <span className="bg-purple-950/60 border border-purple-400/20 px-2 py-0.5 rounded text-[10px] font-medium text-purple-200">
               Volume
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1">
+          <div className="text-2xl font-bold text-white mt-1 tabular-nums">
             {totalPortfolioUnits != null ? totalPortfolioUnits.toLocaleString('en-IN') : 'Not available'}
           </div>
-          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
-            Reported Sales Output
+          <div className="text-[11px] text-purple-300/50 mt-2 truncate">
+            Reported Sales Volume
           </div>
         </div>
 
         {/* KPI 5: Dataset Coverage */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-tv-text-secondary mb-1">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-purple-400/40 hover:shadow-[0_8px_30px_rgba(160,137,230,0.15)] transition-all duration-300">
+          <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-purple-300/60 mb-1">
             <span>Datasets</span>
-            <span className="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 px-2 py-0.5 rounded text-[10px] font-medium">
+            <span className="bg-purple-950/60 text-[#A089E6] border border-purple-400/30 px-2 py-0.5 rounded text-[10px] font-medium">
               Audited
             </span>
           </div>
-          <div className="text-2xl font-bold text-tv-text-primary mt-1">
+          <div className="text-2xl font-bold text-white mt-1 tabular-nums">
             {datasetsList.length > 0 ? datasetsList.length : '10'}
           </div>
-          <div className="text-[11px] text-tv-text-secondary mt-2 truncate">
+          <div className="text-[11px] text-purple-300/50 mt-2 truncate">
             Verified Source Ledgers
           </div>
         </div>
@@ -824,27 +824,27 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
       {/* ================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* PORTFOLIO LEADERS (2 Cols) */}
-        <div className="lg:col-span-2 bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-tv-border pb-3">
+        <div className="lg:col-span-2 bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)] space-y-4">
+          <div className="flex items-center justify-between border-b border-purple-500/15 pb-3">
             <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-500" />
-              <h2 className="text-sm font-bold text-tv-text-primary">Portfolio Performance Leaders</h2>
+              <Award className="w-4 h-4 text-amber-400" />
+              <h2 className="text-sm font-bold text-white">Portfolio Performance Leaders</h2>
             </div>
-            <span className="text-xs text-slate-500">Derived from {periodMonths}M backend analysis</span>
+            <span className="text-xs text-purple-300/60 font-mono">Derived from {periodMonths}M verified ledger</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Revenue Leader */}
-            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border flex flex-col justify-between">
+            <div className="bg-[#0C071C]/70 rounded-xl p-4 border border-purple-500/20 flex flex-col justify-between">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-tv-text-muted">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-purple-300/50">
                   Revenue Leader
                 </div>
-                <div className="text-sm font-bold text-tv-text-primary mt-1 truncate">
+                <div className="text-sm font-bold text-white mt-1 truncate">
                   {portfolioSummary.top_revenue_performer || 'Top Enterprise'}
                 </div>
               </div>
-              <div className="mt-2 text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
+              <div className="mt-3 text-xs font-mono font-bold text-[#A089E6]">
                 {allCompanies[0]?.total_revenue_lakh != null
                   ? `₹${allCompanies[0].total_revenue_lakh}L`
                   : 'Highest Revenue'}
@@ -852,16 +852,16 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             </div>
 
             {/* Margin Leader */}
-            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border flex flex-col justify-between">
+            <div className="bg-[#0C071C]/70 rounded-xl p-4 border border-purple-500/20 flex flex-col justify-between">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-tv-text-muted">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-purple-300/50">
                   Margin Leader
                 </div>
-                <div className="text-sm font-bold text-tv-text-primary mt-1 truncate">
-                  {portfolioSummary.highest_margin_performer || 'Artisanal Silk'}
+                <div className="text-sm font-bold text-white mt-1 truncate">
+                  {portfolioSummary.highest_margin_performer || 'Top Margin Mill'}
                 </div>
               </div>
-              <div className="mt-2 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+              <div className="mt-3 text-xs font-mono font-bold text-emerald-400">
                 {(() => {
                   const maxM = Math.max(
                     ...allCompanies.map(c => Number(c.avg_profit_margin_pct || c.weighted_profit_margin_pct) || 0)
@@ -872,16 +872,16 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
             </div>
 
             {/* Growth Leader */}
-            <div className="bg-tv-base/60 rounded-xl p-3.5 border border-tv-border flex flex-col justify-between">
+            <div className="bg-[#0C071C]/70 rounded-xl p-4 border border-purple-500/20 flex flex-col justify-between">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-tv-text-muted">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-purple-300/50">
                   Growth Leader
                 </div>
-                <div className="text-sm font-bold text-tv-text-primary mt-1 truncate">
+                <div className="text-sm font-bold text-white mt-1 truncate">
                   {portfolioSummary.fastest_growth_performer || 'Fastest Growth'}
                 </div>
               </div>
-              <div className="mt-2 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+              <div className="mt-3 text-xs font-mono font-bold text-indigo-300">
                 {(() => {
                   const maxG = Math.max(...allCompanies.map(c => Number(c.revenue_growth_pct) || 0));
                   return maxG > 0 ? `+${maxG.toFixed(1)}% Period Growth` : 'Growth Trajectory';
@@ -892,28 +892,28 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
         </div>
 
         {/* COMPANIES REQUIRING ATTENTION (1 Col) */}
-        <div className="bg-tv-surface border border-tv-border rounded-xl p-5 shadow-sm space-y-3 flex flex-col justify-between">
+        <div className="bg-[#130C2E]/70 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.3)] space-y-3 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between border-b border-tv-border pb-2.5">
+            <div className="flex items-center justify-between border-b border-purple-500/15 pb-3">
               <div className="flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-                <h2 className="text-sm font-bold text-tv-text-primary">Management Attention Signals</h2>
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <h2 className="text-sm font-bold text-white">Management Attention Signals</h2>
               </div>
-              <span className="text-[11px] font-mono text-tv-text-muted">{attentionCompanies.length} Flagged</span>
+              <span className="text-[11px] font-mono text-purple-300/60">{attentionCompanies.length} Flagged</span>
             </div>
 
-            <div className="space-y-2 mt-3 max-h-40 overflow-y-auto pr-1">
+            <div className="space-y-2 mt-3 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
               {attentionCompanies.length > 0 ? (
                 attentionCompanies.slice(0, 3).map((comp, idx) => (
                   <div
                     key={idx}
-                    className="p-2.5 rounded-lg bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 text-xs"
+                    className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-900/40 text-xs"
                   >
-                    <div className="flex items-center justify-between font-semibold text-tv-text-primary">
+                    <div className="flex items-center justify-between font-semibold text-white">
                       <span>{comp.company_name || comp.name}</span>
-                      <span className="font-mono text-[10px] text-slate-500">{comp.code}</span>
+                      <span className="font-mono text-[10px] text-purple-300/50">{comp.code}</span>
                     </div>
-                    <div className="text-[11px] text-rose-600 dark:text-rose-400 mt-1">
+                    <div className="text-[11px] text-rose-400 mt-1">
                       {comp.issues[0]}
                     </div>
                   </div>
@@ -978,15 +978,14 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
                     y1={y}
                     x2={780}
                     y2={y}
-                    stroke="currentColor"
-                    className="text-slate-100 dark:text-slate-800"
+                    stroke="rgba(160, 137, 230, 0.12)"
                     strokeDasharray={i > 0 && i < 4 ? '3 3' : undefined}
                   />
                   <text
                     x={38}
                     y={y + 3}
                     textAnchor="end"
-                    className="text-[10px] fill-slate-400 font-mono"
+                    className="text-[10px] fill-purple-300/50 font-mono"
                   >
                     ₹{labelVal}L
                   </text>
@@ -1612,7 +1611,7 @@ export const BenchmarkView: React.FC<BenchmarkViewProps> = ({
           </span>
           {[
             'Which company is growing fastest?',
-            'Compare Apex Spinners and Vardhman Spinning',
+            `Compare ${allCompanies[0]?.company_name || allCompanies[0]?.name || 'Jeevan Clothing'} and ${allCompanies[1]?.company_name || allCompanies[1]?.name || 'Jeevan Sourcing'}`,
             'Which companies have declining margins?',
             'Give me a portfolio performance summary',
             'Which company generated the highest revenue?',

@@ -1,53 +1,130 @@
 @import "tailwindcss";
 
+/* ============================================================ */
+/*  PREMIUM THEME — Jeevan Infotech AI                         */
+/*  Palette: #A089E6 · #271A58 · #FFFFFF · #1C1C1C · #2C303D  */
+/*  Typography: Plus Jakarta Sans (Aeonik-equivalent)           */
+/* ============================================================ */
+
 @theme {
-  --color-tv-base: #0B0D0F;
-  --color-tv-sidebar: #101214;
-  --color-tv-surface: #15181B;
-  --color-tv-border: #272B30;
-  --color-tv-text-primary: #F2F3F5;
-  --color-tv-text-secondary: #949AA3;
-  --color-tv-text-muted: #636A73;
-  --color-tv-accent: #D6FF4B;
-  --color-tv-accent-hover: #C5F525;
+  /* ── Base background: deep dark with a faint warm-purple undertone ── */
+  --color-tv-base:           #090614;
+  /* ── Sidebar: frosted deep navy-purple from palette ── */
+  --color-tv-sidebar:        #0C081D;
+  /* ── Surface cards / panels ── */
+  --color-tv-surface:        #130D2B;
+  /* ── Elevated surfaces (inner cards, inputs) ── */
+  --color-tv-surface-raised: #1A1238;
+  /* ── Borders: subtle lavender-tinted glow ── */
+  --color-tv-border:         #2E2556;
+  /* ── Primary text: pure white ── */
+  --color-tv-text-primary:   #FFFFFF;
+  /* ── Secondary text: softened white ── */
+  --color-tv-text-secondary: #B8B0D4;
+  /* ── Muted / placeholder text ── */
+  --color-tv-text-muted:     #6E6594;
+  /* ── Accent: lavender-purple from palette ── */
+  --color-tv-accent:         #A089E6;
+  /* ── Accent hover: slightly brighter ── */
+  --color-tv-accent-hover:   #B8A4EE;
+  /* ── Accent glow for shadows ── */
+  --color-tv-accent-glow:    rgba(160, 137, 230, 0.25);
+}
+
+/* ── Global font + body ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  background-color: #090614;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-tv-base);
+  color: var(--color-tv-text-primary);
+}
+
+/* ── Lush full-page gradient background (matching Vortasky reference) ── */
+.tv-bg-gradient {
+  background:
+    radial-gradient(ellipse 75% 45% at 50% -8%, rgba(138, 92, 255, 0.42) 0%, rgba(88, 50, 230, 0.22) 38%, rgba(39, 26, 88, 0.10) 65%, transparent 80%),
+    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(88, 50, 230, 0.16) 0%, transparent 60%),
+    #090614;
+}
+
+/* ── App root layer gets the top glowing aura matching reference image ── */
+#root > div {
+  background:
+    radial-gradient(ellipse 75% 45% at 50% -8%, rgba(138, 92, 255, 0.38) 0%, rgba(88, 50, 230, 0.22) 36%, rgba(39, 26, 88, 0.10) 65%, transparent 80%),
+    radial-gradient(ellipse 60% 40% at 85% 100%, rgba(88, 50, 230, 0.15) 0%, transparent 60%),
+    #090614;
 }
 
 @layer utilities {
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  /* Hide scrollbar for IE, Edge and Firefox */
-  .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-
-  /* Custom subtle scrollbar for message areas */
+  /* ── Slim lavender-tinted scrollbar ── */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.2);
+    background: rgba(160, 137, 230, 0.22);
     border-radius: 9999px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.4);
+    background: rgba(160, 137, 230, 0.45);
+  }
+
+  /* ── Hide scrollbar ── */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* ── Accent glow utilities ── */
+  .tv-glow-accent {
+    box-shadow: 0 0 24px rgba(160, 137, 230, 0.20), 0 0 8px rgba(160, 137, 230, 0.12);
+  }
+  .tv-glow-accent-strong {
+    box-shadow: 0 0 40px rgba(138, 92, 255, 0.35), 0 0 16px rgba(160, 137, 230, 0.20);
+  }
+  /* ── Premium glass-effect surface ── */
+  .tv-glass {
+    background: rgba(18, 12, 38, 0.65);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(160, 137, 230, 0.16);
+  }
+  .tv-glass-lighter {
+    background: rgba(24, 17, 48, 0.60);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(160, 137, 230, 0.14);
+  }
+  .tv-glass-card {
+    background: rgba(18, 12, 38, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.10);
   }
 }
 
-/* ======================================================== */
-/* ChatGPT / Claude / AI Studio Markdown Typography Styling */
-/* ======================================================== */
+/* ============================================================ */
+/*  AI Markdown Typography (Chat messages)                       */
+/* ============================================================ */
 .ai-markdown-content {
-  color: var(--color-tv-text-primary, #F2F3F5);
+  color: var(--color-tv-text-primary, #FFFFFF);
   font-size: 15px;
-  line-height: 1.72;
+  line-height: 1.75;
   word-break: break-word;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .ai-markdown-content h1,
@@ -55,37 +132,36 @@
 .ai-markdown-content h3,
 .ai-markdown-content h4 {
   color: #FFFFFF;
-  font-weight: 600;
-  letter-spacing: -0.015em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .ai-markdown-content h1 {
   font-size: 1.45rem;
-  margin-top: 1.5rem;
+  margin-top: 1.6rem;
   margin-bottom: 0.75rem;
-  font-weight: 700;
 }
 
 .ai-markdown-content h2 {
-  font-size: 1.25rem;
-  margin-top: 1.35rem;
+  font-size: 1.2rem;
+  margin-top: 1.4rem;
   margin-bottom: 0.65rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(160, 137, 230, 0.15);
   padding-bottom: 0.4rem;
 }
 
 .ai-markdown-content h3 {
-  font-size: 1.08rem;
+  font-size: 1.05rem;
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
-  color: var(--color-tv-accent, #D6FF4B);
+  color: var(--color-tv-accent, #A089E6);
 }
 
 .ai-markdown-content h4 {
   font-size: 0.98rem;
   margin-top: 1rem;
   margin-bottom: 0.4rem;
-  color: #E2E8F0;
+  color: var(--color-tv-text-secondary, #B8B0D4);
 }
 
 .ai-markdown-content p {
@@ -107,7 +183,7 @@
   position: relative;
   padding-left: 1.4rem;
   margin-bottom: 0.55rem;
-  line-height: 1.68;
+  line-height: 1.7;
 }
 
 .ai-markdown-content ul > li::before {
@@ -115,7 +191,7 @@
   position: absolute;
   left: 0.35rem;
   top: -0.1rem;
-  color: var(--color-tv-accent, #D6FF4B);
+  color: var(--color-tv-accent, #A089E6);
   font-size: 1.25rem;
   font-weight: bold;
 }
@@ -129,41 +205,42 @@
 
 .ai-markdown-content ol > li {
   margin-bottom: 0.55rem;
-  line-height: 1.68;
+  line-height: 1.7;
   padding-left: 0.25rem;
 }
 
 .ai-markdown-content strong {
   color: #FFFFFF;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .ai-markdown-content em {
   font-style: italic;
-  color: var(--color-tv-text-secondary, #949AA3);
+  color: var(--color-tv-text-secondary, #B8B0D4);
 }
 
 .ai-markdown-content code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(160, 137, 230, 0.12);
   padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.88em;
-  color: var(--color-tv-accent, #D6FF4B);
+  border-radius: 5px;
+  font-size: 0.87em;
+  color: var(--color-tv-accent, #A089E6);
+  border: 1px solid rgba(160, 137, 230, 0.18);
 }
 
 .ai-markdown-content blockquote {
-  border-left: 3px solid var(--color-tv-accent, #D6FF4B);
-  background: rgba(214, 255, 75, 0.04);
+  border-left: 3px solid var(--color-tv-accent, #A089E6);
+  background: rgba(160, 137, 230, 0.06);
   padding: 0.75rem 1.2rem;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 10px 10px 0;
   margin: 1.1rem 0;
-  color: var(--color-tv-text-secondary, #949AA3);
+  color: var(--color-tv-text-secondary, #B8B0D4);
 }
 
 .ai-markdown-content hr {
   border: 0;
-  border-top: 1px solid var(--color-tv-border, #272B30);
+  border-top: 1px solid rgba(160, 137, 230, 0.15);
   margin: 1.5rem 0;
 }
 

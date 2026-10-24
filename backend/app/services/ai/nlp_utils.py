@@ -34,6 +34,14 @@ COMPANY_KNOWN_ALIASES: dict[str, list[str]] = {
     "comp_textile_h": ["mill h", "heritage handloom", "heritage handloom weavers", "heritage"],
     "comp_textile_i": ["mill i", "imperial woolen", "imperial woolen mills", "imperial"],
     "comp_textile_j": ["mill j", "jupiter garment", "jupiter garment exports", "jupiter", "jupiter garments"],
+    "comp_fbs_1": ["jcc", "jeevan clothing", "jeevan clothing company", "jeevan clothing co"],
+    "comp_fbs_6": ["jsc", "jeevan sourcing", "jeevan sourcing company", "jeevan sourcing co"],
+    "comp_fbs_8": ["concord", "concord apparel", "ca", "concord apparel pvt ltd"],
+    "comp_fbs_9": ["concord mirigama", "mirigama", "ca-9", "ca 9", "concord apparel mirigama"],
+    "comp_fbs_10": ["sri thanam", "thanam", "sri thanam pvt ltd"],
+    "comp_fbs_11": ["jtc", "jeevan trading", "jeevan trading company"],
+    "comp_fbs_16": ["jcbl", "jeevan bangladesh", "bangladesh ltd", "jeevan clothing bangladesh"],
+    "comp_fbs_17": ["jco", "jeevan overseas", "clothing overseas", "jeevan clothing overseas"],
 }
 
 
@@ -325,12 +333,25 @@ _INTENT_PATTERNS: List[Tuple[List[str], str]] = [
          "profit and loss"],
         "profit",
     ),
+    # --- Profile / Location / Facility / Background ---
+    (
+        [
+            "where is", "where are", "location", "located", "address", "city",
+            "state", "headquarters", "headquarter", "hq", "based in", "situated",
+            "where's", "where does", "specializ", "specialize", "what do they make",
+            "what does it make", "what do they produce", "capacity", "annual capacity",
+            "production capacity", "founded", "established", "history", "background",
+            "who is", "who are", "company code", "code of", "tell me about the company",
+            "company profile", "mill profile"
+        ],
+        "profile",
+    ),
     # --- Summary / KPI / Dashboard ---
     (
         ["summary", "overview", "kpi", "dashboard", "performance", "how is",
          "how are", "doing", "performing", "status", "brief", "report",
          "executive", "snapshot", "tell me about", "give me info",
-         "what is happening", "whats happening"],
+         "what is happening", "whats happening", "analyze", "analysis"],
         "summary",
     ),
     # --- Dataset / Upload info ---
