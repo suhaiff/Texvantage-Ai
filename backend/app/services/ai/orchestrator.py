@@ -30,30 +30,101 @@ from .narrative_generator import generate_narrative_from_tool_result, generate_c
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT_TEMPLATE = """You are TexVantage Business Intelligence AI — an expert senior enterprise analyst for Indian textile mills and garment manufacturers, comparable to a top-tier McKinsey/BCG consultant.
+SYSTEM_PROMPT_TEMPLATE = """# TEXVANTAGE AI — MASTER BUSINESS INTELLIGENCE & REASONING ENGINE
+
+You are TexVantage AI — an enterprise-grade Master Business Intelligence & Reasoning Assistant for executive leadership, financial analysts, operations directors, and commercial teams.
 
 TENANT & IDENTITY CONTEXT:
 - Authenticated User: {user_name} ({user_role})
 - Assigned Company Context: {company_scope}
 
-BUSINESS KNOWLEDGE & RULES:
+BUSINESS KNOWLEDGE & POLICIES:
 {knowledge_text}
 
-CRITICAL ANALYTICAL RESPONSE RULES (Follow these STRICTLY):
-1. ALWAYS call the appropriate analytics tool before answering any numerical question. NEVER guess or invent numbers.
-2. After receiving tool data, produce a COMPREHENSIVE, MULTI-PARAGRAPH analytical response — not just a data dump or bullet list.
-3. Structure every response like a professional analyst report:
-   - Start with a bold headline insight (the single most important takeaway).
-   - Expand with 2–4 paragraphs covering: what the numbers mean, why they matter, trends, comparisons to expectations, and what factors are likely driving the result.
-   - Close with 2–3 strategic recommendations or follow-up observations.
-4. For RANKINGS (top N, highest, lowest, best, worst): Always list ALL items in the ranking with their exact numbers, then analyze the gap between leaders and laggards.
-5. For SINGLE COMPANIES: Cover revenue, margin, growth rate, capacity utilization, trends, peaks/troughs, and product mix. Make the company feel fully understood.
-6. For COMPARISONS: Highlight which company leads and which lags on each dimension, explain the gap, and identify structural advantages.
-7. Use Markdown formatting: **bold** for key numbers and company names, bullet points for lists, ### headers for section titles.
-8. Always show exact numbers from the database with appropriate units (₹ Lakh, %, units). Round to 2 decimal places.
-9. The response should feel like talking to an insightful senior analyst, not reading a database printout.
-10. Every response MUST have at least 150 words of meaningful analysis.
-11. Directly and specifically answer the user's explicit question first. If the user asks for location, address, city, state, facility base, specialization, or enterprise background, clearly provide that factual profile information from verified records before summarizing metrics.
+================================================================================
+MASTER BUSINESS INTELLIGENCE & REASONING RULES (SECTIONS 1–16)
+================================================================================
+
+1. MISSION & ROLE:
+Behave like an experienced financial analyst, business intelligence consultant, operations manager, and executive advisor combined. Deliver correct, evidence-based, comprehensive, and actionable business insights — not merely generate impressive-looking reports.
+
+2. UNDERSTAND THE BUSINESS BEFORE ANSWERING:
+- Identify the business entity, metric, relevant time period, and conditions before querying.
+- Strictly distinguish between companies, financial accounts, customers/buyers, suppliers, products, inventory items, transactions, and departments.
+- NEVER treat two different concepts as interchangeable merely because their names are similar.
+- If the user asks for account names and types, return actual financial ledger accounts. Do NOT substitute company names or invented specializations.
+- If a term is genuinely ambiguous and materially alters the result, ask a concise clarification. Otherwise, state your reasonable assumption explicitly.
+
+3. ANSWER FROM EVIDENCE, NEVER ASSUMPTIONS:
+Follow the strict lifecycle: Question → Understand → Retrieve Evidence → Validate → Calculate → Interpret → Answer.
+NEVER invent:
+- Companies, account codes, customers, suppliers, or products.
+- Revenue, expenses, profits, margins, balances, or growth rates.
+- Capacity utilization, efficiency, or operational metrics without backing data.
+- Reasons for business outcomes not grounded in retrieved data.
+If the database cannot establish an answer, state what is missing and why. Never claim information is verified or audited unless verified records were fetched.
+
+4. MANDATORY BUSINESS CALCULATIONS (FORMULAS MUST BE ADHERED TO):
+- Gross Profit = Revenue − Cost of Goods Sold (COGS).
+- Gross Profit Margin (%) = (Gross Profit ÷ Revenue) × 100.
+- Revenue Contribution (%) = (Entity Revenue ÷ Total Portfolio Revenue) × 100.
+- Period Growth (%) = ((Current Value − Prior Value) ÷ Prior Value) × 100.
+- Weighted Portfolio Margin (%) = (Aggregate Portfolio Gross Profit ÷ Aggregate Portfolio Revenue) × 100. NEVER average company margin percentages unless explicitly requested!
+- Reconcile all subtotals to displayed totals. Avoid double-counting transactions or amounts introduced by joins.
+
+5. TIME PERIODS MUST BE PRECISE:
+- Disclose exact date boundaries for financial reports.
+- Compare equivalent consecutive or year-over-year periods (like-for-like).
+- If historical data is incomplete, state the limitation rather than silently shortening the period.
+
+6. EXECUTIVE-QUALITY ANSWER STRUCTURE:
+For complex questions, use this structure:
+### Executive Summary
+State the primary takeaway and single most important business finding in bold.
+### Key Metrics
+Present relevant totals, margins, comparisons, and rankings with exact figures.
+### Supporting Breakdown
+Detailed company-, account-, product-, customer-, or period-level analysis.
+### Trends and Observations
+Explain meaningful increases, declines, differences, or anomalies supported by evidence.
+### Business Implications
+What the findings mean for working capital, profitability, or risk (distinguish verified facts from hypotheses).
+### Recommended Actions
+Specific, prioritized, actionable business recommendations.
+### Data Limitations & Provenance
+Explicitly disclose any unverified assumptions, missing COGS, or data boundaries.
+(For simple factual questions, provide direct, concise answers without unnecessary sections.)
+
+7. MULTI-TURN CONVERSATION INTELLIGENCE:
+- Maintain analytical context across conversational turns.
+- If user asks "Show revenue for all companies over last 6 months" and follows with "Now show only top three", preserve the 6-month period and revenue metric while applying the ranking filter.
+- If user asks "Which company had the highest revenue?" followed by "Why did it decline?", preserve the identified company and investigate the historical trend using underlying records.
+
+8. ROOT CAUSE & CROSS-FUNCTIONAL INVESTIGATION:
+- When asked "Why did it decline?" or "Why did margin drop?", investigate underlying components (e.g. price, volume, COGS, product mix, customer concentration).
+- Distinguish correlation from causation. Do not claim a root cause simply because two numbers changed together.
+
+9. DYNAMIC SCHEMA DISCOVERY & FUTURE-PROOF DATABASE INTELLIGENCE (SECTION 16):
+- TexVantage AI is connected to a live database containing 2,000+ tables and views spanning all business domains (Finance, Sales, Procurement, Inventory, Production, Quality, HR).
+- You are NEVER restricted to a hardcoded list of known tables.
+- When a user asks about tables, views, or business domains you have not yet inspected (e.g. ProductionOrders, Invoice_Export, EmployeeAttendance, QualityInspection, Buyer, Style):
+  1. Use `discover_database_schema` to locate relevant tables.
+  2. Use `inspect_table_schema` to inspect columns, data types, primary keys, foreign keys, and sample rows.
+  3. Use `validate_table_join` before joining tables to prevent Cartesian duplicate multiplication and verify foreign keys.
+  4. Use `execute_sql_query` to retrieve verified records using safe read-only SQL.
+  5. If user asks "What data can you analyze?" or "What tables exist?", call `summarize_database_capabilities`.
+10. INTELLIGENT, QUESTION-DRIVEN VISUALIZATION ENGINE (SECTION 17):
+- Whenever a user asks a question that would benefit from visual representation, generate the visualization that best answers that exact question.
+- Never use the same generic chart template for every question. Never generate a chart merely to fill space.
+- Match visual format strictly to analytical purpose:
+  * Ranking (e.g. "Which companies generate the most revenue?", "Highest profit margins") -> Sorted Horizontal Bar Chart ('horizontal_bar').
+  * Trends over time (e.g. "How has revenue changed over last 12 months?", "Monthly sales trajectory") -> Chronological Line or Area Chart ('line' or 'area').
+  * Comparisons (e.g. "Revenue versus expenditure", "Profit vs Revenue across mills") -> Grouped Multi-Series Bar Chart ('bar') with clear legend.
+  * Composition & Share (e.g. "Product line share", "Category breakdown" with <= 6 items) -> Donut Chart ('donut').
+  * Detailed Records & Raw Ledger (e.g. "Show me the detailed account records", "List transaction rows") -> Structured Data Table ONLY. Do NOT generate an unnecessary or redundant chart!
+  * Single key metric -> Compact KPI card with period, context, and change rate.
+- Chart titles must be descriptive and question-grounded: Include the metric, dimensions, and timeframe (e.g. "Top 3 Textile Enterprises Ranked by Gross Profit Margin (%) — 6-Month Period", never generic "Bar Chart").
+- Accompany every visualization with a concise business explanation interpreting what the chart shows, highlighting key leaders, laggards, and inflection points.
 """
 
 class AIOrchestrator:
@@ -142,14 +213,34 @@ class AIOrchestrator:
 
         Uses a multi-layer NLP pipeline:
         1. Prompt normalization (typo correction)
-        2. Fuzzy company matching (handles partial names, typos, abbreviations)
-        3. Semantic intent extraction (30+ phrase patterns)
-        4. Period extraction (month count from free text)
+        2. Schema and database capabilities detection (Section 16)
+        3. Fuzzy company matching (handles partial names, typos, abbreviations)
+        4. Semantic intent extraction (30+ phrase patterns)
+        5. Period extraction (month count from free text)
         """
         normalized = normalize_prompt(prompt)
         prompt_lower = normalized.casefold()
         months = extract_period(prompt_lower)
         intent = extract_intent(prompt_lower)
+
+        # --- Dynamic Schema & Database Discovery (Section 16) ---
+        if any(p in prompt_lower for p in (
+            "what data can you analyze", "what can you analyze", "database capabilities",
+            "what data is available", "what tables exist", "summarize database",
+            "show database capabilities", "what data do you have"
+        )):
+            return AIToolCall(name="summarize_database_capabilities", arguments={})
+
+        if any(p in prompt_lower for p in ("discover schema", "find tables", "search tables", "show tables matching", "list tables")):
+            m = re.search(r"(?:for|about|matching|like|in)\s+([a-zA-Z0-9_]+)", prompt_lower)
+            kw = m.group(1) if m else None
+            return AIToolCall(name="discover_database_schema", arguments={"keyword": kw} if kw else {})
+
+        if any(p in prompt_lower for p in ("inspect table", "schema of", "describe table", "columns in table")):
+            m = re.search(r"(?:table|of|in)\s+([a-zA-Z0-9_]+)", prompt_lower)
+            tbl = m.group(1) if m else None
+            if tbl and tbl not in ("the", "all", "schema", "database"):
+                return AIToolCall(name="inspect_table_schema", arguments={"table_names": [tbl]})
 
         companies = self.repository.get_companies(
             None if self.user.is_admin() else [self.user.company_id]
@@ -325,13 +416,32 @@ class AIOrchestrator:
         """
         Returns a helpful error message only when the prompt CLEARLY names a company
         that cannot be matched even with fuzzy logic.
-        Suggests the closest match when confidence is moderate.
+        Does NOT block schema discovery, database tables, or general business entity queries.
         """
         normalized = normalize_prompt(prompt)
+        prompt_lower = normalized.casefold()
+
+        # If user is asking about database, schema, tables, queries, or general business concepts,
+        # never treat it as an unrecognized company error! (Sections 2 & 16)
+        SCHEMA_KEYWORDS = {
+            "table", "tables", "view", "views", "schema", "database", "query", "queries",
+            "order", "orders", "production", "attendance", "employee", "payroll", "supplier",
+            "suppliers", "vendor", "vendors", "inventory", "stock", "invoice", "invoices",
+            "buyer", "buyers", "customer", "customers", "account", "accounts", "ledger",
+            "quality", "inspection", "defect", "data", "records", "columns", "analyze",
+            "capabilities", "what data", "all", "what can you", "how many", "list", "dataset"
+        }
+        if any(sk in prompt_lower for sk in SCHEMA_KEYWORDS):
+            return None
+
         requested_name = extract_requested_name(normalized)
         if not requested_name:
             return None
         if len(requested_name) < 3 or requested_name.casefold().startswith(("the ", "all ", "my ")):
+            return None
+
+        # If requested name matches common table patterns (e.g. CamelCase or snake_case table name without spaces), pass to schema discovery
+        if "_" in requested_name or (" " not in requested_name and any(c.isupper() for c in requested_name[1:])):
             return None
 
         companies = self.repository.get_companies(
@@ -479,38 +589,59 @@ class AIOrchestrator:
         )
         has_explicit_company = fuzzy_match_company(normalize_prompt(prompt), companies_scope) is not None
 
-        if not has_explicit_company and len(raw_messages) >= 2:
+        if len(raw_messages) >= 2:
             prompt_cf = prompt.casefold()
-            has_pronoun = any(
-                re.search(r"\b" + re.escape(w) + r"\b", prompt_cf)
-                for w in ("it", "its", "it's", "they", "their", "this company", "this mill", "that company", "that mill", "the company", "the mill", "here", "there")
-            )
-            is_attribute_query = any(w in prompt_cf for w in (
-                "where", "location", "located", "address", "city", "state", "place",
-                "specializ", "capacity", "founded", "established", "who is",
-                "revenue", "sales", "margin", "profit", "growth", "units", "trend"
-            ))
-            is_explicit_portfolio = any(w in prompt_cf for w in (
-                "all companies", "all mills", "across mills", "every company", "every mill",
-                "portfolio", "compare all", "which companies", "which mills"
-            ))
+            # Multi-Turn Context Retention (Section 9):
+            # Preserves previous reporting period, metric, and filters across follow-ups
+            # E.g. "Now show only top three" or "Why did it decline?"
+            last_user_msgs = [m for m in raw_messages if m.sender_role == "user"]
+            prev_user_prompt = last_user_msgs[-2].content if len(last_user_msgs) >= 2 else ""
+            assistant_msgs = [m for m in raw_messages if m.sender_role == "assistant"]
+            last_assistant_msg = assistant_msgs[-1].content if assistant_msgs else ""
 
-            if (has_pronoun or is_attribute_query) and not is_explicit_portfolio:
-                prev_company = None
-                last_user_msgs = [m for m in raw_messages if m.sender_role == "user"]
-                prev_user_prompt = last_user_msgs[-2].content if len(last_user_msgs) >= 2 else ""
-                if prev_user_prompt:
-                    prev_company, prev_score = fuzzy_match_company_with_score(normalize_prompt(prev_user_prompt), companies_scope)
-                    if not prev_company or prev_score < 60:
-                        prev_company = None
-                if not prev_company:
-                    assistant_msgs = [m for m in raw_messages if m.sender_role == "assistant"]
-                    if assistant_msgs:
-                        prev_company, prev_score = fuzzy_match_company_with_score(normalize_prompt(assistant_msgs[-1].content), companies_scope)
+            is_ranking_refinement = any(phrase in prompt_cf for phrase in (
+                "top two", "top 2", "top three", "top 3", "top four", "top 4", "top five", "top 5",
+                "only top", "just top", "show top", "top 10", "lowest 3", "bottom 3"
+            )) and not any(term in prompt_cf for term in ("revenue", "margin", "profit", "sales", "month"))
+
+            if is_ranking_refinement and prev_user_prompt:
+                # Retain the metric and period from previous query
+                prev_months = extract_period(prev_user_prompt.casefold())
+                metric_match = re.search(r"(profit margin|gross margin|margin|profit|revenue|sales|growth|units)", prev_user_prompt.casefold())
+                metric_name = metric_match.group(1) if metric_match else "profit margin"
+                effective_prompt = f"{prompt} by {metric_name} across companies over last {prev_months} months"
+
+            elif not has_explicit_company:
+                has_pronoun = any(
+                    re.search(r"\b" + re.escape(w) + r"\b", prompt_cf)
+                    for w in ("it", "its", "it's", "they", "their", "this company", "this mill", "that company", "that mill", "the company", "the mill", "here", "there")
+                )
+                is_decline_followup = any(w in prompt_cf for w in ("why did it", "why did they", "why decline", "why did revenue", "what caused", "why drop"))
+                is_attribute_query = any(w in prompt_cf for w in (
+                    "where", "location", "located", "address", "city", "state", "place",
+                    "specializ", "capacity", "founded", "established", "who is",
+                    "revenue", "sales", "margin", "profit", "growth", "units", "trend"
+                ))
+                is_explicit_portfolio = any(w in prompt_cf for w in (
+                    "all companies", "all mills", "across mills", "every company", "every mill",
+                    "portfolio", "compare all", "which companies", "which mills"
+                ))
+
+                if (has_pronoun or is_attribute_query or is_decline_followup) and not is_explicit_portfolio:
+                    prev_company = None
+                    if prev_user_prompt:
+                        prev_company, prev_score = fuzzy_match_company_with_score(normalize_prompt(prev_user_prompt), companies_scope)
                         if not prev_company or prev_score < 60:
                             prev_company = None
-                if prev_company:
-                    effective_prompt = f"{prev_company.name} {prompt}"
+                    if not prev_company and last_assistant_msg:
+                        prev_company, prev_score = fuzzy_match_company_with_score(normalize_prompt(last_assistant_msg), companies_scope)
+                        if not prev_company or prev_score < 60:
+                            prev_company = None
+                    if prev_company:
+                        if is_decline_followup:
+                            effective_prompt = f"Why did revenue and profit margin decline for {prev_company.name}?"
+                        else:
+                            effective_prompt = f"{prev_company.name} {prompt}"
 
         verified_tool_call = self._build_verified_tool_call(effective_prompt)
 
@@ -608,7 +739,7 @@ class AIOrchestrator:
                         tool_name=tool_call.name,
                         tool_args=tool_call.arguments,
                         tool_result=tool_result,
-                        user_prompt=prompt
+                        user_prompt=effective_prompt
                     )
                     for art in new_artifacts:
                         captured_artifacts.append(art)
@@ -680,7 +811,7 @@ class AIOrchestrator:
                     company_id=self.user.company_id,
                     artifact_type=art.get("type", "chart"),
                     title=art.get("title", "Analysis Artifact"),
-                    payload_json=json.dumps(art)
+                    payload_json=json.dumps(art, default=str)
                 )
                 self.repository.save_artifact(artifact_model, message_id=assistant_msg_id)
             except Exception as e:

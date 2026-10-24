@@ -1,5 +1,6 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import uuid
+import re
 
 
 def _new_id(kind: str) -> str:
@@ -8,14 +9,54 @@ def _new_id(kind: str) -> str:
 
 def _infer_chart_type(user_prompt: str, default: str) -> str:
     prompt = (user_prompt or "").casefold()
-    if any(term in prompt for term in ("pie", "donut", "share", "mix", "composition", "breakdown")):
+    if any(term in prompt for term in ("pie", "donut", "share", "mix", "composition", "breakdown", "distribution")):
         return "donut"
-    if any(term in prompt for term in ("bar chart", "bar graph", "column", "compare", "rank", "ranking")):
-        return "bar"
+    if any(term in prompt for term in (
+        "horizontal bar", "ranking", "ranked", "rank", "leaderboard", "leaders",
+        "highest", "lowest", "top ", "top-", "top 3", "top 5", "top two", "top three",
+        "most revenue", "best margin", "highest margin", "which companies generate",
+        "which mills generate", "which company generates", "bottom"
+    )):
+        return "horizontal_bar"
     if "area" in prompt:
         return "area"
-    if any(term in prompt for term in ("line", "trend", "trajectory", "plot", "graph", "chart", "visual")):
-        return "line" if "bar" not in prompt else "bar"
+    if any(term in prompt for term in ("line", "trend", "trajectory", "over time", "monthly", "timeline", "history", "last 12 months", "last 6 months")):
+        return "line"
+    if any(term in prompt for term in ("versus", " vs ", "compare", "comparison", "grouped", "bar")):
+        return "bar"
+    return default
+
+
+def _wants_table_only(prompt: str) -> bool:
+    p = (prompt or "").casefold()
+    has_table_intent = any(k in p for k in (
+        "detailed account records", "account records", "detailed records", "records only",
+        "table only", "detailed table", "raw records", "raw data", "ledger records",
+        "ledger entries", "show ledger", "list of accounts", "account list", "show raw"
+    ))
+    has_chart_intent = any(k in p for k in (
+        "chart", "graph", "plot", "visual", "visualize", "diagram", "trend", "ranking"
+    ))
+    return has_table_intent and not has_chart_intent
+
+
+def _extract_limit(prompt: str, default: int) -> int:
+    p = (prompt or "").casefold()
+    word_to_num = {
+        "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+        "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10
+    }
+    m = re.search(r"(?:top|bottom|lowest|highest|first|leader|leaders)\s*[- ]?\s*(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b", p)
+    if m:
+        val = m.group(1)
+        if val in word_to_num:
+            return word_to_num[val]
+        try:
+            return max(1, int(val))
+        except ValueError:
+            pass
+    if any(k in p for k in ("leader", "number one", "single best", "top performer")):
+        return 1
     return default
 
 
@@ -261,34 +302,47 @@ def generate_artifacts_from_tool_result(
 
         # Dynamic visual chart for single enterprise — only when asking financial/trend questions
         monthly_trend = summary.get("monthly_trend") or []
-        if monthly_trend and not is_loc and not is_profile:
+        if monthly_trend and not is_loc and not is_profile and not _wants_table_only(user_prompt):
             is_margin_q = any(w in prompt_lower for w in ("margin", "profitability", "profitable", "margin trend"))
             is_units_q = any(w in prompt_lower for w in ("units", "volume", "production", "produced", "pieces"))
+            is_vs_q = any(w in prompt_lower for w in ("versus", " vs ", "revenue vs", "revenue versus", "vs expenditure", "versus expenditure", "revenue and profit"))
 
             if is_margin_q:
                 artifacts.append(_chart(
-                    title=f"Gross Margin % Trajectory — {comp_name}",
+                    title=f"Gross Profit Margin Trajectory (%) — {comp_name} (12 Months)",
                     chart_type="line",
                     x_key="month",
-                    series=[{"key": "profit_margin_pct", "name": "Profit Margin %", "color": "#10B981", "type": "line"}],
+                    series=[{"key": "profit_margin_pct", "name": "Profit Margin %", "color": "#34D399", "type": "line"}],
                     data_points=monthly_trend,
                 ))
             elif is_units_q and any(row.get("units_sold") is not None for row in monthly_trend):
                 artifacts.append(_chart(
-                    title=f"Monthly Production Volume (Units Sold) — {comp_name}",
+                    title=f"Monthly Production Volume (Units Sold) — {comp_name} (12 Months)",
                     chart_type="bar",
                     x_key="month",
-                    series=[{"key": "units_sold", "name": "Units Sold", "color": "#8B5CF6", "type": "bar"}],
+                    series=[{"key": "units_sold", "name": "Units Sold", "color": "#A089E6", "type": "bar"}],
+                    data_points=monthly_trend,
+                ))
+            elif is_vs_q:
+                artifacts.append(_chart(
+                    title=f"Monthly Revenue vs Gross Profit Comparison — {comp_name} (₹ Lakh)",
+                    chart_type="bar",
+                    x_key="month",
+                    series=[
+                        {"key": "revenue_lakh", "name": "Revenue (₹ Lakh)", "color": "#A089E6", "type": "bar"},
+                        {"key": "gross_profit_lakh", "name": "Gross Profit (₹ Lakh)", "color": "#34D399", "type": "bar"},
+                    ],
                     data_points=monthly_trend,
                 ))
             else:
+                c_type = _infer_chart_type(user_prompt, "bar")
                 artifacts.append(_chart(
-                    title=f"Financial Performance Trend (12 Months) — {comp_name}",
-                    chart_type=_infer_chart_type(user_prompt, "bar"),
+                    title=f"Monthly Financial Performance (₹ Lakh) — {comp_name} (12 Months)",
+                    chart_type=c_type,
                     x_key="month",
                     series=[
-                        {"key": "revenue_lakh", "name": "Revenue (₹ Lakh)", "color": "#2563EB", "type": "bar"},
-                        {"key": "gross_profit_lakh", "name": "Gross Profit (₹ Lakh)", "color": "#10B981", "type": "bar"},
+                        {"key": "revenue_lakh", "name": "Revenue (₹ Lakh)", "color": "#A089E6", "type": c_type},
+                        {"key": "gross_profit_lakh", "name": "Gross Profit (₹ Lakh)", "color": "#34D399", "type": c_type},
                     ],
                     data_points=monthly_trend,
                 ))
@@ -324,28 +378,30 @@ def generate_artifacts_from_tool_result(
             subtext="From underlying monthly ledger",
         ))
 
-        if series:
-            chart_type = _infer_chart_type(user_prompt, "area")
+        if series and not _wants_table_only(user_prompt):
+            chart_type = _infer_chart_type(user_prompt, "line")
+            if chart_type == "donut":
+                chart_type = "line"
             artifacts.append(_chart(
-                title=f"Sales Revenue Trend ({months} Months)",
-                chart_type=chart_type if chart_type != "donut" else "area",
+                title=f"Monthly Sales Revenue Trend ({months} Months) — ₹ Lakh",
+                chart_type=chart_type,
                 x_key="month",
                 series=[
                     {
                         "key": "revenue_lakh",
                         "name": "Revenue (₹ Lakh)",
-                        "color": "#3B82F6",
-                        "type": "area" if chart_type == "donut" else chart_type,
+                        "color": "#A089E6",
+                        "type": chart_type,
                     }
                 ],
                 data_points=series,
             ))
-            if any(row.get("units_sold") is not None for row in series):
+            if any(row.get("units_sold") is not None for row in series) and any(w in prompt_lower for w in ("unit", "volume", "production", "quantity")):
                 artifacts.append(_chart(
-                    title=f"Sales Volume Trend ({months} Months)",
+                    title=f"Monthly Sales Volume Trend ({months} Months) — Units",
                     chart_type="bar",
                     x_key="month",
-                    series=[{"key": "units_sold", "name": "Units Sold", "color": "#8B5CF6", "type": "bar"}],
+                    series=[{"key": "units_sold", "name": "Units Sold", "color": "#34D399", "type": "bar"}],
                     data_points=series,
                 ))
             artifacts.append(_table(
@@ -396,21 +452,22 @@ def generate_artifacts_from_tool_result(
             subtext="Gross margin excluding overheads",
         ))
 
-        if series:
+        if series and not _wants_table_only(user_prompt):
+            chart_type = _infer_chart_type(user_prompt, "line")
             artifacts.append(_chart(
-                title=f"Profitability Trend ({months} Months)",
-                chart_type=_infer_chart_type(user_prompt, "line"),
+                title=f"Gross Profit Trajectory ({months} Months) — ₹ Lakh",
+                chart_type=chart_type if chart_type != "donut" else "line",
                 x_key="month",
                 series=[
-                    {"key": "gross_profit_lakh", "name": "Gross Profit (₹ Lakh)", "color": "#10B981"},
+                    {"key": "gross_profit_lakh", "name": "Gross Profit (₹ Lakh)", "color": "#34D399", "type": chart_type if chart_type != "donut" else "line"},
                 ],
                 data_points=series,
             ))
             artifacts.append(_chart(
-                title=f"Margin Trend ({months} Months)",
+                title=f"Gross Profit Margin Trajectory ({months} Months) — %",
                 chart_type="line",
                 x_key="month",
-                series=[{"key": "profit_margin_pct", "name": "Profit Margin %", "color": "#F59E0B", "type": "line"}],
+                series=[{"key": "profit_margin_pct", "name": "Profit Margin %", "color": "#FBBF24", "type": "line"}],
                 data_points=series,
             ))
 
@@ -418,6 +475,7 @@ def generate_artifacts_from_tool_result(
     elif tool_name == "compare_companies":
         comp = tool_result.get("comparison", {})
         companies = comp.get("companies") or []
+        period_months = comp.get("period_months", 6)
         if companies:
             for c in companies:
                 c["code"] = c.get("code") or c.get("company_name", "")[:4].upper()
@@ -427,13 +485,12 @@ def generate_artifacts_from_tool_result(
             is_margin_q = any(w in prompt_lower for w in ("margin", "profitability", "profitable", "highest margin", "lowest margin", "best margin", "worst margin"))
             is_growth_q = any(w in prompt_lower for w in ("growth", "grew", "fastest", "expansion", "momentum"))
             is_units_q = any(w in prompt_lower for w in ("units", "volume", "produced", "quantity", "pieces"))
-            is_revenue_q = any(w in prompt_lower for w in ("revenue", "sales", "highest revenue", "top revenue", "turnover", "most sales", "revenue leaders"))
+            is_revenue_q = any(w in prompt_lower for w in ("revenue", "sales", "highest revenue", "top revenue", "turnover", "most sales", "revenue leaders", "generate the most"))
+            is_vs_q = any(w in prompt_lower for w in ("versus", " vs ", "revenue vs", "revenue versus", "vs expenditure", "versus expenditure", "compare revenue and", "revenue and profit"))
+            is_share_q = any(w in prompt_lower for w in ("share", "distribution", "mix", "pie", "donut", "breakdown", "contribution"))
+            table_only = _wants_table_only(user_prompt)
 
-            limit = len(companies)
-            if "top 3" in prompt_lower or "top-3" in prompt_lower:
-                limit = 3
-            elif "top 5" in prompt_lower or "top-5" in prompt_lower:
-                limit = 5
+            limit = _extract_limit(user_prompt, default=len(companies))
 
             if is_location_q:
                 artifacts.append(_table(
@@ -456,17 +513,93 @@ def generate_artifacts_from_tool_result(
                         for c in companies
                     ]
                 ))
+            elif is_vs_q:
+                sorted_by_rev = sorted(companies, key=lambda x: _safe_float(x.get("total_revenue_lakh")), reverse=True)[:limit]
+                if not table_only:
+                    artifacts.append(_chart(
+                        title=f"Comparative Revenue vs Gross Profit Across Enterprises (₹ Lakh) — {period_months} Months",
+                        chart_type="bar",
+                        x_key="code",
+                        series=[
+                            {"key": "total_revenue_lakh", "name": "Revenue (₹ Lakh)", "color": "#A089E6", "type": "bar"},
+                            {"key": "total_gross_profit_lakh", "name": "Gross Profit (₹ Lakh)", "color": "#34D399", "type": "bar"},
+                        ],
+                        data_points=sorted_by_rev,
+                    ))
+                artifacts.append(_table(
+                    title=f"Enterprise Financial Performance Comparison ({period_months} Months)",
+                    columns=[
+                        {"key": "code", "label": "Code"},
+                        {"key": "company_name", "label": "Textile Enterprise"},
+                        {"key": "total_revenue_lakh", "label": "Revenue (₹ Lakh)", "format": "currency"},
+                        {"key": "total_gross_profit_lakh", "label": "Gross Profit (₹ Lakh)", "format": "currency"},
+                        {"key": "avg_profit_margin_pct", "label": "Margin %", "format": "percent"},
+                    ],
+                    rows=[
+                        {
+                            "code": c.get("code"),
+                            "company_name": c.get("company_name"),
+                            "total_revenue_lakh": f"₹{_safe_float(c.get('total_revenue_lakh')):,.2f} L",
+                            "total_gross_profit_lakh": f"₹{_safe_float(c.get('total_gross_profit_lakh')):,.2f} L",
+                            "avg_profit_margin_pct": f"{_safe_float(c.get('avg_profit_margin_pct')):.2f}%",
+                        }
+                        for c in sorted_by_rev
+                    ]
+                ))
+            elif is_share_q:
+                sorted_by_rev = sorted(companies, key=lambda x: _safe_float(x.get("total_revenue_lakh")), reverse=True)[:min(limit, 8)]
+                if not table_only:
+                    artifacts.append(_chart(
+                        title=f"Enterprise Revenue Contribution Share (%) — {period_months} Months",
+                        chart_type="donut",
+                        x_key="code",
+                        series=[{"key": "total_revenue_lakh", "name": "Revenue (₹ Lakh)", "color": "#A089E6", "type": "donut"}],
+                        data_points=sorted_by_rev,
+                    ))
+                artifacts.append(_table(
+                    title=f"Enterprise Revenue Contribution Breakdown ({period_months} Months)",
+                    columns=[
+                        {"key": "code", "label": "Code"},
+                        {"key": "company_name", "label": "Textile Enterprise"},
+                        {"key": "total_revenue_lakh", "label": "Revenue (₹ Lakh)", "format": "currency"},
+                    ],
+                    rows=[
+                        {
+                            "code": c.get("code"),
+                            "company_name": c.get("company_name"),
+                            "total_revenue_lakh": f"₹{_safe_float(c.get('total_revenue_lakh')):,.2f} L",
+                        }
+                        for c in sorted_by_rev
+                    ]
+                ))
             elif is_margin_q and not is_revenue_q:
                 sorted_by_margin = sorted(companies, key=lambda x: _safe_float(x.get("avg_profit_margin_pct")), reverse=True)[:limit]
-                artifacts.append(_chart(
-                    title=f"Gross Profit Margin % Ranking ({len(sorted_by_margin)} Enterprises)",
-                    chart_type="bar",
-                    x_key="code",
-                    series=[{"key": "avg_profit_margin_pct", "name": "Avg Margin %", "color": "#10B981", "type": "bar"}],
-                    data_points=sorted_by_margin,
+                top_m = sorted_by_margin[0]
+                artifacts.append(_kpi(
+                    title="Highest Margin Enterprise",
+                    metric="Top Gross Margin",
+                    value=f"{_safe_float(top_m.get('avg_profit_margin_pct')):.2f}%",
+                    raw_value=_safe_float(top_m.get('avg_profit_margin_pct')),
+                    change=str(top_m.get("company_name") or ""),
+                    change_type="positive",
+                    period=f"{period_months} Months",
+                    subtext=f"Total Revenue: ₹{_safe_float(top_m.get('total_revenue_lakh')):,.2f} L",
                 ))
+                if not table_only:
+                    title_margin = (
+                        f"Top {len(sorted_by_margin)} Enterprises Ranked by Gross Profit Margin (%) — {period_months} Months"
+                        if limit < len(companies)
+                        else f"Textile Enterprises Ranked by Gross Profit Margin (%) — {period_months} Months"
+                    )
+                    artifacts.append(_chart(
+                        title=title_margin,
+                        chart_type="horizontal_bar",
+                        x_key="code",
+                        series=[{"key": "avg_profit_margin_pct", "name": "Gross Margin %", "color": "#34D399", "type": "horizontal_bar"}],
+                        data_points=sorted_by_margin,
+                    ))
                 artifacts.append(_table(
-                    title=f"Enterprise Margin Ranking ({comp.get('period_months', 6)} Months)",
+                    title=f"Enterprise Margin Ranking ({period_months} Months)",
                     columns=[
                         {"key": "code", "label": "Code"},
                         {"key": "company_name", "label": "Textile Enterprise"},
@@ -485,15 +618,27 @@ def generate_artifacts_from_tool_result(
                 ))
             elif is_growth_q:
                 sorted_by_growth = sorted(companies, key=lambda x: _safe_float(x.get("revenue_growth_pct")), reverse=True)[:limit]
-                artifacts.append(_chart(
-                    title="Period Revenue Growth Rate (%) Ranking",
-                    chart_type="bar",
-                    x_key="code",
-                    series=[{"key": "revenue_growth_pct", "name": "Growth %", "color": "#8B5CF6", "type": "bar"}],
-                    data_points=sorted_by_growth,
+                top_g = sorted_by_growth[0]
+                artifacts.append(_kpi(
+                    title="Fastest Growing Enterprise",
+                    metric="Top Revenue Growth",
+                    value=f"{_safe_float(top_g.get('revenue_growth_pct')):+.2f}%",
+                    raw_value=_safe_float(top_g.get('revenue_growth_pct')),
+                    change=str(top_g.get("company_name") or ""),
+                    change_type="positive",
+                    period=f"{period_months} Months",
+                    subtext=f"Total Revenue: ₹{_safe_float(top_g.get('total_revenue_lakh')):,.2f} L",
                 ))
+                if not table_only:
+                    artifacts.append(_chart(
+                        title=f"Top {len(sorted_by_growth)} Enterprises Ranked by Revenue Growth Rate (%) — {period_months} Months",
+                        chart_type="horizontal_bar",
+                        x_key="code",
+                        series=[{"key": "revenue_growth_pct", "name": "Growth %", "color": "#38BDF8", "type": "horizontal_bar"}],
+                        data_points=sorted_by_growth,
+                    ))
                 artifacts.append(_table(
-                    title="Enterprise Growth Performance",
+                    title=f"Enterprise Growth Performance ({period_months} Months)",
                     columns=[
                         {"key": "code", "label": "Code"},
                         {"key": "company_name", "label": "Enterprise"},
@@ -512,24 +657,60 @@ def generate_artifacts_from_tool_result(
                 ))
             elif is_units_q:
                 sorted_by_units = sorted(companies, key=lambda x: _safe_float(x.get("total_units_sold")), reverse=True)[:limit]
-                artifacts.append(_chart(
-                    title="Production Volume (Units Sold) Comparison",
-                    chart_type="bar",
-                    x_key="code",
-                    series=[{"key": "total_units_sold", "name": "Units Sold", "color": "#F59E0B", "type": "bar"}],
-                    data_points=sorted_by_units,
+                if not table_only:
+                    artifacts.append(_chart(
+                        title=f"Enterprises Ranked by Production Volume (Units Sold) — {period_months} Months",
+                        chart_type="horizontal_bar",
+                        x_key="code",
+                        series=[{"key": "total_units_sold", "name": "Units Sold", "color": "#FBBF24", "type": "horizontal_bar"}],
+                        data_points=sorted_by_units,
+                    ))
+                artifacts.append(_table(
+                    title=f"Production Volume by Enterprise ({period_months} Months)",
+                    columns=[
+                        {"key": "code", "label": "Code"},
+                        {"key": "company_name", "label": "Enterprise"},
+                        {"key": "total_units_sold", "label": "Units Sold", "format": "number"},
+                        {"key": "total_revenue_lakh", "label": "Revenue (₹ Lakh)", "format": "currency"},
+                    ],
+                    rows=[
+                        {
+                            "code": c.get("code"),
+                            "company_name": c.get("company_name"),
+                            "total_units_sold": f"{int(_safe_float(c.get('total_units_sold'))):,}",
+                            "total_revenue_lakh": f"₹{_safe_float(c.get('total_revenue_lakh')):,.2f} L",
+                        }
+                        for c in sorted_by_units
+                    ]
                 ))
             elif is_revenue_q and not is_margin_q:
                 sorted_by_rev = sorted(companies, key=lambda x: _safe_float(x.get("total_revenue_lakh")), reverse=True)[:limit]
-                artifacts.append(_chart(
-                    title=f"Sales Revenue Comparison ({len(sorted_by_rev)} Enterprises)",
-                    chart_type="bar",
-                    x_key="code",
-                    series=[{"key": "total_revenue_lakh", "name": "Total Revenue (₹ Lakh)", "color": "#2563EB", "type": "bar"}],
-                    data_points=sorted_by_rev,
+                top_r = sorted_by_rev[0]
+                artifacts.append(_kpi(
+                    title="Revenue Leader",
+                    metric="Top Sales Performer",
+                    value=f"₹{_safe_float(top_r.get('total_revenue_lakh')):,.2f} L",
+                    raw_value=_safe_float(top_r.get('total_revenue_lakh')),
+                    change=str(top_r.get("company_name") or ""),
+                    change_type="positive",
+                    period=f"{period_months} Months",
+                    subtext=f"Margin: {_safe_float(top_r.get('avg_profit_margin_pct')):.2f}%",
                 ))
+                if not table_only:
+                    title_rev = (
+                        f"Top {len(sorted_by_rev)} Enterprises Ranked by Sales Revenue (₹ Lakh) — {period_months} Months"
+                        if limit < len(companies)
+                        else f"Textile Enterprises Ranked by Total Sales Revenue (₹ Lakh) — {period_months} Months"
+                    )
+                    artifacts.append(_chart(
+                        title=title_rev,
+                        chart_type="horizontal_bar",
+                        x_key="code",
+                        series=[{"key": "total_revenue_lakh", "name": "Total Revenue (₹ Lakh)", "color": "#A089E6", "type": "horizontal_bar"}],
+                        data_points=sorted_by_rev,
+                    ))
                 artifacts.append(_table(
-                    title=f"Enterprise Revenue Ranking ({comp.get('period_months', 6)} Months)",
+                    title=f"Enterprise Revenue Ranking ({period_months} Months)",
                     columns=[
                         {"key": "code", "label": "Code"},
                         {"key": "company_name", "label": "Textile Enterprise"},
@@ -547,23 +728,22 @@ def generate_artifacts_from_tool_result(
                     ]
                 ))
             else:
-                sorted_by_rev = sorted(companies, key=lambda x: _safe_float(x.get("total_revenue_lakh")), reverse=True)
-                artifacts.append(_chart(
-                    title="Revenue Comparison by Enterprise",
-                    chart_type="bar",
-                    x_key="code",
-                    series=[{"key": "total_revenue_lakh", "name": "Total Revenue (₹ Lakh)", "color": "#2563EB", "type": "bar"}],
-                    data_points=sorted_by_rev,
-                ))
-                artifacts.append(_chart(
-                    title="Profit Margin % Distribution",
-                    chart_type="bar",
-                    x_key="code",
-                    series=[{"key": "avg_profit_margin_pct", "name": "Avg Margin %", "color": "#10B981", "type": "bar"}],
-                    data_points=sorted(companies, key=lambda x: _safe_float(x.get("avg_profit_margin_pct")), reverse=True),
-                ))
+                sorted_by_rev = sorted(companies, key=lambda x: _safe_float(x.get("total_revenue_lakh")), reverse=True)[:limit]
+                title_default = (
+                    f"Top {len(sorted_by_rev)} Enterprises Ranked by Total Sales Revenue (₹ Lakh) — {period_months} Months"
+                    if limit < len(companies)
+                    else f"Textile Enterprises Ranked by Total Sales Revenue (₹ Lakh) — {period_months} Months"
+                )
+                if not table_only:
+                    artifacts.append(_chart(
+                        title=title_default,
+                        chart_type="horizontal_bar",
+                        x_key="code",
+                        series=[{"key": "total_revenue_lakh", "name": "Total Revenue (₹ Lakh)", "color": "#A089E6", "type": "horizontal_bar"}],
+                        data_points=sorted_by_rev,
+                    ))
                 artifacts.append(_table(
-                    title=f"Multi-Company Comparative Analysis ({comp.get('period_months', 6)} Months)",
+                    title=f"Multi-Company Comparative Analysis ({period_months} Months)",
                     columns=[
                         {"key": "code", "label": "Code"},
                         {"key": "company_name", "label": "Textile Enterprise"},
@@ -617,14 +797,15 @@ def generate_artifacts_from_tool_result(
             period=period,
             subtext=f"Portfolio margin: {avg_margin:.2f}%",
         ))
-        if companies:
+        if companies and not _wants_table_only(user_prompt):
             for c in companies:
                 c["code"] = c.get("code") or c.get("company_name", "")[:4].upper()
+            chart_type = _infer_chart_type(user_prompt, "horizontal_bar")
             artifacts.append(_chart(
-                title="Portfolio Revenue by Enterprise",
-                chart_type=_infer_chart_type(user_prompt, "bar"),
+                title=f"Portfolio Revenue by Enterprise (₹ Lakh) — {period}",
+                chart_type=chart_type,
                 x_key="code",
-                series=[{"key": "total_revenue_lakh", "name": "Total Revenue (₹ Lakh)", "color": "#2563EB", "type": "bar"}],
+                series=[{"key": "total_revenue_lakh", "name": "Total Revenue (₹ Lakh)", "color": "#A089E6", "type": chart_type}],
                 data_points=sorted(companies, key=lambda x: _safe_float(x.get("total_revenue_lakh")), reverse=True),
             ))
 
@@ -640,16 +821,51 @@ def generate_artifacts_from_tool_result(
                 raw_value=_safe_float(top.get("total_revenue_lakh")),
                 change=f"₹{_safe_float(top.get('total_revenue_lakh')):,.2f} Lakh",
                 change_type="positive",
-                period="Category mix",
+                period="Product Mix",
                 subtext=f"{len(products)} categories ranked",
             ))
-            chart_type = _infer_chart_type(user_prompt, "donut")
-            artifacts.append(_chart(
-                title="Top Fabric & Product Categories by Revenue",
-                chart_type=chart_type if chart_type in ("donut", "bar") else "donut",
-                x_key="category_name",
-                series=[{"key": "total_revenue_lakh", "name": "Revenue (₹ Lakh)", "color": "#6366F1"}],
-                data_points=products,
+
+            if not _wants_table_only(user_prompt):
+                is_share_q = any(w in prompt_lower for w in ("share", "distribution", "mix", "pie", "donut", "breakdown", "composition"))
+                is_margin_q = any(w in prompt_lower for w in ("margin", "profitability", "profitable"))
+
+                if is_share_q:
+                    chart_type = "donut"
+                    chart_title = "Product Line Revenue Contribution Breakdown (%)"
+                    series = [{"key": "total_revenue_lakh", "name": "Revenue (₹ Lakh)", "color": "#A089E6", "type": "donut"}]
+                elif is_margin_q and any(p.get("gross_margin_pct") is not None or p.get("profit_margin_pct") is not None for p in products):
+                    chart_type = "horizontal_bar"
+                    margin_key = "gross_margin_pct" if "gross_margin_pct" in products[0] else "profit_margin_pct"
+                    chart_title = f"Top {len(products)} Product Categories Ranked by Profit Margin (%)"
+                    series = [{"key": margin_key, "name": "Gross Margin %", "color": "#34D399", "type": "horizontal_bar"}]
+                else:
+                    chart_type = _infer_chart_type(user_prompt, "horizontal_bar")
+                    chart_title = f"Top {len(products)} Product Categories Ranked by Sales Revenue (₹ Lakh)"
+                    series = [{"key": "total_revenue_lakh", "name": "Sales Revenue (₹ Lakh)", "color": "#A089E6", "type": chart_type}]
+
+                artifacts.append(_chart(
+                    title=chart_title,
+                    chart_type=chart_type,
+                    x_key="category_name",
+                    series=series,
+                    data_points=products,
+                ))
+
+            artifacts.append(_table(
+                title=f"Product Category Performance ({len(products)} Lines)",
+                columns=[
+                    {"key": "category_name", "label": "Product Category"},
+                    {"key": "total_revenue_lakh", "label": "Revenue (₹ Lakh)", "format": "currency"},
+                    {"key": "units_sold", "label": "Units Sold", "format": "number"},
+                ],
+                rows=[
+                    {
+                        "category_name": p.get("category_name"),
+                        "total_revenue_lakh": f"₹{_safe_float(p.get('total_revenue_lakh')):,.2f} L",
+                        "units_sold": f"{int(_safe_float(p.get('units_sold'))):,}" if p.get("units_sold") is not None else "N/A",
+                    }
+                    for p in products
+                ]
             ))
 
     # 8. query_business_data — render whatever monthly series the tool returned
@@ -703,6 +919,166 @@ def generate_artifacts_from_tool_result(
             series=[{"key": k, "name": k, "type": chart_args.get("chart_type", "bar")} for k in chart_args.get("series", [])],
             data_points=chart_args.get("data_points", [])
         ))
+
+    # 8. execute_sql_query
+    elif tool_name == "execute_sql_query":
+        rows = tool_result.get("rows", [])
+        cols = tool_result.get("columns", [])
+        exec_ms = tool_result.get("execution_time_ms", 0)
+
+        if rows:
+            table_cols = [{"key": c, "label": c.replace("_", " ").title()} for c in cols]
+            artifacts.append(_table(
+                title=f"Verified Database Query ({len(rows)} Records)",
+                columns=table_cols,
+                rows=rows
+            ))
+
+            artifacts.append(_kpi(
+                title="Query Output",
+                metric="Records Returned",
+                value=f"{len(rows)} Rows",
+                raw_value=len(rows),
+                change=f"{exec_ms} ms",
+                change_type="positive" if rows else "neutral",
+                period="Live Database Query",
+                subtext=f"{len(cols)} columns retrieved securely"
+            ))
+
+            # Redundant Chart Suppression (Section 17.1 & 17.2):
+            # If user asked for detailed records, accounts, raw data, or table, do NOT generate an unnecessary chart!
+            if not _wants_table_only(user_prompt):
+                first_row = rows[0]
+                cat_col = next((c for c in cols if isinstance(first_row.get(c), str)), None)
+                num_cols = [c for c in cols if isinstance(first_row.get(c), (int, float)) and not isinstance(first_row.get(c), bool)]
+                if cat_col and num_cols and len(rows) >= 2:
+                    primary_num = num_cols[0]
+                    num_label = primary_num.replace("_", " ").title()
+                    cat_label = cat_col.replace("_", " ").title()
+
+                    chart_type = _infer_chart_type(user_prompt, "bar")
+                    if any(t in cat_col.lower() for t in ("date", "month", "year", "period", "time")) and chart_type != "horizontal_bar":
+                        chart_type = "line"
+
+                    series = [{
+                        "key": primary_num,
+                        "name": num_label,
+                        "color": "#A089E6",
+                        "type": chart_type
+                    }]
+                    artifacts.append(_chart(
+                        title=f"{num_label} by {cat_label} ({min(len(rows), 20)} Records)",
+                        chart_type=chart_type,
+                        x_key=cat_col,
+                        series=series,
+                        data_points=rows[:20]
+                    ))
+
+    # 9. discover_database_schema
+    elif tool_name in ("discover_database_schema", "get_database_schema"):
+        if "summary" in tool_result:
+            summary = tool_result["summary"]
+            domains = summary.get("domains", [])
+            table_rows = [
+                {
+                    "domain": d.get("domain", ""),
+                    "table_count": d.get("table_count", 0),
+                    "sample_tables": ", ".join(d.get("sample_tables", [])[:4])
+                }
+                for d in domains
+            ]
+            artifacts.append(_table(
+                title="Live Database Domain Catalog",
+                columns=[
+                    {"key": "domain", "label": "Business Domain"},
+                    {"key": "table_count", "label": "Tables & Views"},
+                    {"key": "sample_tables", "label": "Sample Entities"}
+                ],
+                rows=table_rows
+            ))
+            artifacts.append(_kpi(
+                title="Database Coverage",
+                metric="Total Entities",
+                value=f"{summary.get('total_entities', 0):,}",
+                raw_value=summary.get('total_entities', 0),
+                change=f"{summary.get('total_tables', 0)} Tables",
+                change_type="positive",
+                period="Live Database Schema",
+                subtext=f"{summary.get('total_views', 0)} Views | {len(domains)} Domains"
+            ))
+        else:
+            tables = tool_result.get("tables", [])
+            if tables:
+                artifacts.append(_table(
+                    title=f"Discovered Tables ({len(tables)})",
+                    columns=[
+                        {"key": "name", "label": "Table Name"},
+                        {"key": "type", "label": "Type"},
+                        {"key": "domain", "label": "Business Domain"}
+                    ],
+                    rows=tables
+                ))
+
+    # 10. inspect_table_schema
+    elif tool_name == "inspect_table_schema":
+        tables = tool_result.get("tables", {})
+        for t_name, info in tables.items():
+            if info.get("status") == "success":
+                cols = info.get("columns", [])
+                samples = info.get("sample_rows", [])
+
+                artifacts.append(_table(
+                    title=f"Schema: {t_name} ({len(cols)} Columns)",
+                    columns=[
+                        {"key": "name", "label": "Column Name"},
+                        {"key": "type", "label": "Data Type"},
+                        {"key": "nullable", "label": "Nullable"},
+                        {"key": "is_primary_key", "label": "Primary Key"}
+                    ],
+                    rows=cols
+                ))
+
+                if samples:
+                    first_sample = samples[0]
+                    sample_cols = [{"key": k, "label": k} for k in first_sample.keys()]
+                    artifacts.append(_table(
+                        title=f"Sample Records: {t_name}",
+                        columns=sample_cols,
+                        rows=samples
+                    ))
+
+    # 11. summarize_database_capabilities / refresh_database_schema
+    elif tool_name in ("summarize_database_capabilities", "refresh_database_schema"):
+        summary = tool_result.get("catalog_summary") or tool_result
+        if "domains" in summary:
+            domains = summary.get("domains", [])
+            table_rows = [
+                {
+                    "domain": d.get("domain", ""),
+                    "table_count": d.get("table_count", 0),
+                    "sample_tables": ", ".join(d.get("sample_tables", [])[:4])
+                }
+                for d in domains
+            ]
+            artifacts.append(_table(
+                title="Live Enterprise Schema Capabilities",
+                columns=[
+                    {"key": "domain", "label": "Business Domain"},
+                    {"key": "table_count", "label": "Entity Count"},
+                    {"key": "sample_tables", "label": "Key Sample Tables"}
+                ],
+                rows=table_rows
+            ))
+            artifacts.append(_kpi(
+                title="Schema Capacity",
+                metric="Total Accessible Entities",
+                value=f"{summary.get('total_entities', 0):,}",
+                raw_value=summary.get('total_entities', 0),
+                change=f"{summary.get('total_tables', 0)} Tables",
+                change_type="positive",
+                period="Connected Database",
+                subtext=f"{summary.get('total_views', 0)} Views | Dynamic Discovery Active"
+            ))
 
     # File report ONLY when the user explicitly asked for an export, download, excel, or spreadsheet
     wants_download = any(k in prompt_lower for k in (
@@ -789,8 +1165,9 @@ def _artifacts_from_tabular_records(
             }
             for idx, key in enumerate(preferred[:2])
         ]
+        metric_title = " & ".join(label_map.get(k, k.replace('_', ' ').title()) for k in preferred[:2])
         artifacts.append(_chart(
-            title="Verified Database Trend",
+            title=f"{metric_title} by {x_key.replace('_', ' ').title()} ({len(records)} Records)",
             chart_type=chart_type,
             x_key=x_key,
             series=series,

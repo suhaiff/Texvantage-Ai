@@ -12,8 +12,10 @@ import {
   ChevronDown,
   ChevronUp,
   Mic,
+  MicOff,
   Volume2,
   VolumeX,
+  Square,
   MoreVertical,
   Pencil,
   Trash2,
@@ -300,6 +302,129 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
   const handleSendRef = useRef<any>(null);
+  const isSubmittingRef = useRef<boolean>(false);
+  const isVoiceSubmittingRef = useRef<boolean>(false);
+
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null);
+  const speakTimeoutRef = useRef<any>(null);
+  const lastSpokenRef = useRef<{ text: string; time: number; msgId?: string } | null>(null);
+
+  const cleanTextForSpeech = (rawText: string): string => {
+    if (!rawText) return '';
+    return rawText
+      .replace(/```[\s\S]*?```/g, '') // remove code fences
+      .replace(/`([^`]+)`/g, '$1') // inline code
+      .replace(/!\[([^\]]*)\]\([^\)]+\)/g, '') // images
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // links
+      .replace(/^#{1,6}\s+/gm, '') // headings
+      .replace(/\|[-:\s|]+\|/g, '') // table dividers
+      .replace(/\|\s*([^|\n]+)\s*/g, '$1, ') // tables to commas
+      .replace(/[*_~#]/g, '') // markdown emphasis
+      .replace(/\s+/g, ' ')
+      .replace(/,\s*,/g, ',')
+      .trim();
+  };
+
+  const stopSpeaking = () => {
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
+    lastSpokenRef.current = null;
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (_) {}
+    }
+    setIsSpeaking(false);
+    setCurrentlySpeakingId(null);
+  };
+
+  const speakText = (text: string, msgId?: string, forceVoice: boolean = false) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (!forceVoice && !voiceEnabled) return;
+
+    const cleanText = cleanTextForSpeech(text);
+    if (!cleanText) return;
+
+    // Deduplication guard: completely prevent speaking the exact same text or message twice within 2.5s
+    const now = Date.now();
+    if (
+      lastSpokenRef.current &&
+      (lastSpokenRef.current.msgId === msgId || lastSpokenRef.current.text === cleanText) &&
+      now - lastSpokenRef.current.time < 2500
+    ) {
+      return;
+    }
+    lastSpokenRef.current = { text: cleanText, time: now, msgId };
+
+    // Clear any previously pending speak timeout so multiple utterances are never queued simultaneously
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
+
+    try {
+      window.speechSynthesis.cancel();
+    } catch (_) {}
+
+    speakTimeoutRef.current = setTimeout(() => {
+      speakTimeoutRef.current = null;
+      try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        const voices = window.speechSynthesis.getVoices();
+        if (voices && voices.length > 0) {
+          const preferredVoice = voices.find(v =>
+            (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Jenny') || v.name.includes('Aria') || v.name.includes('Zira')) && v.lang.startsWith('en')
+          ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
+          }
+        }
+
+        utterance.onstart = () => {
+          setIsSpeaking(true);
+          if (msgId) setCurrentlySpeakingId(msgId);
+        };
+
+        utterance.onend = () => {
+          setIsSpeaking(false);
+          setCurrentlySpeakingId(null);
+        };
+
+        utterance.onerror = (e) => {
+          console.warn('SpeechSynthesis event error:', e);
+          setIsSpeaking(false);
+          setCurrentlySpeakingId(null);
+        };
+
+        window.speechSynthesis.speak(utterance);
+      } catch (err) {
+        console.error('Speech synthesis execution failed:', err);
+        setIsSpeaking(false);
+        setCurrentlySpeakingId(null);
+      }
+    }, 60);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (_) {}
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // @ts-ignore
@@ -312,17 +437,32 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
       
       recognition.onstart = () => setIsRecording(true);
       recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setInputPrompt(prev => {
-          const combined = prev ? prev + ' ' + transcript : transcript;
-          // Auto-send after a tiny delay to let UI reflect
-          setTimeout(() => {
-            if (handleSendRef.current) {
-              handleSendRef.current(combined);
-            }
-          }, 100);
-          return combined;
-        });
+        if (!event.results || event.results.length === 0) return;
+        const transcript = event.results[0]?.[0]?.transcript?.trim();
+        if (!transcript) return;
+
+        // Atomic check to prevent double triggers in React
+        if (isVoiceSubmittingRef.current || isSubmittingRef.current) return;
+        isVoiceSubmittingRef.current = true;
+
+        try {
+          recognition.abort();
+        } catch (_) {
+          try {
+            recognition.stop();
+          } catch (_) {}
+        }
+        setIsRecording(false);
+
+        setInputPrompt(transcript);
+
+        if (handleSendRef.current) {
+          handleSendRef.current(transcript, { fromVoice: true });
+        }
+
+        setTimeout(() => {
+          isVoiceSubmittingRef.current = false;
+        }, 1500);
       };
       recognition.onerror = () => setIsRecording(false);
       recognition.onend = () => setIsRecording(false);
@@ -332,21 +472,20 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
   }, []);
 
   const toggleRecording = () => {
+    stopSpeaking();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.resume();
+    }
     if (isRecording) {
       recognitionRef.current?.stop();
     } else {
-      recognitionRef.current?.start();
+      isVoiceSubmittingRef.current = false;
+      try {
+        recognitionRef.current?.start();
+      } catch (err) {
+        console.error('Speech recognition start failed', err);
+      }
     }
-  };
-
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const speakText = (text: string) => {
-    if (!voiceEnabled || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const cleanText = text.replace(/[*#_`]/g, '').replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1');
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 1.05;
-    window.speechSynthesis.speak(utterance);
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -371,9 +510,15 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
     handleSendRef.current = handleSend;
   });
 
-  const handleSend = async (customPrompt?: string) => {
+  const handleSend = async (customPrompt?: string, options?: { fromVoice?: boolean }) => {
     const textToSend = (customPrompt || inputPrompt).trim();
-    if (!textToSend || loading) return;
+    if (!textToSend || isSubmittingRef.current || loading) return;
+    isSubmittingRef.current = true;
+
+    const isFromVoice = !!options?.fromVoice;
+    stopSpeaking();
+
+    let hasTurnDoneFired = false;
 
     setInputPrompt('');
     setLoading(true);
@@ -445,14 +590,21 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
           onConversationUpdated?.();
         },
         onDone: () => {
+          if (hasTurnDoneFired) return;
+          hasTurnDoneFired = true;
           isStreamingRef.current = false;
           setMessages(prev =>
             prev.map(m => (m.id === assistantMsgId ? { ...m, isStreaming: false } : m))
           );
-          speakText(accumulatedText);
+          // Auto voice feedback if prompt was spoken or if voice is enabled (reads exactly once)
+          if (accumulatedText.trim()) {
+            speakText(accumulatedText, assistantMsgId, isFromVoice || voiceEnabled);
+          }
           onConversationUpdated?.();
         },
         onError: errMsg => {
+          if (hasTurnDoneFired) return;
+          hasTurnDoneFired = true;
           isStreamingRef.current = false;
           accumulatedText += `\n\n⚠️ **Error**: ${errMsg}`;
           setMessages(prev =>
@@ -460,6 +612,9 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
               m.id === assistantMsgId ? { ...m, content: accumulatedText, isStreaming: false } : m
             )
           );
+          if (isFromVoice || voiceEnabled) {
+            speakText(`Notice: ${errMsg}`, assistantMsgId, true);
+          }
           onConversationUpdated?.();
         }
       });
@@ -477,6 +632,7 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
         )
       );
     } finally {
+      isSubmittingRef.current = false;
       isStreamingRef.current = false;
       setLoading(false);
       setStatusMessage(null);
@@ -542,6 +698,22 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
             }}
             className="w-full relative z-10 bg-[#130C2E]/70 backdrop-blur-2xl border border-purple-400/25 rounded-2xl p-2 shadow-[0_25px_70px_rgba(0,0,0,0.6),0_0_40px_rgba(109,74,255,0.18)] focus-within:border-purple-400/60 focus-within:shadow-[0_25px_70px_rgba(0,0,0,0.7),0_0_50px_rgba(160,137,230,0.3)] transition-all duration-300 mb-10"
           >
+            {isRecording && (
+              <div className="flex items-center justify-between px-3.5 py-2 bg-rose-500/15 border border-rose-500/30 rounded-xl mb-2 text-xs text-rose-200 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                  <span className="font-semibold text-white">Listening... Speak now</span>
+                  <span className="text-purple-300/70 hidden sm:inline">(Auto-submits and replies with voice)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => recognitionRef.current?.stop()}
+                  className="text-[11px] font-semibold text-rose-300 hover:text-white cursor-pointer px-2 py-0.5 rounded-md hover:bg-rose-500/20"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <textarea
                 rows={1}
@@ -568,9 +740,9 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
                       ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.5)]' 
                       : 'bg-transparent text-purple-300/60 hover:text-white hover:bg-white/[0.05]'
                   }`}
-                  title="Use voice input"
+                  title={isRecording ? "Stop listening" : "Voice input (replies with voice defaultly)"}
                 >
-                  <Mic className="w-5 h-5" />
+                  {isRecording ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5" />}
                 </button>
               )}
 
@@ -721,11 +893,50 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
                     ) : (
                       <div className="flex justify-start">
                         <div className="max-w-full w-full">
-                          <div className="text-[11px] font-bold text-purple-300/70 mb-2 uppercase tracking-wider flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-[#6D4AFF] to-[#A089E6] flex items-center justify-center shadow-[0_0_8px_rgba(160,137,230,0.4)]">
-                              <Bot className="w-3 h-3 text-white" />
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-[11px] font-bold text-purple-300/70 uppercase tracking-wider flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-[#6D4AFF] to-[#A089E6] flex items-center justify-center shadow-[0_0_8px_rgba(160,137,230,0.4)]">
+                                <Bot className="w-3 h-3 text-white" />
+                              </div>
+                              <span className="text-white font-semibold">Jeevan Infotech AI</span>
                             </div>
-                            <span className="text-white font-semibold">Jeevan Infotech AI</span>
+
+                            {/* Voice Playback Button */}
+                            {!msg.isStreaming && msg.content && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (currentlySpeakingId === msg.id) {
+                                    stopSpeaking();
+                                  } else {
+                                    speakText(msg.content, msg.id, true);
+                                  }
+                                }}
+                                title={currentlySpeakingId === msg.id ? "Stop reading" : "Read aloud"}
+                                className={`text-[11px] px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer font-medium ${
+                                  currentlySpeakingId === msg.id
+                                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-[0_0_12px_rgba(244,63,94,0.3)] animate-pulse'
+                                    : 'text-purple-300/60 hover:text-white hover:bg-white/[0.06] border border-transparent'
+                                }`}
+                              >
+                                {currentlySpeakingId === msg.id ? (
+                                  <>
+                                    <Square className="w-3 h-3 fill-rose-400 text-rose-400" />
+                                    <span>Stop Speaking</span>
+                                    <span className="flex gap-0.5 items-center ml-1">
+                                      <span className="w-1 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                      <span className="w-1 h-3.5 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                      <span className="w-1 h-2 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Volume2 className="w-3.5 h-3.5 text-purple-300/80" />
+                                    <span>Read aloud</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
                           </div>
 
                           <div className="space-y-4 text-white">
@@ -893,47 +1104,86 @@ export const AIWorkspace: React.FC<AIWorkspaceProps> = ({
                   e.preventDefault();
                   handleSend();
                 }}
-                className="relative bg-[#130C2E]/80 backdrop-blur-2xl border border-purple-400/25 rounded-2xl p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_30px_rgba(109,74,255,0.15)] focus-within:border-purple-400/60 focus-within:shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_40px_rgba(160,137,230,0.25)] transition-all flex items-center gap-2"
+                className="relative bg-[#130C2E]/80 backdrop-blur-2xl border border-purple-400/25 rounded-2xl p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_30px_rgba(109,74,255,0.15)] focus-within:border-purple-400/60 focus-within:shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_40px_rgba(160,137,230,0.25)] transition-all"
               >
-                <textarea
-                  rows={1}
-                  value={inputPrompt}
-                  onChange={e => setInputPrompt(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
-                  }}
-                  placeholder="Ask a follow-up..."
-                  disabled={loading}
-                  className="flex-1 bg-transparent border-0 resize-none text-[15px] text-white placeholder-purple-300/40 focus:outline-none px-4 py-2 max-h-32 custom-scrollbar"
-                />
-                {isSpeechSupported && (
-                  <button
-                    type="button"
-                    onClick={toggleRecording}
-                    disabled={loading}
-                    className={`p-2.5 rounded-xl transition-all shrink-0 cursor-pointer ${
-                      isRecording 
-                        ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.5)]' 
-                        : 'bg-transparent text-purple-300/60 hover:text-white hover:bg-white/[0.06]'
-                    }`}
-                    title="Use voice input"
-                  >
-                    <Mic className="w-4 h-4" />
-                  </button>
+                {isRecording && (
+                  <div className="flex items-center justify-between px-3.5 py-1.5 bg-rose-500/15 border border-rose-500/30 rounded-xl mb-1 text-xs text-rose-200 animate-in fade-in duration-200">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                      <span className="font-semibold text-white">Listening... Speak follow-up</span>
+                      <span className="text-purple-300/70 hidden sm:inline">(Auto-submits & speaks response)</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => recognitionRef.current?.stop()}
+                      className="text-[11px] font-semibold text-rose-300 hover:text-white cursor-pointer px-2 py-0.5 rounded-md hover:bg-rose-500/20"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 )}
-                <button
-                  type="submit"
-                  disabled={!inputPrompt.trim() || loading}
-                  className="bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] disabled:opacity-40 disabled:hover:scale-100 disabled:shadow-none text-white p-2.5 rounded-xl transition-all duration-200 shadow-[0_0_15px_rgba(109,74,255,0.35)] hover:shadow-[0_0_25px_rgba(160,137,230,0.55)] hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <textarea
+                    rows={1}
+                    value={inputPrompt}
+                    onChange={e => setInputPrompt(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                    placeholder="Ask a follow-up..."
+                    disabled={loading}
+                    className="flex-1 bg-transparent border-0 resize-none text-[15px] text-white placeholder-purple-300/40 focus:outline-none px-4 py-2 max-h-32 custom-scrollbar"
+                  />
+                  {isSpeechSupported && (
+                    <button
+                      type="button"
+                      onClick={toggleRecording}
+                      disabled={loading}
+                      className={`p-2.5 rounded-xl transition-all shrink-0 cursor-pointer ${
+                        isRecording 
+                          ? 'bg-rose-500 text-white animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.5)]' 
+                          : 'bg-transparent text-purple-300/60 hover:text-white hover:bg-white/[0.06]'
+                      }`}
+                      title={isRecording ? "Stop listening" : "Voice input (replies with voice defaultly)"}
+                    >
+                      {isRecording ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4" />}
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={!inputPrompt.trim() || loading}
+                    className="bg-gradient-to-r from-[#A089E6] to-[#6D4AFF] hover:from-[#B8A4EE] hover:to-[#8155F5] disabled:opacity-40 disabled:hover:scale-100 disabled:shadow-none text-white p-2.5 rounded-xl transition-all duration-200 shadow-[0_0_15px_rgba(109,74,255,0.35)] hover:shadow-[0_0_25px_rgba(160,137,230,0.55)] hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
               </form>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ChatGPT-style Floating Voice Feedback Controller */}
+      {isSpeaking && (
+        <div className="fixed bottom-24 right-6 z-40 flex items-center gap-3 bg-[#150D32]/95 border border-[#A089E6]/40 backdrop-blur-2xl px-4 py-2.5 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.6),0_0_24px_rgba(160,137,230,0.25)] animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <div className="flex items-center gap-1">
+            <span className="w-1.5 h-2.5 bg-[#A089E6] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <span className="w-1.5 h-4 bg-[#6D4AFF] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <span className="w-1.5 h-5 bg-[#A089E6] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <span className="w-1.5 h-2.5 bg-[#6D4AFF] rounded-full animate-bounce" style={{ animationDelay: '450ms' }} />
+          </div>
+          <span className="text-xs font-semibold text-white tracking-wide">AI Speaking...</span>
+          <button
+            onClick={stopSpeaking}
+            className="ml-1 flex items-center gap-1.5 text-xs font-bold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-500/40 border border-rose-500/30 px-2.5 py-1 rounded-xl transition-all cursor-pointer shadow-sm"
+            title="Stop speech"
+          >
+            <Square className="w-3 h-3 fill-current" />
+            <span>Stop</span>
+          </button>
         </div>
       )}
 

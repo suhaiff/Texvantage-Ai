@@ -487,6 +487,14 @@ class ApiClient {
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
       let finished = false;
+      let hasEmittedDone = false;
+
+      const emitDone = () => {
+        if (hasEmittedDone) return;
+        hasEmittedDone = true;
+        finished = true;
+        callbacks.onDone?.();
+      };
 
       const emitArtifacts = (event: any) => {
         const bundled = [
@@ -508,8 +516,7 @@ class ApiClient {
         const payloadStr = dataLines.join('\n').trim();
         if (!payloadStr) return;
         if (payloadStr === '[DONE]') {
-          finished = true;
-          callbacks.onDone?.();
+          emitDone();
           return;
         }
 
@@ -535,13 +542,11 @@ class ApiClient {
           } else if (event.type === 'answer' || event.type === 'complete') {
             emitArtifacts(event);
             if (event.type === 'complete') {
-              finished = true;
-              callbacks.onDone?.();
+              emitDone();
             }
           } else if (event.type === 'done') {
             emitArtifacts(event);
-            finished = true;
-            callbacks.onDone?.();
+            emitDone();
           } else if (event.type === 'error') {
             callbacks.onError?.(event.message);
           }
@@ -568,6 +573,7 @@ class ApiClient {
           if (done) {
             buffer += decoder.decode();
             consumeBuffer(true);
+            emitDone();
             break;
           }
 
@@ -577,7 +583,7 @@ class ApiClient {
       } catch (err: any) {
         callbacks.onError?.(err?.message || 'Error while reading stream');
       } finally {
-        if (!finished) callbacks.onDone?.();
+        emitDone();
       }
     }
   };
